@@ -23,7 +23,8 @@ Documentación completa en `~/Desktop/Desktop_Mac/projects/Club de Futbol/Docume
 - Duración: indeterminada · Patrimonio inicial: 600 LEI
 - Conducción: Cristian Maximiliano Savino (**presidente**, representante legal), Sergio Felipe Quiroga Gualteros (vicepresidente), Fabian Andres Rodriguez Rodriguez (secretario)
 - Objeto: promoción y desarrollo del fútbol (Divizia a 5-a, seniors y juniors), afiliación a la FRF
-- Ojo: el CUI/CIF fiscal no figura en este PDF (se tramita en ANAF aparte) — hace falta para la activación en vivo de Stripe
+- **CIF (código fiscal): 53035344**, atribuido el 02.12.2025 (certificado ANAF Seria A Nr. 1432198,
+  en `~/Desktop/Desktop_Mac/projects/Club de Futbol/Documentos/CIF.pdf`)
 
 Estos son los datos que van en el onboarding real de Stripe (tipo: non-profit **constituită**) y en cualquier formulario legal.
 
