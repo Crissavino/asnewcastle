@@ -23,8 +23,14 @@ class DatabaseSeeder extends Seeder
                 'crest_path' => 'img/crest.png',
                 'monthly_fee_cents' => 12000,
                 'currency' => 'RON',
+                'standings_url' => 'https://www.frf-ajf.ro/ilfov/competitii-fotbal/liga-a-5-a-15248/clasament',
             ],
         );
+
+        $club->update([
+            'standings_url' => $club->standings_url
+                ?? 'https://www.frf-ajf.ro/ilfov/competitii-fotbal/liga-a-5-a-15248/clasament',
+        ]);
 
         $phone = env('SEED_MANAGER_PHONE');
 

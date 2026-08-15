@@ -22,6 +22,7 @@ class Club extends Model
         'monthly_fee_cents',
         'currency',
         'standings_json',
+        'standings_url',
     ];
 
     protected function casts(): array
