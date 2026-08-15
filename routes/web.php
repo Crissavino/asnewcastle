@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\AltaController;
 use App\Http\Controllers\Auth\InviteController;
 use App\Http\Controllers\Auth\OtpController;
+use App\Http\Controllers\PerfilController;
+use App\Http\Middleware\EnsureProfileComplete;
 use App\Http\Middleware\SetActiveClub;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -37,12 +40,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/sin-club', fn () => Inertia::render('Auth/SinClub'))->name('sin-club');
 
     Route::middleware(SetActiveClub::class)->group(function () {
-        Route::get('/agenda', fn () => Inertia::render('Agenda'))->name('agenda');
-        Route::get('/tabla', fn () => Inertia::render('Tabla'))->name('tabla');
-        Route::get('/vestuario', fn () => Inertia::render('Vestuario'))->name('vestuario');
-        Route::get('/cuota', fn () => Inertia::render('Cuota'))->name('cuota');
-        Route::get('/perfil', fn () => Inertia::render('Perfil'))->name('perfil');
+        // Alta: el wizard de 5 pasos, fuera del chequeo de perfil completo
+        Route::get('/alta', [AltaController::class, 'show'])->name('alta');
+        Route::post('/alta', [AltaController::class, 'store'])->name('alta.guardar');
 
-        Route::post('/invitaciones', [InviteController::class, 'create'])->name('invitacion.crear');
+        Route::middleware(EnsureProfileComplete::class)->group(function () {
+            Route::get('/agenda', fn () => Inertia::render('Agenda'))->name('agenda');
+            Route::get('/tabla', fn () => Inertia::render('Tabla'))->name('tabla');
+            Route::get('/vestuario', fn () => Inertia::render('Vestuario'))->name('vestuario');
+            Route::get('/cuota', fn () => Inertia::render('Cuota'))->name('cuota');
+            Route::get('/perfil', [PerfilController::class, 'show'])->name('perfil');
+
+            Route::post('/invitaciones', [InviteController::class, 'create'])->name('invitacion.crear');
+        });
     });
 });

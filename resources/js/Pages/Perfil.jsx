@@ -1,12 +1,13 @@
 import { router, usePage } from '@inertiajs/react';
+import { Check } from 'lucide-react';
 import { useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
 import { LOCALES, useTranslations } from '../i18n';
 
-export default function Perfil() {
+export default function Perfil({ me, roster }) {
     const { t, locale } = useTranslations();
-    const { auth, member, flash } = usePage().props;
+    const { member, flash } = usePage().props;
     const [copied, setCopied] = useState(false);
 
     const generateInvite = () => {
@@ -27,15 +28,48 @@ export default function Perfil() {
         <AppLayout tab="perfil">
             <div className="nc-card">
                 <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                    {member?.shirt_number != null && <Kit n={member.shirt_number} size="lg" />}
+                    <Kit n={me.shirt_number} size="lg" />
                     <div>
-                        <h2 className="nc-display" style={{ fontSize: 21, lineHeight: 1 }}>
-                            {auth.user?.name ?? '—'}
-                        </h2>
-                        {member?.position && <div className="nc-meta" style={{ marginTop: 5 }}>{member.position}</div>}
+                        <h2 className="nc-display" style={{ fontSize: 21, lineHeight: 1 }}>{me.name}</h2>
+                        <div className="nc-meta" style={{ marginTop: 5 }}>
+                            {t(`pos.${me.position}`)} · {t(`foot.${me.preferred_foot}`).toLowerCase()}
+                        </div>
                     </div>
                 </div>
-                <p className="nc-meta" style={{ marginTop: 12 }}>{t('empty.perfil')}</p>
+                <div className="nc-row" style={{ marginTop: 14 }}>
+                    <span className="nc-meta">{t('perfil.equipment')}</span>
+                    <div style={{ display: 'flex', gap: 7 }}>
+                        <Kit n={me.shirt_number} kit="home" size="sm" />
+                        <Kit n={me.shirt_number} kit="away" size="sm" />
+                    </div>
+                </div>
+            </div>
+
+            <div className="nc-card">
+                <div className="nc-label">{t('perfil.availability')}</div>
+                <div style={{ marginTop: 6 }}>
+                    {me.availability.map((s) => (
+                        <div key={s} className="nc-row">
+                            <span style={{ fontSize: 14 }}>{t(`slot.${s}`)}</span>
+                            <Check size={15} color="var(--aqua-dk)" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="nc-card">
+                <div className="nc-label">{t('perfil.roster')}</div>
+                <div style={{ marginTop: 6 }}>
+                    {roster.map((p) => (
+                        <div key={p.id} className="nc-row">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <Kit n={p.shirt_number ?? '–'} size="sm" />
+                                <span style={{ fontSize: 14 }}>{p.name ?? '—'}</span>
+                            </div>
+                            <span className="nc-label">{p.position ?? ''}</span>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {member?.role === 'manager' && (

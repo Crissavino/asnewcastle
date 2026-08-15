@@ -47,4 +47,13 @@ class Member extends Model
     {
         return $this->role === 'manager';
     }
+
+    /** El alta está completa cuando el wizard cargó nombre, puesto, dorsal y disponibilidad. */
+    public function profileComplete(): bool
+    {
+        return $this->user->name !== null
+            && $this->position !== null
+            && $this->shirt_number !== null
+            && ! empty($this->availability);
+    }
 }
