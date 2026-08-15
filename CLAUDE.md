@@ -17,7 +17,7 @@ No es una red social ni un crowdfunding. Es una herramienta operativa semanal.
 Estas no se negocian. Si algo en una tarea las contradice, pará y preguntá.
 
 - **Todo query filtra por `club_id`.** Sin excepción. Un usuario puede pertenecer a varios clubes. Usar un global scope + middleware que resuelve el club activo, y tests que verifiquen que un usuario del club A no puede leer datos del club B.
-- **Español rioplatense en toda la UI.** Sin i18n en v1. "Vos", no "tú".
+- **i18n key-value desde el día uno.** Inglés (obligatorio, es el fallback), rumano y español. Diccionarios en `lang/{en,ro,es}.json`, compartidos a React por props de Inertia con el helper `t()` de `resources/js/i18n.js`. Toda cadena de UI nueva entra en los tres archivos. El español es rioplatense: "vos", no "tú". La preferencia se guarda en `users.locale`; primera visita se detecta por `Accept-Language`.
 - **Mobile-first y solo mobile.** Diseñar para 380px. No hay layout de escritorio. Todo lo tocable, mínimo 44px de alto.
 - **Nada que dependa del navegador.** Esta app se va a envolver en Capacitor. No usar `window.open`, ni navegación por URL bar, ni nada que asuma pestañas o barra de direcciones.
 - **Sesiones largas.** Un jugador se loguea una vez y no vuelve a loguearse en meses.
@@ -177,7 +177,6 @@ Chat simple del equipo.
 Escrito para que no aparezca por inercia:
 
 - Crowdfunding y donaciones
-- Multi-idioma
 - Notificaciones push web
 - Estadísticas de jugadores (goles, tarjetas, minutos)
 - Formación táctica / pizarra
