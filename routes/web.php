@@ -1,9 +1,13 @@
 <?php
 
+use App\Http\Controllers\AgendaController;
 use App\Http\Controllers\AltaController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\InviteController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\Webhooks\TwilioWebhookController;
+use App\Http\Middleware\VerifyTwilioSignature;
 use App\Http\Middleware\EnsureProfileComplete;
 use App\Http\Middleware\SetActiveClub;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +32,11 @@ Route::middleware('guest')->group(function () {
         ->name('otp.verificar');
 });
 
+// Webhook de Twilio: respuestas de los botones de WhatsApp
+Route::post('/webhooks/twilio', TwilioWebhookController::class)
+    ->middleware(VerifyTwilioSignature::class)
+    ->name('webhooks.twilio');
+
 // Link de invitación firmado: funciona logueado o no
 Route::get('/invitacion/{club:slug}', [InviteController::class, 'accept'])
     ->middleware('signed')
@@ -45,7 +54,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/alta', [AltaController::class, 'store'])->name('alta.guardar');
 
         Route::middleware(EnsureProfileComplete::class)->group(function () {
-            Route::get('/agenda', fn () => Inertia::render('Agenda'))->name('agenda');
+            Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda');
+            Route::post('/eventos', [AgendaController::class, 'store'])->name('eventos.crear');
+            Route::post('/eventos/{event}/recordar', [AgendaController::class, 'remind'])->name('eventos.recordar');
+            Route::post('/eventos/{event}/asistencia', [AttendanceController::class, 'store'])->name('asistencia');
             Route::get('/tabla', fn () => Inertia::render('Tabla'))->name('tabla');
             Route::get('/vestuario', fn () => Inertia::render('Vestuario'))->name('vestuario');
             Route::get('/cuota', fn () => Inertia::render('Cuota'))->name('cuota');

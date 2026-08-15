@@ -37,4 +37,14 @@ class CurrentClub
     {
         return $this->club?->id;
     }
+
+    /**
+     * 404 si el modelo no es del club activo. Necesario en rutas con
+     * binding implícito: la resolución del modelo corre antes que el
+     * middleware SetActiveClub, así que el global scope no filtra ahí.
+     */
+    public function assertOwns(object $model): void
+    {
+        abort_unless($this->club && $model->club_id === $this->club->id, 404);
+    }
 }

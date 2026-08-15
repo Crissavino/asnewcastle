@@ -20,6 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->redirectGuestsTo(fn () => route('entrar'));
         $middleware->redirectUsersTo(fn () => route('agenda'));
+
+        // Los webhooks vienen de afuera: sin CSRF, la firma es la autenticación
+        $middleware->validateCsrfTokens(except: ['webhooks/*']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
