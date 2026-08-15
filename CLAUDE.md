@@ -12,6 +12,21 @@ El producto resuelve tres dolores concretos que hoy se resuelven mal en un grupo
 
 No es una red social ni un crowdfunding. Es una herramienta operativa semanal.
 
+## Datos legales del club (cliente cero)
+
+Documentación completa en `~/Desktop/Desktop_Mac/projects/Club de Futbol/Documentos/Final Documentation.pdf`
+(certificado de inscripción, încheiere judecătorească y extracto del Registrul Special).
+
+- Denominación legal: **ASOCIAȚIA SPORTIVĂ NEW CASTLE** (persona jurídica sin fines de lucro, O.G. 26/2000)
+- Inscripción: Registrul Special **115PJ / 14.10.2025**, Judecătoria Buftea (dosar 26089/94/2025, încheiere 10529 del 30.07.2025)
+- Sede: Str. Emil Racoviță nr. 27C, parter, ap. 2, Oraș Voluntari, județul Ilfov
+- Duración: indeterminada · Patrimonio inicial: 600 LEI
+- Conducción: Cristian Maximiliano Savino (**presidente**, representante legal), Sergio Felipe Quiroga Gualteros (vicepresidente), Fabian Andres Rodriguez Rodriguez (secretario)
+- Objeto: promoción y desarrollo del fútbol (Divizia a 5-a, seniors y juniors), afiliación a la FRF
+- Ojo: el CUI/CIF fiscal no figura en este PDF (se tramita en ANAF aparte) — hace falta para la activación en vivo de Stripe
+
+Estos son los datos que van en el onboarding real de Stripe (tipo: non-profit **constituită**) y en cualquier formulario legal.
+
 ## Reglas duras
 
 Estas no se negocian. Si algo en una tarea las contradice, pará y preguntá.
