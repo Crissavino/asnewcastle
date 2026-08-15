@@ -103,7 +103,12 @@ html, body { margin: 0; padding: 0; }
 .nc-sys { text-align: center; font-size: 11px; color: var(--stone); letter-spacing: .07em; padding: 4px 0 14px; text-transform: uppercase; font-weight: 600; }
 .nc-sys::before { content: '— '; color: var(--aqua-dk); }
 .nc-sys::after { content: ' —'; color: var(--aqua-dk); }
-.nc-composer { display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+/* el compositor queda siempre a la vista: pegado arriba de las tabs en
+   mobile, al borde de abajo en tablet/desktop */
+.nc-composer { display: flex; gap: 8px; padding: 12px 0 14px; border-top: 1px solid var(--line);
+  position: sticky; bottom: calc(57px + env(safe-area-inset-bottom)); z-index: 25;
+  background: var(--paper); }
+@media (min-width: 768px) { .nc-composer { bottom: 0; } }
 .nc-composer input { flex: 1; background: #fff; border: 1px solid var(--line); border-radius: 2px; padding: 11px 12px; color: var(--ink); font-family: 'Archivo', sans-serif; font-size: 14px; }
 .nc-composer input::placeholder { color: var(--stone); }
 
