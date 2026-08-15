@@ -18,7 +18,7 @@ Estas no se negocian. Si algo en una tarea las contradice, pará y preguntá.
 
 - **Todo query filtra por `club_id`.** Sin excepción. Un usuario puede pertenecer a varios clubes. Usar un global scope + middleware que resuelve el club activo, y tests que verifiquen que un usuario del club A no puede leer datos del club B.
 - **i18n key-value desde el día uno.** Inglés (obligatorio, es el fallback), rumano y español. Diccionarios en `lang/{en,ro,es}.json`, compartidos a React por props de Inertia con el helper `t()` de `resources/js/i18n.js`. Toda cadena de UI nueva entra en los tres archivos. El español es rioplatense: "vos", no "tú". La preferencia se guarda en `users.locale`; primera visita se detecta por `Accept-Language`.
-- **Mobile-first y solo mobile.** Diseñar para 380px. No hay layout de escritorio. Todo lo tocable, mínimo 44px de alto.
+- **Mobile-first.** Diseñar para 380px; todo lo tocable, mínimo 44px de alto. En escritorio NO hay layout alternativo: es la misma columna mobile centrada sobre un "escenario" del club (fondo oscuro con branding, hovers). Ninguna funcionalidad puede depender del viewport ancho.
 - **Nada que dependa del navegador.** Esta app se va a envolver en Capacitor. No usar `window.open`, ni navegación por URL bar, ni nada que asuma pestañas o barra de direcciones.
 - **Sesiones largas.** Un jugador se loguea una vez y no vuelve a loguearse en meses.
 - **No inventar features.** Si algo no está en las fases de abajo, no va.

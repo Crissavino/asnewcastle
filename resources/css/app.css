@@ -89,7 +89,7 @@ html, body { margin: 0; padding: 0; }
 .nc-table th { font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--stone); text-align: right; padding: 0 0 8px; font-weight: 700; }
 .nc-table th:nth-child(2) { text-align: left; }
 .nc-table td { padding: 9px 0; border-top: 1px solid var(--line); text-align: right; }
-.nc-table td:nth-child(2) { text-align: left; }
+.nc-table td:nth-child(2), .nc-table th:nth-child(2) { text-align: left; padding-left: 12px; }
 .nc-table tr.us td { background: rgba(210,34,51,.07); color: var(--red-dk); font-weight: 700; }
 .nc-table tr.us td:first-child { box-shadow: inset 4px 0 0 var(--red); }
 
@@ -173,5 +173,61 @@ html, body { margin: 0; padding: 0; }
 
 /* error de validación */
 .nc-error { font-size: 13px; color: var(--red-dk); margin-top: 8px; line-height: 1.4; }
+
+/* ------------------------------------------------------------------ */
+/* Escritorio: la app sigue siendo la columna mobile, pero apoyada     */
+/* sobre un escenario del club — noche de partido, no un fondo gris.  */
+/* ------------------------------------------------------------------ */
+
+@media (min-width: 768px) {
+  .nc-root {
+    padding: 40px 24px;
+    align-items: flex-start;
+    background:
+      repeating-linear-gradient(115deg, transparent 0 28px, rgba(210,34,51,.045) 28px 30px),
+      radial-gradient(1100px 700px at 68% -10%, #262726 0%, #171817 55%, #0e0f0e 100%);
+  }
+
+  /* wordmark gigante de fondo, tipografía de póster */
+  .nc-root::before {
+    content: 'A.S NEW CASTLE';
+    position: fixed; left: -8px; bottom: -3vh; z-index: 0;
+    font-family: 'Archivo Black', sans-serif; font-style: italic; text-transform: uppercase;
+    font-size: clamp(90px, 12vw, 190px); line-height: .82; letter-spacing: -.04em;
+    color: transparent; -webkit-text-stroke: 2px rgba(255,255,255,.07);
+    white-space: nowrap; pointer-events: none; user-select: none;
+  }
+
+  /* filete superior con los colores del club, de punta a punta */
+  .nc-root::after {
+    content: ''; position: fixed; top: 0; left: 0; right: 0; height: 6px; z-index: 40;
+    background: linear-gradient(90deg, var(--red) 0 40%, var(--ink) 40% 60%, var(--aqua) 60% 100%);
+    pointer-events: none;
+  }
+
+  .nc-app {
+    position: relative; z-index: 1;
+    min-height: calc(100vh - 80px);
+    border-radius: 4px; overflow: clip;
+    box-shadow: 18px 18px 0 rgba(0,0,0,.38), 0 0 0 1px rgba(255,255,255,.07);
+  }
+
+  .nc-sheet-inner { border-radius: 4px 4px 0 0; }
+}
+
+/* micro-interacciones solo donde hay puntero (desktop) */
+@media (hover: hover) {
+  .nc-btn:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+  .nc-btn.dark:hover:not(:disabled) { box-shadow: 4px 4px 0 var(--red); }
+  .nc-btn.ghost:hover:not(:disabled) { box-shadow: 4px 4px 0 rgba(18,18,18,.3); }
+  .nc-mini:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .nc-mini.solid:hover { background: var(--red-dk); border-color: var(--red-dk); }
+  .nc-tabs a:hover { color: var(--ink); }
+  .nc-tabs a.on:hover { color: var(--red); }
+  .nc-opt:hover { border-color: var(--ink); }
+  .nc-numgrid button:not(:disabled):hover { border-color: var(--ink); }
+  .nc-table tbody tr:hover td { background: rgba(18,18,18,.025); }
+  .nc-table tr.us:hover td { background: rgba(210,34,51,.1); }
+}
 
 @media (prefers-reduced-motion: reduce) { .nc-root *, .nc-root *::before { animation: none !important; transition: none !important; } }
