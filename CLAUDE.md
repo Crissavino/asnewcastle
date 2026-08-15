@@ -178,6 +178,11 @@ El núcleo del producto.
 
 **Criterio de aceptación:** un pago real de prueba en modo test acredita en la cuenta conectada del club, no en la de la plataforma.
 
+Webhook de Stripe: los cargos son directos en la cuenta conectada, así que el evento
+`checkout.session.completed` llega **desde la cuenta conectada**. En producción el endpoint
+se crea con "listen to events on **connected** accounts"; en local el túnel es
+`stripe listen --forward-connect-to 127.0.0.1:8000/webhooks/stripe` (no `--forward-to`).
+
 Pagos con billeteras: el Checkout hosteado de Stripe muestra **Apple Pay y Google Pay solo**
 (métodos dinámicos — no hardcodear `payment_method_types`). Ojo para la fase Capacitor: el
 checkout debe abrirse en el **navegador del sistema** (SFSafariViewController / Custom Tabs),
