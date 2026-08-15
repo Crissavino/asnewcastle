@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { CalendarDays, ListOrdered, MessageSquare, Wallet, User } from 'lucide-react';
 import Crest from '../Components/Crest';
+import Kit from '../Components/Kit';
 import { useTranslations } from '../i18n';
 
 const TABS = [
@@ -11,34 +12,62 @@ const TABS = [
     { key: 'perfil', route: 'perfil', Icon: User },
 ];
 
-export default function AppLayout({ tab, eyebrow, children }) {
+function NavLinks({ iconSize }) {
     const { t } = useTranslations();
     const { url } = usePage();
+
+    return TABS.map(({ key, route: name, Icon }) => (
+        <Link key={key} href={route(name)} className={url.startsWith(`/${name}`) ? 'on' : ''}>
+            <Icon size={iconSize} strokeWidth={2} />
+            {t(`tabs.${key}`)}
+        </Link>
+    ));
+}
+
+export default function AppLayout({ tab, eyebrow, children }) {
+    const { t } = useTranslations();
+    const { auth, club, member } = usePage().props;
 
     const title = t(`tabs.${tab}`);
 
     return (
         <div className="nc-root">
             <Head title={title} />
-            <div className="nc-app">
-                <header className="nc-top nc-pinstripe">
-                    <Crest size={38} />
-                    <div>
-                        <div className="nc-eyebrow">{eyebrow ?? t(`headers.${tab}_eyebrow`)}</div>
-                        <h1 className="nc-display nc-h1">{title}</h1>
+            <div className="nc-shell">
+                {/* Riel / sidebar: solo tablet y desktop */}
+                <aside className="nc-side">
+                    <div className="nc-side-brand">
+                        <Crest size={40} />
+                        <div>
+                            <div className="nc-side-name">{club?.name}</div>
+                            <div className="nc-side-league">{club?.league}</div>
+                        </div>
                     </div>
-                </header>
+                    <nav>
+                        <NavLinks iconSize={19} />
+                    </nav>
+                    <div className="nc-side-user">
+                        {member?.shirt_number != null && <Kit n={member.shirt_number} size="sm" />}
+                        <span>{auth.user?.name}</span>
+                    </div>
+                </aside>
 
-                <main className="nc-body">{children}</main>
+                <div className="nc-main">
+                    <header className="nc-top nc-pinstripe">
+                        <Crest size={38} />
+                        <div>
+                            <div className="nc-eyebrow">{eyebrow ?? t(`headers.${tab}_eyebrow`)}</div>
+                            <h1 className="nc-display nc-h1">{title}</h1>
+                        </div>
+                    </header>
 
-                <nav className="nc-tabs">
-                    {TABS.map(({ key, route: name, Icon }) => (
-                        <Link key={key} href={route(name)} className={url.startsWith(`/${name}`) ? 'on' : ''}>
-                            <Icon size={18} strokeWidth={2} />
-                            {t(`tabs.${key}`)}
-                        </Link>
-                    ))}
-                </nav>
+                    <main className={`nc-body page-${tab}`}>{children}</main>
+
+                    {/* Tabs de abajo: solo mobile */}
+                    <nav className="nc-tabs">
+                        <NavLinks iconSize={18} />
+                    </nav>
+                </div>
             </div>
         </div>
     );

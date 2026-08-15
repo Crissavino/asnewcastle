@@ -224,7 +224,7 @@ export default function Agenda({ events, roster_count }) {
             )}
 
             {events.length === 0 && (
-                <div className="nc-card">
+                <div className="nc-card" style={{ gridColumn: '1 / -1' }}>
                     <p className="nc-meta">{t('empty.agenda')}</p>
                 </div>
             )}

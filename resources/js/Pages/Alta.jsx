@@ -106,7 +106,7 @@ export default function Alta({ taken, positions, feet, slots, max_number, name }
     };
 
     return (
-        <div className="nc-root">
+        <div className="nc-root nc-stage">
             <Head title={t('alta.name_q')} />
             <div className="nc-app">
                 <div className="nc-step">

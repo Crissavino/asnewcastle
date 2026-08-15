@@ -27,7 +27,7 @@ export default function Telefono({ countries }) {
     };
 
     return (
-        <div className="nc-root">
+        <div className="nc-root nc-stage">
             <Head title={t('auth.phone_title')} />
             <div className="nc-app">
                 <div className="nc-step">

@@ -175,21 +175,34 @@ html, body { margin: 0; padding: 0; }
 .nc-error { font-size: 13px; color: var(--red-dk); margin-top: 8px; line-height: 1.4; }
 
 /* ------------------------------------------------------------------ */
-/* Escritorio: la app sigue siendo la columna mobile, pero apoyada     */
-/* sobre un escenario del club — noche de partido, no un fondo gris.  */
+/* Responsive real: mobile = app con tabs abajo · tablet = riel de     */
+/* íconos al costado · desktop = web con sidebar completo y grilla.    */
+/* Las pantallas de entrada (.nc-stage: login, código, alta) quedan    */
+/* como tarjeta centrada sobre el escenario oscuro del club.           */
 /* ------------------------------------------------------------------ */
 
+/* shell: la app con navegación; en mobile es idéntica a .nc-app */
+.nc-shell { width: 100%; max-width: 430px; min-height: 100vh; background: var(--paper);
+  display: flex; flex-direction: column; position: relative; box-shadow: 0 0 0 1px var(--line); }
+.nc-side { display: none; }
+.nc-main { flex: 1; display: flex; flex-direction: column; min-height: 100vh; min-width: 0; }
+
 @media (min-width: 768px) {
-  .nc-root {
-    padding: 40px 24px;
-    align-items: flex-start;
+  /* filete superior con los colores del club, en todas las pantallas */
+  .nc-root::after {
+    content: ''; position: fixed; top: 0; left: 0; right: 0; height: 6px; z-index: 50;
+    background: linear-gradient(90deg, var(--red) 0 40%, var(--ink) 40% 60%, var(--aqua) 60% 100%);
+    pointer-events: none;
+  }
+
+  /* --- escenario oscuro: solo entrada/alta --- */
+  .nc-root.nc-stage {
+    padding: 40px 24px; align-items: flex-start;
     background:
       repeating-linear-gradient(115deg, transparent 0 28px, rgba(210,34,51,.045) 28px 30px),
       radial-gradient(1100px 700px at 68% -10%, #262726 0%, #171817 55%, #0e0f0e 100%);
   }
-
-  /* wordmark gigante de fondo, tipografía de póster */
-  .nc-root::before {
+  .nc-stage::before {
     content: 'A.S NEW CASTLE';
     position: fixed; left: -8px; bottom: -3vh; z-index: 0;
     font-family: 'Archivo Black', sans-serif; font-style: italic; text-transform: uppercase;
@@ -197,22 +210,69 @@ html, body { margin: 0; padding: 0; }
     color: transparent; -webkit-text-stroke: 2px rgba(255,255,255,.07);
     white-space: nowrap; pointer-events: none; user-select: none;
   }
-
-  /* filete superior con los colores del club, de punta a punta */
-  .nc-root::after {
-    content: ''; position: fixed; top: 0; left: 0; right: 0; height: 6px; z-index: 40;
-    background: linear-gradient(90deg, var(--red) 0 40%, var(--ink) 40% 60%, var(--aqua) 60% 100%);
-    pointer-events: none;
-  }
-
-  .nc-app {
-    position: relative; z-index: 1;
-    min-height: calc(100vh - 80px);
+  .nc-stage .nc-app { position: relative; z-index: 1; min-height: calc(100vh - 80px);
     border-radius: 4px; overflow: clip;
-    box-shadow: 18px 18px 0 rgba(0,0,0,.38), 0 0 0 1px rgba(255,255,255,.07);
-  }
+    box-shadow: 18px 18px 0 rgba(0,0,0,.38), 0 0 0 1px rgba(255,255,255,.07); }
+  .nc-stage .nc-step { min-height: calc(100vh - 80px); }
 
-  .nc-sheet-inner { border-radius: 4px 4px 0 0; }
+  /* --- tablet en adelante: riel lateral, chau tabs de abajo --- */
+  .nc-shell { max-width: none; flex-direction: row; box-shadow: none; }
+  .nc-tabs { display: none; }
+
+  .nc-side { display: flex; flex-direction: column; width: 92px; flex: 0 0 auto;
+    position: sticky; top: 0; height: 100vh;
+    background: repeating-linear-gradient(90deg, transparent 0 9px, rgba(255,255,255,.045) 9px 11px), var(--ink);
+    color: #fff; border-right: 3px solid var(--red); }
+  .nc-side-brand { display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 22px 10px 16px; border-bottom: 1px solid rgba(255,255,255,.09); }
+  .nc-side-name, .nc-side-league { display: none; }
+  .nc-side nav { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 14px 0; }
+  .nc-side nav a { display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 13px 6px; color: rgba(255,255,255,.6); text-decoration: none;
+    font-size: 8.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+    font-family: 'Archivo', sans-serif;
+    border-left: 3px solid transparent; transition: color .12s, background .12s; }
+  .nc-side nav a.on { color: #fff; border-left-color: var(--red);
+    background: linear-gradient(90deg, rgba(210,34,51,.3), transparent); }
+  .nc-side-user { display: flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 16px 10px; border-top: 1px solid rgba(255,255,255,.09); }
+  .nc-side-user span { display: none; }
+
+  .nc-main { background: var(--paper); }
+  .nc-top { padding: 16px 28px 15px; }
+  /* el escudo ya vive en el riel; !important porque el <img> trae display inline */
+  .nc-top > img { display: none !important; }
+  .nc-body { width: 100%; max-width: 780px; margin: 0 auto; padding: 26px 28px 64px;
+    /* césped más sutil en pantallas grandes para que no parezcan filas */
+    background: repeating-linear-gradient(0deg, transparent 0 72px, rgba(18,18,18,.013) 72px 144px); }
+
+  /* los sheets dejan de ser bottom-sheet: modal centrado con sombra dura */
+  .nc-sheet { align-items: center; padding: 26px; }
+  .nc-sheet-inner { max-width: 480px; border-radius: 4px; box-shadow: 14px 14px 0 rgba(0,0,0,.35); }
+  .nc-sheet-inner:not(.plain)::before { display: none; }
+}
+
+/* --- desktop: sidebar completo con marca y contenido en grilla --- */
+@media (min-width: 1100px) {
+  .nc-side { width: 248px; }
+  .nc-side-brand { flex-direction: row; justify-content: flex-start; gap: 12px; padding: 22px 18px; }
+  .nc-side-name { display: block; font-family: 'Archivo Black', sans-serif; font-style: italic;
+    text-transform: uppercase; font-size: 15px; line-height: 1; letter-spacing: -.01em; }
+  .nc-side-league { display: block; font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase;
+    color: rgba(255,255,255,.5); font-weight: 700; margin-top: 4px; }
+  .nc-side nav a { flex-direction: row; gap: 12px; padding: 12px 18px; font-size: 11px; }
+  .nc-side-user { justify-content: flex-start; padding-left: 18px; }
+  .nc-side-user span { display: block; font-size: 12px; font-weight: 600; }
+
+  .nc-h1 { font-size: 30px; }
+  .nc-top { padding: 20px 40px 18px; }
+
+  .nc-body { max-width: 1100px; padding: 34px 40px 72px;
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; align-content: start; }
+  .nc-body > * { min-width: 0; }
+  .nc-body > .nc-btn, .nc-body > p { grid-column: 1 / -1; }
+  /* tabla y vestuario se leen mejor en una sola columna cómoda */
+  .nc-body.page-tabla, .nc-body.page-vestuario { display: block; max-width: 780px; }
 }
 
 /* micro-interacciones solo donde hay puntero (desktop) */

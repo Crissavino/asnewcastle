@@ -16,7 +16,7 @@ export default function Codigo({ phone_masked }) {
     };
 
     return (
-        <div className="nc-root">
+        <div className="nc-root nc-stage">
             <Head title={t('auth.code_title')} />
             <div className="nc-app">
                 <div className="nc-step">

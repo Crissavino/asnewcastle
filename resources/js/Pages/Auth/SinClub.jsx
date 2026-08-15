@@ -6,7 +6,7 @@ export default function SinClub() {
     const { t } = useTranslations();
 
     return (
-        <div className="nc-root">
+        <div className="nc-root nc-stage">
             <Head title={t('auth.no_club_title')} />
             <div className="nc-app">
                 <div className="nc-step" style={{ justifyContent: 'center', textAlign: 'center' }}>
