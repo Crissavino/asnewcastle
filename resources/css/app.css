@@ -119,17 +119,18 @@ html, body { margin: 0; padding: 0; }
 .nc-lightbox img { max-width: 100%; max-height: 100%; border-radius: 2px; }
 .nc-icon-btn.ghost { background: #fff; border: 1px solid var(--line); color: var(--stone); }
 
-/* botón flotante de la encuesta: queda a la vista mientras scrolleás el chat */
-.nc-fab { position: sticky; bottom: 96px; align-self: flex-end; z-index: 30;
+/* botón flotante de la encuesta: a la izquierda y despegado del compositor,
+   así no tapa los mensajes propios (que van a la derecha) */
+.nc-fab { position: sticky; bottom: 132px; align-self: flex-start; z-index: 30;
   width: 54px; height: 54px; border-radius: 50%; border: none; cursor: pointer;
   background: var(--red); color: #fff; display: flex; align-items: center; justify-content: center;
-  box-shadow: 3px 3px 0 var(--ink); margin: -54px 2px 10px 0; }
+  box-shadow: 3px 3px 0 var(--ink); margin: -54px 0 10px 2px; }
 .nc-fab::after { content: ''; position: absolute; inset: -5px; border-radius: 50%;
   border: 2px solid rgba(210,34,51,.55); animation: nc-ping 2s ease-out infinite; pointer-events: none; }
 @keyframes nc-ping { 0% { transform: scale(.92); opacity: .9 } 70%, 100% { transform: scale(1.32); opacity: 0 } }
 .nc-fab > b { position: absolute; top: -4px; right: -6px; background: var(--aqua); color: var(--ink);
   font-size: 11px; font-weight: 700; border-radius: 2px; padding: 1px 6px; }
-@media (min-width: 768px) { .nc-fab { bottom: 28px; } }
+@media (min-width: 768px) { .nc-fab { bottom: 110px; } }
 
 /* votación post-partido: figura + cómo los viste */
 .nc-poll-row { padding: 10px 0 12px; border-top: 1px solid var(--line); }
