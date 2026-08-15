@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Webhooks;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\User;
+use App\Services\SystemMessages;
 use App\Services\WhatsApp\EventMessenger;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -46,7 +47,7 @@ class TwilioWebhookController extends Controller
             return $this->ok();
         }
 
-        $event->attendances()->updateOrCreate(
+        $attendance = $event->attendances()->updateOrCreate(
             ['member_id' => $member->id],
             [
                 'status' => $status,
@@ -54,6 +55,10 @@ class TwilioWebhookController extends Controller
                 'source' => 'whatsapp',
             ],
         );
+
+        if ($attendance->status === 'in' && ($attendance->wasRecentlyCreated || $attendance->wasChanged('status'))) {
+            app(SystemMessages::class)->confirmed($member, $event);
+        }
 
         $confirmed = $event->attendances()->where('status', 'in')->count();
         $messenger->sendReplyAck($member, $status, $confirmed);

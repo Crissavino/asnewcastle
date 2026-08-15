@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SendEventConvocation;
 use App\Models\Event;
+use App\Services\SystemMessages;
 use App\Support\CurrentClub;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -101,6 +102,8 @@ class AgendaController extends Controller
 
         // La convocatoria sale por WhatsApp a todo el plantel
         SendEventConvocation::dispatch($event);
+
+        app(SystemMessages::class)->eventCreated($event);
 
         return redirect()->route('agenda');
     }

@@ -123,5 +123,16 @@
     "cuota.trust": "Banii intră în contul asociației, nu într-un cont personal.",
     "cuota.stripe_title": "Plăți online",
     "cuota.stripe_body": "Activează plățile prin Stripe ca lotul să plătească cotizația din aplicație. Banii merg direct în contul clubului.",
-    "cuota.stripe_button": "Activează plățile"
+    "cuota.stripe_button": "Activează plățile",
+    "vestuario.placeholder": "Scrie-i echipei",
+    "vestuario.you": "tu",
+    "vestuario.players": ":count jucători",
+    "system.event_created_match": "Meci nou cu :opponent — :date",
+    "system.event_created_training": "Antrenament nou — :date",
+    "system.confirmed_match": ":name vine la meciul cu :opponent",
+    "system.confirmed_training": ":name vine la antrenament",
+    "tabla.team": "Echipă",
+    "tabla.pj": "M",
+    "tabla.dg": "DG",
+    "tabla.pts": "Pct"
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\CuotaController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\StripeConnectController;
+use App\Http\Controllers\VestuarioController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Controllers\Webhooks\TwilioWebhookController;
 use App\Http\Middleware\VerifyTwilioSignature;
@@ -64,8 +65,11 @@ Route::middleware('auth')->group(function () {
             Route::post('/eventos', [AgendaController::class, 'store'])->name('eventos.crear');
             Route::post('/eventos/{event}/recordar', [AgendaController::class, 'remind'])->name('eventos.recordar');
             Route::post('/eventos/{event}/asistencia', [AttendanceController::class, 'store'])->name('asistencia');
-            Route::get('/tabla', fn () => Inertia::render('Tabla'))->name('tabla');
-            Route::get('/vestuario', fn () => Inertia::render('Vestuario'))->name('vestuario');
+            Route::get('/tabla', fn () => Inertia::render('Tabla', [
+                'standings' => app(\App\Support\CurrentClub::class)->club()->standings_json,
+            ]))->name('tabla');
+            Route::get('/vestuario', [VestuarioController::class, 'show'])->name('vestuario');
+            Route::post('/vestuario', [VestuarioController::class, 'store'])->name('vestuario.enviar');
             Route::get('/cuota', [CuotaController::class, 'show'])->name('cuota');
             Route::post('/cuota/{due}/pagar', [CuotaController::class, 'pay'])->name('cuota.pagar');
             Route::post('/cuota/reclamar', [CuotaController::class, 'claim'])->name('cuota.reclamar');

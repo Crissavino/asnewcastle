@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Services\SystemMessages;
 use App\Support\CurrentClub;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,14 +23,20 @@ class AttendanceController extends Controller
             'status' => ['required', Rule::in(['in', 'maybe', 'out'])],
         ]);
 
-        $event->attendances()->updateOrCreate(
-            ['member_id' => app(CurrentClub::class)->member()->id],
+        $member = app(CurrentClub::class)->member();
+
+        $attendance = $event->attendances()->updateOrCreate(
+            ['member_id' => $member->id],
             [
                 'status' => $validated['status'],
                 'responded_at' => now(),
                 'source' => 'app',
             ],
         );
+
+        if ($attendance->status === 'in' && ($attendance->wasRecentlyCreated || $attendance->wasChanged('status'))) {
+            app(SystemMessages::class)->confirmed($member, $event);
+        }
 
         return back();
     }

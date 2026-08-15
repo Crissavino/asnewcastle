@@ -123,5 +123,16 @@
     "cuota.trust": "La plata entra a la cuenta de la asociación, no a una cuenta personal.",
     "cuota.stripe_title": "Cobros online",
     "cuota.stripe_body": "Activá los cobros con Stripe para que el plantel pague la cuota desde la app. La plata va directo a la cuenta del club.",
-    "cuota.stripe_button": "Activar cobros"
+    "cuota.stripe_button": "Activar cobros",
+    "vestuario.placeholder": "Escribile al equipo",
+    "vestuario.you": "vos",
+    "vestuario.players": ":count jugadores",
+    "system.event_created_match": "Nuevo partido vs :opponent — :date",
+    "system.event_created_training": "Nuevo entrenamiento — :date",
+    "system.confirmed_match": ":name confirmó para el partido vs :opponent",
+    "system.confirmed_training": ":name confirmó para el entrenamiento",
+    "tabla.team": "Equipo",
+    "tabla.pj": "PJ",
+    "tabla.dg": "DG",
+    "tabla.pts": "Pts"
 }
