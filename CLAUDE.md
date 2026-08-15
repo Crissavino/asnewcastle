@@ -178,6 +178,11 @@ El núcleo del producto.
 
 **Criterio de aceptación:** un pago real de prueba en modo test acredita en la cuenta conectada del club, no en la de la plataforma.
 
+Pagos con billeteras: el Checkout hosteado de Stripe muestra **Apple Pay y Google Pay solo**
+(métodos dinámicos — no hardcodear `payment_method_types`). Ojo para la fase Capacitor: el
+checkout debe abrirse en el **navegador del sistema** (SFSafariViewController / Custom Tabs),
+nunca dentro del webview, porque Apple Pay no funciona en webviews.
+
 Ojo con esto: **la plata nunca pasa por una cuenta de la plataforma.** Cada club cobra en su propia cuenta conectada. Si el diseño te lleva a que los fondos toquen una cuenta central, pará y avisá — eso convierte a la plataforma en intermediario de pagos y cambia el marco legal.
 
 ### Fase 5 — Vestuario
