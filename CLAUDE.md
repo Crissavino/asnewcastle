@@ -170,7 +170,10 @@ Chat simple del equipo.
 
 - Polling cada 8 segundos. **No** WebSockets, no Reverb, no Echo en v1.
 - Mensajes del sistema automáticos cuando alguien confirma o se crea un evento
-- Sin adjuntos, sin reacciones, sin hilos, sin edición
+- Fotos en el chat (disco público, sin galería aparte). Sin reacciones, sin hilos, sin edición
+- Post-partido (2hs después, ventana de 48hs): votación de figura entre los que fueron,
+  y calificación ternaria anónima de cada compañero (le costó / cumplió / crack —
+  la más baja nunca es hiriente). Sin puntajes numéricos ni estadísticas acumuladas.
 
 ## Lo que NO va en v1
 

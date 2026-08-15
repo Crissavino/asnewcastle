@@ -15,6 +15,7 @@ class Message extends Model
         'club_id',
         'member_id',
         'body',
+        'attachment_path',
         'is_system',
     ];
 

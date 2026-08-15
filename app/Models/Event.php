@@ -25,6 +25,7 @@ class Event extends Model
         'notes',
         'notified_at',
         'reminded_at',
+        'mvp_opened_at',
     ];
 
     protected function casts(): array
@@ -34,6 +35,7 @@ class Event extends Model
             'starts_at' => 'datetime',
             'notified_at' => 'datetime',
             'reminded_at' => 'datetime',
+            'mvp_opened_at' => 'datetime',
         ];
     }
 
@@ -55,5 +57,29 @@ class Event extends Model
     public function isMatch(): bool
     {
         return $this->kind === 'match';
+    }
+
+    public function mvpVotes(): HasMany
+    {
+        return $this->hasMany(MvpVote::class);
+    }
+
+    public function playerRatings(): HasMany
+    {
+        return $this->hasMany(PlayerRating::class);
+    }
+
+    /** Un partido se considera terminado 2 horas después del arranque. */
+    public function isFinished(): bool
+    {
+        return $this->starts_at->copy()->addHours(2)->isPast();
+    }
+
+    /** La votación de figura queda abierta 48hs desde el final del partido. */
+    public function mvpPollOpen(): bool
+    {
+        return $this->mvp_opened_at !== null
+            && $this->isFinished()
+            && $this->starts_at->copy()->addHours(50)->isFuture();
     }
 }

@@ -134,5 +134,15 @@
     "tabla.team": "Echipă",
     "tabla.pj": "M",
     "tabla.dg": "DG",
-    "tabla.pts": "Pct"
+    "tabla.pts": "Pct",
+    "vestuario.photo": "Trimite o poză",
+    "vestuario.photo_ready": "Poza e gata de trimis",
+    "vestuario.mvp_title": "Omul meciului",
+    "vestuario.mvp_hint": "Atinge steaua ca să votezi omul meciului cu :opponent. Mai jos, spune cum a jucat fiecare — nimeni nu vede cine ce a pus.",
+    "vestuario.mvp_votes": ":count voturi",
+    "vestuario.mvp_not_candidate": "Jucătorul ăla n-a fost la meci.",
+    "rate.1": "Zi grea",
+    "rate.2": "Solid",
+    "rate.3": "Vedetă",
+    "system.mvp_open": "S-a terminat meciul cu :opponent — votează omul meciului în vestiar"
 }

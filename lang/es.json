@@ -134,5 +134,15 @@
     "tabla.team": "Equipo",
     "tabla.pj": "PJ",
     "tabla.dg": "DG",
-    "tabla.pts": "Pts"
+    "tabla.pts": "Pts",
+    "vestuario.photo": "Mandar una foto",
+    "vestuario.photo_ready": "Foto lista para mandar",
+    "vestuario.mvp_title": "Figura del partido",
+    "vestuario.mvp_hint": "Tocá la estrella para votar a la figura del partido vs :opponent. Abajo, decí cómo viste a cada uno — nadie ve quién puso qué.",
+    "vestuario.mvp_votes": ":count votos",
+    "vestuario.mvp_not_candidate": "Ese jugador no estuvo en el partido.",
+    "rate.1": "Le costó",
+    "rate.2": "Cumplió",
+    "rate.3": "Crack",
+    "system.mvp_open": "Terminó el partido vs :opponent — votá a la figura en el vestuario"
 }

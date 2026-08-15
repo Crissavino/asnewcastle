@@ -27,6 +27,18 @@ class SystemMessages
         ]);
     }
 
+    public function mvpOpened(Event $event): void
+    {
+        Message::create([
+            'club_id' => $event->club_id,
+            'is_system' => true,
+            'body' => json_encode([
+                'key' => 'system.mvp_open',
+                'params' => array_filter(['opponent' => $event->opponent]),
+            ]),
+        ]);
+    }
+
     public function confirmed(Member $member, Event $event): void
     {
         Message::create([

@@ -6,6 +6,8 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\InviteController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\CuotaController;
+use App\Http\Controllers\MvpVoteController;
+use App\Http\Controllers\PlayerRatingController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\VestuarioController;
@@ -70,6 +72,8 @@ Route::middleware('auth')->group(function () {
             ]))->name('tabla');
             Route::get('/vestuario', [VestuarioController::class, 'show'])->name('vestuario');
             Route::post('/vestuario', [VestuarioController::class, 'store'])->name('vestuario.enviar');
+            Route::post('/eventos/{event}/figura', [MvpVoteController::class, 'store'])->name('figura.votar');
+            Route::post('/eventos/{event}/puntaje', [PlayerRatingController::class, 'store'])->name('puntaje.votar');
             Route::get('/cuota', [CuotaController::class, 'show'])->name('cuota');
             Route::post('/cuota/{due}/pagar', [CuotaController::class, 'pay'])->name('cuota.pagar');
             Route::post('/cuota/reclamar', [CuotaController::class, 'claim'])->name('cuota.reclamar');

@@ -1,6 +1,6 @@
-import { router, useForm } from '@inertiajs/react';
-import { Send } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { router, useForm, usePage } from '@inertiajs/react';
+import { Camera, Send, Star, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
 import { useTranslations } from '../i18n';
@@ -8,16 +8,79 @@ import { useTranslations } from '../i18n';
 const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB' };
 const POLL_MS = 8000;
 
-export default function Vestuario({ messages, roster_count }) {
+function MvpPoll({ mvp }) {
+    const { t } = useTranslations();
+    const { member } = usePage().props;
+
+    const voteFigura = (memberId) => {
+        router.post(route('figura.votar', mvp.event_id), { member_id: memberId }, { preserveScroll: true });
+    };
+
+    const rate = (memberId, rating) => {
+        router.post(route('puntaje.votar', mvp.event_id), { member_id: memberId, rating }, { preserveScroll: true });
+    };
+
+    const maxVotes = Math.max(...mvp.candidates.map((c) => c.votes), 1);
+
+    return (
+        <div className="nc-card match" style={{ marginBottom: 16 }}>
+            <div className="nc-label">{t('vestuario.mvp_title')}</div>
+            <p className="nc-meta" style={{ marginTop: 6 }}>{t('vestuario.mvp_hint', { opponent: mvp.opponent })}</p>
+
+            <div style={{ marginTop: 10 }}>
+                {mvp.candidates.map((c) => (
+                    <div key={c.id} className="nc-poll-row">
+                        <div className="nc-poll-head">
+                            <Kit n={c.shirt_number} size="sm" />
+                            <span className="nc-poll-name">{c.name}</span>
+                            <button
+                                type="button"
+                                className={`nc-star ${mvp.my_vote === c.id ? 'on' : ''}`}
+                                onClick={() => voteFigura(c.id)}
+                                aria-label={t('vestuario.mvp_title')}
+                            >
+                                <Star size={16} fill={mvp.my_vote === c.id ? 'currentColor' : 'none'} />
+                                <b className="nc-num">{c.votes}</b>
+                            </button>
+                        </div>
+                        <div className="nc-poll-bar">
+                            <i style={{ width: `${(c.votes / maxVotes) * 100}%` }} />
+                        </div>
+                        {c.id !== member?.id && (
+                            <div className="nc-rate">
+                                {[1, 2, 3].map((r) => (
+                                    <button
+                                        key={r}
+                                        type="button"
+                                        className={c.my_rating === r ? 'on' : ''}
+                                        onClick={() => rate(c.id, r)}
+                                    >
+                                        {t(`rate.${r}`)}
+                                        {c.ratings[r - 1] > 0 && <b className="nc-num">{c.ratings[r - 1]}</b>}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+export default function Vestuario({ messages, mvp, roster_count }) {
     const { t, locale } = useTranslations();
     const intl = INTL_LOCALES[locale] ?? 'en-GB';
     const end = useRef(null);
-    const { data, setData, post, processing, reset } = useForm({ body: '' });
+    const fileRef = useRef(null);
+    const [preview, setPreview] = useState(null);
+    const [lightbox, setLightbox] = useState(null);
+    const { data, setData, post, processing, reset } = useForm({ body: '', image: null });
 
-    // Polling cada 8 segundos: solo recarga los mensajes, sin tocar el input
+    // Polling cada 8 segundos: refresca mensajes y votación, sin tocar el input
     useEffect(() => {
         const id = setInterval(() => {
-            router.reload({ only: ['messages'] });
+            router.reload({ only: ['messages', 'mvp'] });
         }, POLL_MS);
         return () => clearInterval(id);
     }, []);
@@ -26,12 +89,29 @@ export default function Vestuario({ messages, roster_count }) {
         end.current?.scrollIntoView({ block: 'end' });
     }, [messages]);
 
+    const pickImage = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setData('image', file);
+        setPreview(URL.createObjectURL(file));
+    };
+
+    const clearImage = () => {
+        setData('image', null);
+        setPreview(null);
+        if (fileRef.current) fileRef.current.value = '';
+    };
+
     const send = (e) => {
         e.preventDefault();
-        if (!data.body.trim()) return;
+        if (!data.body.trim() && !data.image) return;
         post(route('vestuario.enviar'), {
+            forceFormData: true,
             preserveScroll: true,
-            onSuccess: () => reset(),
+            onSuccess: () => {
+                reset();
+                clearImage();
+            },
         });
     };
 
@@ -50,6 +130,8 @@ export default function Vestuario({ messages, roster_count }) {
     return (
         <AppLayout tab="vestuario" eyebrow={t('vestuario.players', { count: roster_count })}>
             <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+                {mvp && <MvpPoll mvp={mvp} />}
+
                 <div style={{ flex: 1 }}>
                     {messages.map((m) =>
                         m.system ? (
@@ -58,7 +140,17 @@ export default function Vestuario({ messages, roster_count }) {
                             <div key={m.id} className={`nc-msg ${m.mine ? 'mine' : ''}`}>
                                 <Kit n={m.author?.shirt_number} size="sm" />
                                 <div>
-                                    <div className="nc-bubble">{m.body}</div>
+                                    <div className="nc-bubble">
+                                        {m.attachment && (
+                                            <img
+                                                className="nc-photo"
+                                                src={m.attachment}
+                                                alt=""
+                                                onClick={() => setLightbox(m.attachment)}
+                                            />
+                                        )}
+                                        {m.body}
+                                    </div>
                                     <div className="nc-meta" style={{ fontSize: 11, marginTop: 3, textAlign: m.mine ? 'right' : 'left' }}>
                                         {m.mine ? t('vestuario.you') : m.author?.name} · {timeOf(m.at)}
                                     </div>
@@ -69,7 +161,19 @@ export default function Vestuario({ messages, roster_count }) {
                     <div ref={end} />
                 </div>
 
+                {preview && (
+                    <div className="nc-preview">
+                        <img src={preview} alt="" />
+                        <span className="nc-meta">{t('vestuario.photo_ready')}</span>
+                        <button type="button" onClick={clearImage} aria-label="X"><X size={15} /></button>
+                    </div>
+                )}
+
                 <form className="nc-composer" onSubmit={send}>
+                    <input type="file" accept="image/*" hidden ref={fileRef} onChange={pickImage} />
+                    <button type="button" className="nc-icon-btn ghost" onClick={() => fileRef.current?.click()} aria-label={t('vestuario.photo')}>
+                        <Camera size={17} />
+                    </button>
                     <input
                         value={data.body}
                         onChange={(e) => setData('body', e.target.value)}
@@ -81,6 +185,12 @@ export default function Vestuario({ messages, roster_count }) {
                     </button>
                 </form>
             </div>
+
+            {lightbox && (
+                <div className="nc-lightbox" onClick={() => setLightbox(null)}>
+                    <img src={lightbox} alt="" />
+                </div>
+            )}
         </AppLayout>
     );
 }

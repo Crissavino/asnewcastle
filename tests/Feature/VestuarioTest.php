@@ -5,6 +5,8 @@ use App\Models\Event;
 use App\Models\Member;
 use App\Models\Message;
 use App\Services\WhatsApp\WhatsAppChannel;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\FakeWhatsAppChannel;
 
@@ -107,6 +109,37 @@ it('la confirmación por WhatsApp también deja mensaje del sistema', function (
     $this->withHeaders(['X-Twilio-Signature' => $sig])->post('/webhooks/twilio', $params)->assertOk();
 
     expect(Message::withoutGlobalScopes()->where('is_system', true)->count())->toBe(1);
+});
+
+it('manda una foto, con o sin texto', function () {
+    Storage::fake('public');
+    $member = Member::factory()->create();
+
+    $this->actingAs($member->user)
+        ->post('/vestuario', ['image' => UploadedFile::fake()->image('festejo.jpg', 1200, 900)])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    $message = Message::withoutGlobalScopes()->first();
+    expect($message->attachment_path)->not->toBeNull();
+    Storage::disk('public')->assertExists($message->attachment_path);
+
+    $this->actingAs($member->user)
+        ->get('/vestuario')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('messages.0.attachment', fn ($url) => str_contains($url, '/storage/vestuario/'))
+        );
+});
+
+it('rechaza archivos que no son imagen', function () {
+    Storage::fake('public');
+    $member = Member::factory()->create();
+
+    $this->actingAs($member->user)
+        ->post('/vestuario', ['image' => UploadedFile::fake()->create('virus.pdf', 100, 'application/pdf')])
+        ->assertSessionHasErrors('image');
+
+    expect(Message::withoutGlobalScopes()->count())->toBe(0);
 });
 
 it('valida el mensaje: ni vacío ni de 500+ caracteres', function () {

@@ -107,6 +107,35 @@ html, body { margin: 0; padding: 0; }
 .nc-composer input { flex: 1; background: #fff; border: 1px solid var(--line); border-radius: 2px; padding: 11px 12px; color: var(--ink); font-family: 'Archivo', sans-serif; font-size: 14px; }
 .nc-composer input::placeholder { color: var(--stone); }
 
+/* fotos en el chat */
+.nc-photo { display: block; max-width: 100%; max-height: 260px; border-radius: 2px; margin: 2px 0 6px; cursor: pointer; }
+.nc-bubble .nc-photo:only-child { margin-bottom: 0; }
+.nc-preview { display: flex; align-items: center; gap: 10px; padding: 8px 0 0; }
+.nc-preview img { width: 42px; height: 42px; object-fit: cover; border-radius: 2px; border: 1px solid var(--line); }
+.nc-preview button { margin-left: auto; background: none; border: 1px solid var(--line); border-radius: 2px;
+  width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--stone); }
+.nc-lightbox { position: fixed; inset: 0; z-index: 80; background: rgba(18,18,18,.92);
+  display: flex; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; }
+.nc-lightbox img { max-width: 100%; max-height: 100%; border-radius: 2px; }
+.nc-icon-btn.ghost { background: #fff; border: 1px solid var(--line); color: var(--stone); }
+
+/* votación post-partido: figura + cómo los viste */
+.nc-poll-row { padding: 10px 0 12px; border-top: 1px solid var(--line); }
+.nc-poll-head { display: flex; align-items: center; gap: 10px; }
+.nc-poll-name { font-size: 14px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nc-star { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--line);
+  border-radius: 2px; padding: 7px 10px; cursor: pointer; color: var(--stone); font-size: 13px; }
+.nc-star.on { background: var(--red); border-color: var(--red); color: #fff; }
+.nc-poll-bar { height: 4px; background: transparent; margin: 8px 0 0; border-radius: 2px; overflow: hidden; }
+.nc-poll-bar i { display: block; height: 100%; background: rgba(138,212,216,.7); transition: width .25s; }
+.nc-rate { display: flex; gap: 6px; margin-top: 9px; }
+.nc-rate button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 4px; background: #fff; border: 1px solid var(--line); border-radius: 2px; cursor: pointer;
+  color: var(--stone); font-family: 'Archivo', sans-serif; font-size: 10.5px; font-weight: 700;
+  letter-spacing: .05em; text-transform: uppercase; }
+.nc-rate button.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+.nc-rate button b { opacity: .75; font-weight: 700; }
+
 /* botones: sombra dura desplazada, como afiche de cancha */
 .nc-btn { width: 100%; padding: 14px; border: none; border-radius: 2px; cursor: pointer; background: var(--red); color: #fff;
   font-family: 'Archivo Black', sans-serif; text-transform: uppercase; letter-spacing: .04em; font-size: 14px; font-style: italic;
