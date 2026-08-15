@@ -5,6 +5,9 @@ namespace App\Providers;
 use App\Services\Otp\LogOtpChannel;
 use App\Services\Otp\OtpChannel;
 use App\Services\Otp\TwilioOtpChannel;
+use App\Services\Stripe\RealStripeGateway;
+use App\Services\Stripe\StripeGateway;
+use Stripe\StripeClient;
 use App\Services\WhatsApp\LogWhatsAppChannel;
 use App\Services\WhatsApp\TwilioWhatsAppChannel;
 use App\Services\WhatsApp\WhatsAppChannel;
@@ -24,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return new LogOtpChannel();
+        });
+
+        $this->app->bind(StripeGateway::class, function () {
+            return new RealStripeGateway(new StripeClient(config('services.stripe.secret')));
         });
 
         $this->app->bind(WhatsAppChannel::class, function () {

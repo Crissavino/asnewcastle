@@ -22,6 +22,13 @@ return [
         'channel' => env('OTP_CHANNEL', 'twilio'),
     ],
 
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        // Comisión de la plataforma en basis points (100 = 1%)
+        'application_fee_bps' => (int) env('STRIPE_APPLICATION_FEE_BPS', 0),
+    ],
+
     'whatsapp' => [
         // Avisos del club (convocatorias, recordatorios, cuotas)
         'channel' => env('WHATSAPP_CHANNEL', env('OTP_CHANNEL', 'twilio')),

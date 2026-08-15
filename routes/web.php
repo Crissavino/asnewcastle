@@ -5,7 +5,10 @@ use App\Http\Controllers\AltaController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\InviteController;
 use App\Http\Controllers\Auth\OtpController;
+use App\Http\Controllers\CuotaController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\StripeConnectController;
+use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Controllers\Webhooks\TwilioWebhookController;
 use App\Http\Middleware\VerifyTwilioSignature;
 use App\Http\Middleware\EnsureProfileComplete;
@@ -37,6 +40,9 @@ Route::post('/webhooks/twilio', TwilioWebhookController::class)
     ->middleware(VerifyTwilioSignature::class)
     ->name('webhooks.twilio');
 
+// Webhook de Stripe: pagos de cuotas en las cuentas conectadas
+Route::post('/webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
+
 // Link de invitación firmado: funciona logueado o no
 Route::get('/invitacion/{club:slug}', [InviteController::class, 'accept'])
     ->middleware('signed')
@@ -60,7 +66,11 @@ Route::middleware('auth')->group(function () {
             Route::post('/eventos/{event}/asistencia', [AttendanceController::class, 'store'])->name('asistencia');
             Route::get('/tabla', fn () => Inertia::render('Tabla'))->name('tabla');
             Route::get('/vestuario', fn () => Inertia::render('Vestuario'))->name('vestuario');
-            Route::get('/cuota', fn () => Inertia::render('Cuota'))->name('cuota');
+            Route::get('/cuota', [CuotaController::class, 'show'])->name('cuota');
+            Route::post('/cuota/{due}/pagar', [CuotaController::class, 'pay'])->name('cuota.pagar');
+            Route::post('/cuota/reclamar', [CuotaController::class, 'claim'])->name('cuota.reclamar');
+            Route::post('/stripe/onboarding', [StripeConnectController::class, 'start'])->name('stripe.onboarding');
+            Route::get('/stripe/retorno', [StripeConnectController::class, 'back'])->name('stripe.retorno');
             Route::get('/perfil', [PerfilController::class, 'show'])->name('perfil');
 
             Route::post('/invitaciones', [InviteController::class, 'create'])->name('invitacion.crear');
