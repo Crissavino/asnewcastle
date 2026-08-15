@@ -8,26 +8,35 @@ use App\Support\CurrentClub;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use Stripe\Exception\ApiErrorException;
 use Symfony\Component\HttpFoundation\Response;
 
 class StripeConnectController extends Controller
 {
     /** El manager arranca (o retoma) el onboarding de Stripe Connect Express. */
-    public function start(StripeGateway $stripe): Response
+    public function start(StripeGateway $stripe): Response|RedirectResponse
     {
         Gate::authorize('create', Event::class);
 
         $club = app(CurrentClub::class)->club();
 
-        if (! $club->stripe_account_id) {
-            $club->update(['stripe_account_id' => $stripe->createExpressAccount($club)]);
-        }
+        try {
+            if (! $club->stripe_account_id) {
+                $club->update(['stripe_account_id' => $stripe->createExpressAccount($club)]);
+            }
 
-        $url = $stripe->createOnboardingLink(
-            $club,
-            route('stripe.retorno'),
-            route('stripe.onboarding'),
-        );
+            $url = $stripe->createOnboardingLink(
+                $club,
+                route('stripe.retorno'),
+                route('stripe.onboarding'),
+            );
+        } catch (ApiErrorException $e) {
+            // Error de configuración de Stripe (ej: Connect sin habilitar):
+            // se muestra en la pantalla en vez de reventar con un 500
+            report($e);
+
+            return back()->withErrors(['stripe' => $e->getMessage()]);
+        }
 
         return Inertia::location($url);
     }

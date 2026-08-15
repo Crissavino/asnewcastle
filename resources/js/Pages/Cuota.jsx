@@ -13,7 +13,7 @@ function money(cents) {
 
 export default function Cuota({ currency, stripe_ready, my_due, caja }) {
     const { t, locale } = useTranslations();
-    const { member, flash } = usePage().props;
+    const { member, flash, errors } = usePage().props;
     const [claimed, setClaimed] = useState(false);
     const isManager = member?.role === 'manager';
     const intl = INTL_LOCALES[locale] ?? 'en-GB';
@@ -76,6 +76,7 @@ export default function Cuota({ currency, stripe_ready, my_due, caja }) {
                 <div className="nc-card">
                     <div className="nc-label">{t('cuota.stripe_title')}</div>
                     <p className="nc-meta" style={{ marginTop: 8 }}>{t('cuota.stripe_body')}</p>
+                    {errors.stripe && <div className="nc-error">{errors.stripe}</div>}
                     <button className="nc-btn dark" style={{ marginTop: 14 }} onClick={() => router.post(route('stripe.onboarding'))}>
                         {t('cuota.stripe_button')}
                     </button>
