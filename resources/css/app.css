@@ -12,7 +12,8 @@ html, body { margin: 0; padding: 0; }
 .nc-root *, .nc-root *::before, .nc-root *::after { box-sizing: border-box; }
 .nc-app { width: 100%; max-width: 430px; min-height: 100vh; background: var(--paper);
   display: flex; flex-direction: column; position: relative; box-shadow: 0 0 0 1px var(--line); }
-.nc-display { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; letter-spacing: -.01em; }
+/* Tipografía display en itálica: energía de camiseta / póster de partido */
+.nc-display { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; letter-spacing: -.01em; font-style: italic; }
 .nc-num { font-family: 'Rubik', sans-serif; font-variant-numeric: tabular-nums; }
 .nc-pinstripe { background: repeating-linear-gradient(90deg, transparent 0 9px, rgba(255,255,255,.30) 9px 11px), var(--red); }
 
@@ -25,24 +26,35 @@ html, body { margin: 0; padding: 0; }
 .nc-kit.away { background: repeating-linear-gradient(115deg, transparent 0 5px, rgba(255,255,255,.5) 5px 6px), var(--aqua); color: var(--ink); }
 .nc-kit.sm { width: 25px; height: 28px; font-size: 9px; padding-top: 7px; }
 .nc-kit.lg { width: 74px; height: 84px; font-size: 27px; padding-top: 20px; }
+.nc-kit { filter: drop-shadow(1px 2px 0 rgba(18,18,18,.18)); }
 .nc-kit.ghost { opacity: .3; filter: grayscale(.85); }
 
-/* header */
+/* header: rojo a rayas + línea negra + filete celeste — los tres colores del club */
 .nc-top { position: sticky; top: 0; z-index: 20; color: #fff; padding: 14px 16px 13px;
-  display: flex; align-items: center; gap: 12px; border-bottom: 3px solid var(--ink); }
+  display: flex; align-items: center; gap: 12px; border-bottom: 3px solid var(--ink);
+  box-shadow: 0 3px 0 var(--aqua); }
+.nc-top img { filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
 .nc-eyebrow { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; font-weight: 700; opacity: .85; }
-.nc-h1 { font-size: 24px; line-height: .95; margin: 2px 0 0; }
+.nc-h1 { font-size: 24px; line-height: .95; margin: 2px 0 0; text-shadow: 2px 2px 0 rgba(0,0,0,.28); }
 .nc-role { margin-left: auto; display: flex; background: rgba(0,0,0,.28); border-radius: 2px; padding: 2px; }
 .nc-role button { border: none; background: transparent; color: rgba(255,255,255,.75); cursor: pointer;
   font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .08em;
   text-transform: uppercase; padding: 6px 8px; border-radius: 2px; }
 .nc-role button.on { background: #fff; color: var(--red-dk); }
-.nc-body { flex: 1; padding: 16px 14px 100px; }
+/* el fondo: franjas de césped recién cortado, casi imperceptibles */
+.nc-body { flex: 1; padding: 16px 14px 100px;
+  background: repeating-linear-gradient(0deg, transparent 0 46px, rgba(18,18,18,.022) 46px 92px); }
 
-.nc-card { background: var(--card); border: 1px solid var(--line); border-radius: 2px; padding: 16px; margin-bottom: 12px; }
-.nc-card.match { border-left: 4px solid var(--red); }
-.nc-card.away-match { border-left: 4px solid var(--aqua-dk); }
+.nc-card { background: var(--card); border: 1px solid var(--line); border-radius: 2px; padding: 16px; margin-bottom: 12px;
+  position: relative; box-shadow: 0 1px 0 rgba(18,18,18,.05); }
+.nc-card.match { border-left: 4px solid var(--red);
+  background-image: repeating-linear-gradient(115deg, transparent 0 18px, rgba(210,34,51,.03) 18px 36px); }
+.nc-card.away-match { border-left: 4px solid var(--aqua-dk);
+  background-image: repeating-linear-gradient(115deg, transparent 0 18px, rgba(46,130,136,.04) 18px 36px); }
 .nc-label { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--stone); font-weight: 700; }
+/* banderín de córner en los títulos de sección de cada tarjeta */
+.nc-card > .nc-label::before, .nc-admin > .nc-label::before { content: ''; display: inline-block;
+  width: 6px; height: 6px; background: var(--red); margin-right: 7px; transform: skewX(-14deg); vertical-align: 1px; }
 .nc-meta { font-size: 13px; color: var(--stone); line-height: 1.45; }
 
 .nc-rsvp { display: flex; gap: 7px; margin-top: 14px; }
@@ -56,8 +68,10 @@ html, body { margin: 0; padding: 0; }
 .nc-rsvp button.on.out { background: var(--ink); border-color: var(--ink); color: #fff; }
 .nc-root button:focus-visible, .nc-root input:focus-visible, .nc-root select:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 
+/* el contador como marcador: número gigante con subrayado celeste de resaltador */
 .nc-count { display: flex; align-items: baseline; gap: 7px; margin-top: 16px; }
-.nc-count .n { font-family: 'Archivo Black', sans-serif; font-size: 32px; line-height: 1; }
+.nc-count .n { font-family: 'Archivo Black', sans-serif; font-size: 32px; line-height: 1; font-style: italic;
+  box-shadow: inset 0 -7px 0 rgba(138,212,216,.55); padding: 0 3px; }
 .nc-kits { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 11px; }
 
 /* bloque delegado */
@@ -82,28 +96,37 @@ html, body { margin: 0; padding: 0; }
 /* chat */
 .nc-msg { margin-bottom: 13px; display: flex; gap: 10px; align-items: flex-start; }
 .nc-msg.mine { flex-direction: row-reverse; }
-.nc-bubble { background: #fff; border: 1px solid var(--line); border-radius: 2px; padding: 9px 12px; max-width: 76%; font-size: 14px; line-height: 1.42; }
-.nc-msg.mine .nc-bubble { background: var(--red); border-color: var(--red); color: #fff; }
+.nc-bubble { background: #fff; border: 1px solid var(--line); border-radius: 2px; padding: 9px 12px; max-width: 76%; font-size: 14px; line-height: 1.42;
+  box-shadow: 2px 2px 0 rgba(18,18,18,.07); }
+.nc-msg.mine .nc-bubble { background: var(--red); border-color: var(--red); color: #fff; box-shadow: 2px 2px 0 rgba(18,18,18,.35); }
+/* los avisos del sistema como cinta de ticker */
 .nc-sys { text-align: center; font-size: 11px; color: var(--stone); letter-spacing: .07em; padding: 4px 0 14px; text-transform: uppercase; font-weight: 600; }
+.nc-sys::before { content: '— '; color: var(--aqua-dk); }
+.nc-sys::after { content: ' —'; color: var(--aqua-dk); }
 .nc-composer { display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
 .nc-composer input { flex: 1; background: #fff; border: 1px solid var(--line); border-radius: 2px; padding: 11px 12px; color: var(--ink); font-family: 'Archivo', sans-serif; font-size: 14px; }
 .nc-composer input::placeholder { color: var(--stone); }
 
-/* botones */
+/* botones: sombra dura desplazada, como afiche de cancha */
 .nc-btn { width: 100%; padding: 14px; border: none; border-radius: 2px; cursor: pointer; background: var(--red); color: #fff;
-  font-family: 'Archivo Black', sans-serif; text-transform: uppercase; letter-spacing: .04em; font-size: 14px; }
-.nc-btn:disabled { opacity: .28; cursor: not-allowed; }
-.nc-btn.ghost { background: #fff; border: 1px solid var(--line); color: var(--ink); }
-.nc-btn.dark { background: var(--ink); }
+  font-family: 'Archivo Black', sans-serif; text-transform: uppercase; letter-spacing: .04em; font-size: 14px; font-style: italic;
+  box-shadow: 3px 3px 0 var(--ink); transition: transform .08s, box-shadow .08s; }
+.nc-btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.nc-btn:disabled { opacity: .28; cursor: not-allowed; box-shadow: none; }
+.nc-btn.ghost { background: #fff; border: 1px solid var(--ink); color: var(--ink); box-shadow: 3px 3px 0 rgba(18,18,18,.2); }
+.nc-btn.dark { background: var(--ink); box-shadow: 3px 3px 0 var(--red); }
 .nc-icon-btn { background: var(--red); border: none; border-radius: 2px; width: 44px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; }
 
 /* tabs */
-.nc-tabs { position: sticky; bottom: 0; display: flex; background: #fff; border-top: 1px solid var(--line); }
+.nc-tabs { position: sticky; bottom: 0; display: flex; background: #fff; border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom); }
 .nc-tabs a { flex: 1; padding: 10px 2px 12px; background: transparent; border: none; cursor: pointer;
   color: var(--stone); display: flex; flex-direction: column; align-items: center; gap: 4px;
   font-size: 9px; letter-spacing: .09em; text-transform: uppercase; font-weight: 700;
-  font-family: 'Archivo', sans-serif; border-top: 3px solid transparent; margin-top: -1px; text-decoration: none; }
-.nc-tabs a.on { color: var(--red); border-top-color: var(--red); }
+  font-family: 'Archivo', sans-serif; border-top: 3px solid transparent; margin-top: -1px; text-decoration: none;
+  transition: color .12s, background .12s; }
+.nc-tabs a.on { color: var(--red); border-top-color: var(--red);
+  background: linear-gradient(180deg, rgba(210,34,51,.07), transparent 70%); }
 
 /* alta */
 .nc-step { padding: 24px 20px 28px; display: flex; flex-direction: column; min-height: 100vh; }
@@ -131,11 +154,14 @@ html, body { margin: 0; padding: 0; }
 .nc-sheet { position: fixed; inset: 0; background: rgba(18,18,18,.55); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
 .nc-sheet-inner { width: 100%; max-width: 430px; background: #fff; border-top: 4px solid var(--red);
   padding: 22px 20px 26px; animation: nc-up .2s ease-out; max-height: 92vh; overflow-y: auto; }
+.nc-sheet-inner:not(.plain)::before { content: ''; display: block; width: 44px; height: 4px;
+  background: var(--line); border-radius: 2px; margin: -8px auto 14px; }
 .nc-sheet-inner.plain { border-top-color: var(--ink); padding: 0; }
 @keyframes nc-up { from { transform: translateY(16px); opacity: 0 } to { transform: none; opacity: 1 } }
 .nc-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-top: 1px solid var(--line); }
-.nc-bar { height: 7px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 12px; }
-.nc-bar i { display: block; height: 100%; }
+.nc-bar { height: 8px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 12px; }
+.nc-bar i { display: block; height: 100%;
+  background: repeating-linear-gradient(90deg, transparent 0 5px, rgba(255,255,255,.4) 5px 6px), var(--red); }
 .nc-pill { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; padding: 4px 8px; border-radius: 2px; }
 .nc-pill.ok { background: rgba(46,130,136,.14); color: var(--aqua-dk); }
 .nc-pill.no { background: rgba(210,34,51,.11); color: var(--red-dk); }

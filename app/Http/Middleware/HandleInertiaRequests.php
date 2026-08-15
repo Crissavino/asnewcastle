@@ -24,7 +24,9 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
 
             'locale' => $locale,
-            'messages' => fn () => $this->messages($locale),
+            // Ojo con el nombre: tiene que ser único para que ninguna página
+            // lo pise con un prop propio (el chat usa "messages", por ejemplo).
+            'translations' => fn () => $this->translations($locale),
 
             'auth' => [
                 'user' => $request->user() ? [
@@ -57,7 +59,7 @@ class HandleInertiaRequests extends Middleware
     }
 
     /** Diccionario completo del locale activo, para el helper t() de React. */
-    protected function messages(string $locale): array
+    protected function translations(string $locale): array
     {
         $path = lang_path($locale.'.json');
 

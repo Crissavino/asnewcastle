@@ -8,7 +8,7 @@ it('detecta el idioma del teléfono en la primera visita', function () {
         ->get('/entrar')
         ->assertInertia(fn (Assert $page) => $page
             ->where('locale', 'ro')
-            ->where('messages', fn ($messages) => collect($messages)->get('auth.phone_title') === 'Intră cu telefonul tău')
+            ->where('translations', fn ($translations) => collect($translations)->get('auth.phone_title') === 'Intră cu telefonul tău')
         );
 });
 

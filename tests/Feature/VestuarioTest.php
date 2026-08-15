@@ -29,6 +29,19 @@ it('manda un mensaje y aparece en el vestuario', function () {
         );
 });
 
+it('el vestuario no pisa el diccionario de traducciones', function () {
+    // Regresión: el prop "messages" del chat pisaba el prop compartido
+    // de traducciones y la pestaña mostraba las keys crudas.
+    $member = Member::factory()->create();
+
+    $this->actingAs($member->user)
+        ->get('/vestuario')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('translations', fn ($t) => collect($t)->has('vestuario.placeholder'))
+            ->has('messages')
+        );
+});
+
 it('el vestuario está aislado por club', function () {
     $member = Member::factory()->create();
     $ajeno = Member::factory()->create(); // otro club

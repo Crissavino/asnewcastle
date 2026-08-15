@@ -92,7 +92,7 @@ export default function Cuota({ currency, stripe_ready, my_due, caja }) {
                         </span>
                     </div>
                     <div className="nc-bar">
-                        <i style={{ width: `${caja.target_cents ? (caja.collected_cents / caja.target_cents) * 100 : 0}%`, background: 'var(--red)' }} />
+                        <i style={{ width: `${caja.target_cents ? (caja.collected_cents / caja.target_cents) * 100 : 0}%` }} />
                     </div>
                     <div className="nc-meta" style={{ marginTop: 8 }}>
                         {t('cuota.up_to_date', { paid: caja.paid_count, total: caja.total_count })}
