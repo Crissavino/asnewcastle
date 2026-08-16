@@ -291,7 +291,7 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
                                             style={{ flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 10 }}
                                             onClick={() => router.post(route('cuota.estado', d.due_id), { status: 'paid' }, { preserveScroll: true })}
                                         >
-                                            {t('cuota.cash')}
+                                            {t('cuota.mark_cash')}
                                         </button>
                                         <button
                                             className="nc-mini"

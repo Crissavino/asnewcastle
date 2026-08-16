@@ -109,7 +109,7 @@
     "cuota.none": "No dues generated for this month yet.",
     "cuota.not_ready": "The club hasn't enabled online payments yet. Settle with the manager as usual.",
     "cuota.processing": "We're confirming your payment. It'll show as paid shortly.",
-    "cuota.cash": "Cash",
+    "cuota.cash": "Club cashbox",
     "cuota.of": "of :total :currency",
     "cuota.up_to_date": ":paid of :total players paid up",
     "cuota.owe": "Owe this month",
@@ -216,5 +216,6 @@
     "perfil.drop_admin": "Remove admin",
     "pill.due_ok": "Paid up",
     "pill.due_owing": "Owes",
-    "system.dues_due": ":period dues are overdue — owing: :names"
+    "system.dues_due": ":period dues are overdue — owing: :names",
+    "cuota.mark_cash": "Cash"
 }

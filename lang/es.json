@@ -109,7 +109,7 @@
     "cuota.none": "Este mes todavía no hay cuota generada.",
     "cuota.not_ready": "El club todavía no activó los pagos online. Arreglá con el delegado como siempre.",
     "cuota.processing": "Estamos confirmando tu pago. En un rato aparece como acreditado.",
-    "cuota.cash": "Efectivo",
+    "cuota.cash": "Caja del club",
     "cuota.of": "de :total :currency",
     "cuota.up_to_date": ":paid de :total jugadores al día",
     "cuota.owe": "Deben este mes",
@@ -216,5 +216,6 @@
     "perfil.drop_admin": "Quitar admin",
     "pill.due_ok": "Al día",
     "pill.due_owing": "Debe",
-    "system.dues_due": "Venció la cuota de :period — deben: :names"
+    "system.dues_due": "Venció la cuota de :period — deben: :names",
+    "cuota.mark_cash": "Efectivo"
 }
