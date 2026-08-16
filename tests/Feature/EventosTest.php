@@ -109,7 +109,7 @@ it('la agenda solo muestra eventos del club activo', function () {
         ->assertInertia(fn (Assert $page) => $page->has('events', 1));
 });
 
-it('el manager ve la convocatoria en texto plano copiable', function () {
+it('el manager ve la convocatoria en texto plano, en orden de confirmación', function () {
     $manager = Member::factory()->manager()->create(['shirt_number' => 5]);
     $manager->user->update(['name' => 'Sergio Quiroga']);
     $event = Event::factory()->by($manager)->create();
@@ -117,13 +117,15 @@ it('el manager ve la convocatoria en texto plano copiable', function () {
     $p10 = Member::factory()->for($manager->club)->create(['shirt_number' => 10]);
     $p10->user->update(['name' => 'Cristian Savino']);
 
-    Attendance::create(['event_id' => $event->id, 'member_id' => $p10->id, 'status' => 'in', 'responded_at' => now()]);
-    Attendance::create(['event_id' => $event->id, 'member_id' => $manager->id, 'status' => 'in', 'responded_at' => now()]);
+    // Cristian (10) confirma antes que Sergio (5): va primero aunque tenga
+    // número más alto — la lista es orden de inscripción, no de camiseta.
+    Attendance::create(['event_id' => $event->id, 'member_id' => $p10->id, 'status' => 'in', 'responded_at' => now()->subHours(2)]);
+    Attendance::create(['event_id' => $event->id, 'member_id' => $manager->id, 'status' => 'in', 'responded_at' => now()->subHour()]);
 
     $this->actingAs($manager->user)
         ->get('/agenda')
         ->assertInertia(fn (Assert $page) => $page
-            ->where('events.0.convocation', '5 Sergio Quiroga · 10 Cristian Savino')
+            ->where('events.0.convocation', '10 Cristian Savino · 5 Sergio Quiroga')
         );
 });
 

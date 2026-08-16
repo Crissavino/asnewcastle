@@ -31,8 +31,10 @@ class AgendaController extends Controller
             ->map(function (Event $event) use ($member, $isManager, $rosterCount) {
                 $byStatus = $event->attendances->groupBy('status');
 
+                // Orden de inscripción: el primero que confirmó aparece primero
+                // (lista de anotados). Empate/sin fecha: cae al final, estable.
                 $names = fn ($status) => $byStatus->get($status, collect())
-                    ->sortBy(fn ($a) => $a->member->shirt_number)
+                    ->sortBy(fn ($a) => $a->responded_at?->timestamp ?? PHP_INT_MAX)
                     ->map(fn ($a) => [
                         'id' => $a->member_id,
                         'shirt_number' => $a->member->shirt_number,
