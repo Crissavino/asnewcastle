@@ -6,6 +6,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\InviteController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\CuotaController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\MvpVoteController;
 use App\Http\Controllers\PlayerRatingController;
 use App\Http\Controllers\PerfilController;
@@ -87,6 +88,9 @@ Route::middleware('auth')->group(function () {
             Route::patch('/perfil', [PerfilController::class, 'update'])->name('perfil.actualizar');
             Route::post('/perfil/disponibilidad', [PerfilController::class, 'updateAvailability'])->name('perfil.disponibilidad');
             Route::post('/plantel/{member}/baja', [PerfilController::class, 'removeMember'])->name('plantel.baja');
+            Route::post('/plantel/{member}/rol', [PerfilController::class, 'setRole'])->name('plantel.rol');
+            Route::post('/gastos', [ExpenseController::class, 'store'])->name('gastos.crear');
+            Route::delete('/gastos/{expense}', [ExpenseController::class, 'destroy'])->name('gastos.borrar');
 
             Route::post('/invitaciones', [InviteController::class, 'create'])->name('invitacion.crear');
         });

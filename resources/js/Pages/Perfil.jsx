@@ -199,17 +199,31 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                                 <Kit n={p.shirt_number ?? '–'} size="sm" />
                                 <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name ?? '—'}</span>
+                                {p.role === 'manager' && <span className="nc-pill ok" style={{ flexShrink: 0 }}>{t('perfil.admin')}</span>}
+                                {p.due_status === 'pending' && <span className="nc-pill no" style={{ flexShrink: 0 }}>{t('pill.due_owing')}</span>}
+                                {p.due_status === 'paid' && <span className="nc-pill ok" style={{ flexShrink: 0, opacity: 0.7 }}>{t('pill.due_ok')}</span>}
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                                 <span className="nc-label">{p.position ?? ''}</span>
-                                {isManager && p.role === 'player' && p.id !== member.id && (
-                                    <ConfirmButton
-                                        className="nc-mini"
-                                        style={{ flex: 'none', minWidth: 0, padding: '6px 8px', fontSize: 10 }}
-                                        onConfirm={() => removeMember(p)}
-                                    >
-                                        <X size={12} /> {t('perfil.remove')}
-                                    </ConfirmButton>
+                                {isManager && p.id !== member.id && (
+                                    <>
+                                        <ConfirmButton
+                                            className="nc-mini"
+                                            style={{ flex: 'none', minWidth: 0, padding: '6px 8px', fontSize: 10, opacity: 0.75 }}
+                                            onConfirm={() => router.post(route('plantel.rol', p.id), { role: p.role === 'manager' ? 'player' : 'manager' }, { preserveScroll: true })}
+                                        >
+                                            {p.role === 'manager' ? t('perfil.drop_admin') : t('perfil.make_admin')}
+                                        </ConfirmButton>
+                                        {p.role === 'player' && (
+                                            <ConfirmButton
+                                                className="nc-mini"
+                                                style={{ flex: 'none', minWidth: 0, padding: '6px 8px', fontSize: 10 }}
+                                                onConfirm={() => removeMember(p)}
+                                            >
+                                                <X size={12} /> {t('perfil.remove')}
+                                            </ConfirmButton>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>

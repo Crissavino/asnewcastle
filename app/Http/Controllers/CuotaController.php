@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Due;
 use App\Models\Event;
+use App\Models\Expense;
 use App\Services\Stripe\StripeGateway;
 use App\Services\WhatsApp\WhatsAppChannel;
 use App\Support\CurrentClub;
@@ -39,6 +40,10 @@ class CuotaController extends Controller
                 'due_date' => $myDue->due_date->toDateString(),
                 'period' => $myDue->period->toDateString(),
             ] : null,
+            // Quién está al día y quién debe: lo ve todo el plantel
+            'plantel' => $this->squadStatus($period),
+            // Saldo y movimientos del mes: transparencia para todos
+            'resumen' => $this->cashSummary($period),
         ];
 
         // La caja es solo del delegado: un player no la ve.
@@ -60,9 +65,77 @@ class CuotaController extends Controller
                     'amount_cents' => $d->amount_cents,
                 ]),
             ];
+
+            // El detalle de gastos del mes, con opción de borrar
+            $props['gastos'] = Expense::query()
+                ->whereBetween('spent_on', [$period, $period->copy()->endOfMonth()])
+                ->orderByDesc('spent_on')
+                ->with('event:id,opponent,kind')
+                ->get()
+                ->map(fn ($e) => [
+                    'id' => $e->id,
+                    'category' => $e->category,
+                    'description' => $e->description,
+                    'amount_cents' => $e->amount_cents,
+                    'spent_on' => $e->spent_on->toDateString(),
+                    'event' => $e->event?->opponent,
+                ]);
+
+            $props['categorias'] = Expense::CATEGORIES;
+
+            // Eventos recientes para atar un gasto (el árbitro del partido vs X)
+            $props['eventos'] = Event::query()
+                ->orderByDesc('starts_at')
+                ->limit(15)
+                ->get(['id', 'opponent', 'kind', 'starts_at'])
+                ->map(fn ($e) => [
+                    'id' => $e->id,
+                    'opponent' => $e->opponent,
+                    'date' => $e->starts_at->format('d/m'),
+                ]);
         }
 
         return Inertia::render('Cuota', $props);
+    }
+
+    /** Estado de cuota por jugador, visible para todo el plantel. */
+    protected function squadStatus($period): array
+    {
+        $dues = Due::query()->whereDate('period', $period)->get()->keyBy('member_id');
+
+        return app(CurrentClub::class)->club()->activeMembers()
+            ->with('user:id,name')
+            ->orderBy('shirt_number')
+            ->get()
+            ->map(fn ($m) => [
+                'id' => $m->id,
+                'name' => $m->user->name,
+                'shirt_number' => $m->shirt_number,
+                'due_status' => $dues->get($m->id)?->status,
+            ])
+            ->values()
+            ->all();
+    }
+
+    /** Saldo acumulado y movimientos del mes. Caja lógica, no el banco. */
+    protected function cashSummary($period): array
+    {
+        $incomeAll = (int) Due::query()->where('status', 'paid')->sum('amount_cents');
+        $spentAll = (int) Expense::query()->sum('amount_cents');
+
+        $monthExpenses = Expense::query()
+            ->whereBetween('spent_on', [$period, $period->copy()->endOfMonth()])
+            ->get();
+
+        return [
+            'balance_cents' => $incomeAll - $spentAll,
+            'month_in_cents' => (int) Due::query()->whereDate('period', $period)->where('status', 'paid')->sum('amount_cents'),
+            'month_out_cents' => (int) $monthExpenses->sum('amount_cents'),
+            'by_category' => $monthExpenses->groupBy('category')
+                ->map(fn ($g) => (int) $g->sum('amount_cents'))
+                ->sortDesc()
+                ->all(),
+        ];
     }
 
     public function pay(Due $due, StripeGateway $stripe): BaseResponse

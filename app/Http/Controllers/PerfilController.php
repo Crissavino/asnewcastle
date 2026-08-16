@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attendance;
+use App\Models\Due;
 use App\Models\Event;
 use App\Models\Member;
 use App\Support\CurrentClub;
@@ -22,7 +23,12 @@ class PerfilController extends Controller
         $current = app(CurrentClub::class);
         $member = $current->member();
 
-        // El plantel: dorsal, nombre y puesto. Nunca teléfonos.
+        // El plantel: dorsal, nombre, puesto y estado de cuota. Nunca teléfonos.
+        $dues = Due::query()
+            ->whereDate('period', now()->startOfMonth())
+            ->get()
+            ->keyBy('member_id');
+
         $roster = $current->club()->activeMembers()
             ->with('user:id,name')
             ->orderBy('shirt_number')
@@ -33,6 +39,7 @@ class PerfilController extends Controller
                 'shirt_number' => $m->shirt_number,
                 'position' => $m->position,
                 'role' => $m->role,
+                'due_status' => $dues->get($m->id)?->status,
             ]);
 
         return Inertia::render('Perfil', [
@@ -101,6 +108,25 @@ class PerfilController extends Controller
         app(CurrentClub::class)->member()->update([
             'availability' => array_values(array_unique($validated['availability'])),
         ]);
+
+        return back();
+    }
+
+    /** Nombrar o quitar administradores. El admin también juega: el rol no toca la ficha. */
+    public function setRole(Request $request, Member $member): RedirectResponse
+    {
+        $current = app(CurrentClub::class);
+
+        abort_unless($current->member()->isManager(), 403);
+        abort_unless($member->club_id === $current->id(), 404);
+        // El propio rol no se toca: así el club nunca se queda sin admin
+        abort_if($member->id === $current->member()->id, 403);
+
+        $validated = $request->validate([
+            'role' => ['required', Rule::in(['player', 'manager'])],
+        ]);
+
+        $member->update(['role' => $validated['role']]);
 
         return back();
     }

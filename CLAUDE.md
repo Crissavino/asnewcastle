@@ -121,6 +121,12 @@ payments
   amount_cents, application_fee_cents
   status, paid_at
   timestamps
+
+expenses           -- gastos del club (caja lógica, no reconcilia banco)
+  id, club_id, member_id (quién lo cargó), event_id (nullable)
+  category: referee | pitch | league | gear | water | other
+  description (nullable), amount_cents, spent_on (date)
+  timestamps
 ```
 
 Notas de diseño:
@@ -216,7 +222,11 @@ Escrito para que no aparezca por inercia:
 
 ## Seguridad
 
-- Policies de Laravel en todo. Un `player` no puede crear eventos, editar la tabla ni ver la caja del club.
+- Policies de Laravel en todo. Un `player` no puede crear eventos, editar la tabla, cargar gastos
+  ni operar cuotas. **Sí ve** (decisión de producto, para generar conciencia): el estado de cuota
+  de cada compañero, el saldo de la caja y los gastos del mes por categoría. El detalle operativo
+  (montos de recaudación, acciones) es solo del manager. El día del vencimiento se publica en el
+  vestuario la lista de deudores con nombre.
 - Verificación de firma en los webhooks de Stripe **y** de Twilio.
 - Idempotencia en todo handler de webhook.
 - Los números de teléfono nunca aparecen en URLs ni en respuestas de API a otros jugadores.

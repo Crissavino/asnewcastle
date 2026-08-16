@@ -153,6 +153,9 @@ export default function Vestuario({ messages, mvp, roster_count }) {
                 weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
             });
         }
+        if (params.period) {
+            params.period = new Date(params.period).toLocaleDateString(intl, { month: 'long' });
+        }
         return t(system.key, params);
     };
 
