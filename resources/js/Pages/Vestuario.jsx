@@ -161,8 +161,8 @@ export default function Vestuario({ messages, mvp, roster_count }) {
 
     return (
         <AppLayout tab="vestuario" eyebrow={t('vestuario.players', { count: roster_count })}>
-            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
-                <div style={{ flex: 1 }}>
+            <div className="nc-chat">
+                <div className="nc-chat-scroll">
                     {(() => {
                         // Mensajes agrupados por autor + separadores de día, estilo chat
                         const items = [];
