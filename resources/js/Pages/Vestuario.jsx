@@ -92,11 +92,37 @@ export default function Vestuario({ messages, mvp, roster_count }) {
         end.current?.scrollIntoView({ block: 'end' });
     }, [messages]);
 
-    const pickImage = (e) => {
+    // Las fotos del teléfono pesan 4-8MB: se achican a 1600px antes de subir
+    const compress = (file) => new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const max = 1600;
+            let { width: w, height: h } = img;
+            if (Math.max(w, h) > max) {
+                const r = max / Math.max(w, h);
+                w = Math.round(w * r);
+                h = Math.round(h * r);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            canvas.toBlob(
+                (blob) => resolve(blob ? new File([blob], 'foto.jpg', { type: 'image/jpeg' }) : file),
+                'image/jpeg',
+                0.82,
+            );
+        };
+        img.onerror = () => resolve(file);
+        img.src = URL.createObjectURL(file);
+    });
+
+    const pickImage = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        setData('image', file);
-        setPreview(URL.createObjectURL(file));
+        const small = await compress(file);
+        setData('image', small);
+        setPreview(URL.createObjectURL(small));
     };
 
     const clearImage = () => {

@@ -27,6 +27,59 @@ class SystemMessages
         ]);
     }
 
+    public function eventUpdated(Event $event): void
+    {
+        $this->announce($event, $event->isMatch() ? 'system.event_updated_match' : 'system.event_updated_training');
+    }
+
+    public function eventCancelled(Event $event): void
+    {
+        $this->announce($event, $event->isMatch() ? 'system.event_cancelled_match' : 'system.event_cancelled_training');
+    }
+
+    public function result(Event $event): void
+    {
+        Message::create([
+            'club_id' => $event->club_id,
+            'is_system' => true,
+            'body' => json_encode([
+                'key' => 'system.result',
+                'params' => [
+                    'opponent' => $event->opponent,
+                    'gf' => $event->goals_for,
+                    'ga' => $event->goals_against,
+                ],
+            ]),
+        ]);
+    }
+
+    public function mvpWinner(Event $event, string $names, int $votes): void
+    {
+        Message::create([
+            'club_id' => $event->club_id,
+            'is_system' => true,
+            'body' => json_encode([
+                'key' => 'system.mvp_winner',
+                'params' => ['opponent' => $event->opponent, 'name' => $names, 'votes' => $votes],
+            ]),
+        ]);
+    }
+
+    protected function announce(Event $event, string $key): void
+    {
+        Message::create([
+            'club_id' => $event->club_id,
+            'is_system' => true,
+            'body' => json_encode([
+                'key' => $key,
+                'params' => array_filter([
+                    'opponent' => $event->opponent,
+                    'date' => $event->starts_at->toIso8601String(),
+                ]),
+            ]),
+        ]);
+    }
+
     public function mvpOpened(Event $event): void
     {
         Message::create([

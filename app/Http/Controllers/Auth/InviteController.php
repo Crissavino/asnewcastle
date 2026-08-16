@@ -32,10 +32,7 @@ class InviteController extends Controller
     public function accept(Request $request, Club $club): RedirectResponse
     {
         if ($user = $request->user()) {
-            $user->members()->firstOrCreate(
-                ['club_id' => $club->id],
-                ['role' => 'player', 'joined_at' => now()],
-            );
+            $this->joinOrRejoin($user, $club->id);
 
             return redirect()->route('agenda');
         }
@@ -43,5 +40,18 @@ class InviteController extends Controller
         $request->session()->put('invite_club_id', $club->id);
 
         return redirect()->route('entrar');
+    }
+
+    /** Si es un ex-member que vuelve, se le levanta la baja; si no, se crea. */
+    public static function joinOrRejoin($user, int $clubId): void
+    {
+        $member = $user->members()->firstOrNew(['club_id' => $clubId]);
+
+        if (! $member->exists) {
+            $member->fill(['role' => 'player', 'joined_at' => now()]);
+        }
+
+        $member->left_at = null;
+        $member->save();
     }
 }

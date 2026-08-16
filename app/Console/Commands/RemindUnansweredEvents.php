@@ -17,6 +17,7 @@ class RemindUnansweredEvents extends Command
         $events = Event::query()
             ->whereNotNull('notified_at')
             ->whereNull('reminded_at')
+            ->whereNull('cancelled_at')
             ->whereBetween('starts_at', [now(), now()->addDay()])
             ->get();
 

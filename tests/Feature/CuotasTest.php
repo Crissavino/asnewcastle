@@ -114,6 +114,44 @@ it('a la vuelta del onboarding con la cuenta habilitada se marca el club', funct
     expect($manager->club->fresh()->stripe_onboarded_at)->not->toBeNull();
 });
 
+it('el manager marca cuotas en efectivo o las condona, y la caja lo refleja', function () {
+    $manager = Member::factory()->manager()->create();
+    $due = Due::factory()->forMember($manager)->create();
+    $condonado = Member::factory()->for($manager->club)->create();
+    $dueCondonada = Due::factory()->forMember($condonado)->create();
+
+    $this->actingAs($manager->user)->post("/cuota/{$due->id}/estado", ['status' => 'paid'])->assertRedirect();
+    $this->actingAs($manager->user)->post("/cuota/{$dueCondonada->id}/estado", ['status' => 'waived'])->assertRedirect();
+
+    expect($due->fresh()->status)->toBe('paid')
+        ->and($dueCondonada->fresh()->status)->toBe('waived');
+
+    // La condonada no cuenta ni como objetivo ni como deuda
+    $this->actingAs($manager->user)
+        ->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('caja.total_count', 1)
+            ->where('caja.paid_count', 1)
+            ->where('caja.target_cents', 12000)
+            ->has('caja.debtors', 0)
+        );
+});
+
+it('una cuota pagada por Stripe no se puede pisar a mano, y un player tampoco toca nada', function () {
+    $manager = Member::factory()->manager()->create();
+    $player = Member::factory()->for($manager->club)->create();
+    $due = Due::factory()->forMember($player)->paid()->create();
+    $due->payments()->create([
+        'stripe_payment_intent_id' => 'pi_lock',
+        'amount_cents' => 12000,
+        'status' => 'succeeded',
+        'paid_at' => now(),
+    ]);
+
+    $this->actingAs($manager->user)->post("/cuota/{$due->id}/estado", ['status' => 'pending'])->assertStatus(400);
+    $this->actingAs($player->user)->post("/cuota/{$due->id}/estado", ['status' => 'paid'])->assertForbidden();
+});
+
 it('reclamar por WhatsApp va solo a los que deben, y solo lo hace el manager', function () {
     $manager = Member::factory()->manager()->create();
     Due::factory()->forMember($manager)->paid()->create();

@@ -7,7 +7,9 @@ use App\Models\Event;
 use App\Services\Stripe\StripeGateway;
 use App\Services\WhatsApp\WhatsAppChannel;
 use App\Support\CurrentClub;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as BaseResponse;
@@ -43,11 +45,14 @@ class CuotaController extends Controller
         if ($isManager) {
             $dues = Due::query()->whereDate('period', $period)->with('member.user:id,name')->get();
 
+            // Las condonadas no cuentan ni como deuda ni como objetivo
+            $active = $dues->where('status', '!=', 'waived');
+
             $props['caja'] = [
-                'collected_cents' => $dues->where('status', 'paid')->sum('amount_cents'),
-                'target_cents' => $dues->sum('amount_cents'),
-                'paid_count' => $dues->where('status', 'paid')->count(),
-                'total_count' => $dues->count(),
+                'collected_cents' => $active->where('status', 'paid')->sum('amount_cents'),
+                'target_cents' => $active->sum('amount_cents'),
+                'paid_count' => $active->where('status', 'paid')->count(),
+                'total_count' => $active->count(),
                 'debtors' => $dues->where('status', 'pending')->values()->map(fn ($d) => [
                     'due_id' => $d->id,
                     'name' => $d->member->user->name,
@@ -76,6 +81,26 @@ class CuotaController extends Controller
         );
 
         return Inertia::location($url);
+    }
+
+    /**
+     * El delegado marca la cuota a mano: pagó en efectivo, se condona,
+     * o vuelve a pendiente. Las pagadas por Stripe no se tocan.
+     */
+    public function setStatus(Request $request, Due $due): BaseResponse
+    {
+        Gate::authorize('create', Event::class);
+        app(CurrentClub::class)->assertOwns($due);
+
+        abort_if($due->payments()->exists(), 400, 'Pagada por Stripe: no se cambia a mano.');
+
+        $validated = $request->validate([
+            'status' => ['required', Rule::in(['pending', 'paid', 'waived'])],
+        ]);
+
+        $due->update(['status' => $validated['status']]);
+
+        return back();
     }
 
     public function claim(WhatsAppChannel $whatsapp): BaseResponse

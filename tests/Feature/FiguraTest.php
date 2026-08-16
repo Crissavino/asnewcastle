@@ -130,6 +130,39 @@ it('la calificación ternaria se guarda, se cambia y no permite autobombo', func
         ->assertSessionHasErrors('rating');
 });
 
+it('figura:cerrar anuncia al ganador una sola vez y alimenta las estadísticas', function () {
+    $manager = Member::factory()->manager()->create();
+    $a = Member::factory()->for($manager->club)->create();
+    $event = Event::factory()->by($manager)->create([
+        'starts_at' => now()->subHours(60),
+        'mvp_opened_at' => now()->subHours(57),
+    ]);
+    fueron($event, $manager, $a);
+
+    MvpVote::create(['event_id' => $event->id, 'voter_member_id' => $manager->id, 'voted_member_id' => $a->id]);
+    MvpVote::create(['event_id' => $event->id, 'voter_member_id' => $a->id, 'voted_member_id' => $a->id]);
+
+    $this->artisan('figura:cerrar')->assertSuccessful();
+    $this->artisan('figura:cerrar')->assertSuccessful(); // idempotente
+
+    expect($event->fresh()->mvp_closed_at)->not->toBeNull();
+
+    $winners = Message::withoutGlobalScopes()
+        ->where('is_system', true)
+        ->where('body', 'like', '%mvp_winner%')
+        ->get();
+    expect($winners)->toHaveCount(1);
+
+    $body = json_decode($winners->first()->body, true);
+    expect($body['params']['name'])->toBe($a->user->name)
+        ->and($body['params']['votes'])->toBe(2);
+
+    // Y en el perfil del ganador figura la estadística
+    $this->actingAs($a->user)
+        ->get('/perfil')
+        ->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page->where('season.mvps', 1));
+});
+
 it('el vestuario muestra la encuesta con totales anónimos', function () {
     $manager = Member::factory()->manager()->create();
     $a = Member::factory()->for($manager->club)->create();

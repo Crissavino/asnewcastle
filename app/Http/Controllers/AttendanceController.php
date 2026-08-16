@@ -19,6 +19,9 @@ class AttendanceController extends Controller
     {
         app(CurrentClub::class)->assertOwns($event);
 
+        // A un evento cancelado no se le responde
+        abort_if($event->isCancelled(), 400);
+
         $validated = $request->validate([
             'status' => ['required', Rule::in(['in', 'maybe', 'out'])],
         ]);

@@ -1,14 +1,105 @@
 import { router, usePage } from '@inertiajs/react';
-import { Check } from 'lucide-react';
+import { Check, Pencil, X } from 'lucide-react';
 import { useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
 import { LOCALES, useTranslations } from '../i18n';
 
-export default function Perfil({ me, slots, roster }) {
+/* Doble tap: primero pregunta, después ejecuta. */
+function ConfirmButton({ className, style, onConfirm, children }) {
+    const { t } = useTranslations();
+    const [arming, setArming] = useState(false);
+
+    const click = () => {
+        if (arming) {
+            setArming(false);
+            onConfirm();
+        } else {
+            setArming(true);
+            setTimeout(() => setArming(false), 2500);
+        }
+    };
+
+    return (
+        <button type="button" className={className} style={style} onClick={click}>
+            {arming ? t('common.sure') : children}
+        </button>
+    );
+}
+
+function EditSheet({ me, positions, feet, taken, maxNumber, onClose }) {
+    const { t } = useTranslations();
+    const [data, setData] = useState({
+        name: me.name ?? '',
+        position: me.position,
+        preferred_foot: me.preferred_foot,
+        shirt_number: me.shirt_number,
+    });
+    const [errors, setErrors] = useState({});
+
+    const save = () => {
+        router.patch(route('perfil.actualizar'), data, {
+            onSuccess: onClose,
+            onError: setErrors,
+            preserveScroll: true,
+        });
+    };
+
+    return (
+        <div className="nc-sheet" onClick={onClose}>
+            <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
+                <h3 className="nc-display" style={{ fontSize: 21, margin: '5px 0 16px' }}>{t('perfil.edit')}</h3>
+
+                <label className="nc-field-l">
+                    <span className="nc-label">{t('alta.name_placeholder')}</span>
+                    <input value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} />
+                </label>
+
+                <label className="nc-field-l">
+                    <span className="nc-label">{t('alta.pos_q')}</span>
+                    <select value={data.position} onChange={(e) => setData({ ...data, position: e.target.value })}>
+                        {positions.map((p) => <option key={p} value={p}>{t(`pos.${p}`)}</option>)}
+                    </select>
+                </label>
+
+                <label className="nc-field-l">
+                    <span className="nc-label">{t('alta.foot_q')}</span>
+                    <select value={data.preferred_foot} onChange={(e) => setData({ ...data, preferred_foot: e.target.value })}>
+                        {feet.map((f) => <option key={f} value={f}>{t(`foot.${f}`)}</option>)}
+                    </select>
+                </label>
+
+                <div className="nc-label" style={{ marginBottom: 8 }}>{t('alta.num_q')}</div>
+                <div className="nc-numgrid">
+                    {Array.from({ length: maxNumber }, (_, i) => i + 1).map((n) => (
+                        <button
+                            key={n}
+                            type="button"
+                            disabled={taken.includes(n)}
+                            className={data.shirt_number === n ? 'on' : ''}
+                            onClick={() => setData({ ...data, shirt_number: n })}
+                        >
+                            {n}
+                        </button>
+                    ))}
+                </div>
+
+                {Object.values(errors)[0] && <div className="nc-error">{Object.values(errors)[0]}</div>}
+
+                <button className="nc-btn" style={{ marginTop: 16 }} onClick={save} disabled={data.name.trim().length < 3}>
+                    {t('agenda.save')}
+                </button>
+            </div>
+        </div>
+    );
+}
+
+export default function Perfil({ me, season, slots, positions, feet, max_number, taken, roster }) {
     const { t, locale } = useTranslations();
     const { member, flash } = usePage().props;
     const [copied, setCopied] = useState(false);
+    const [editing, setEditing] = useState(false);
+    const isManager = member?.role === 'manager';
 
     const generateInvite = () => {
         router.post(route('invitacion.crear'), {}, { preserveScroll: true });
@@ -34,17 +125,24 @@ export default function Perfil({ me, slots, roster }) {
         router.post(route('perfil.disponibilidad'), { availability: next }, { preserveScroll: true });
     };
 
+    const removeMember = (m) => {
+        router.post(route('plantel.baja', m.id), {}, { preserveScroll: true });
+    };
+
     return (
         <AppLayout tab="perfil">
             <div className="nc-card">
                 <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
                     <Kit n={me.shirt_number} size="lg" />
-                    <div>
+                    <div style={{ flex: 1 }}>
                         <h2 className="nc-display" style={{ fontSize: 21, lineHeight: 1 }}>{me.name}</h2>
                         <div className="nc-meta" style={{ marginTop: 5 }}>
                             {t(`pos.${me.position}`)} · {t(`foot.${me.preferred_foot}`).toLowerCase()}
                         </div>
                     </div>
+                    <button type="button" className="nc-mini" style={{ flex: 'none', minWidth: 0 }} onClick={() => setEditing(true)} aria-label={t('perfil.edit')}>
+                        <Pencil size={13} />
+                    </button>
                 </div>
                 <div className="nc-row" style={{ marginTop: 14 }}>
                     <span className="nc-meta">{t('perfil.equipment')}</span>
@@ -52,6 +150,22 @@ export default function Perfil({ me, slots, roster }) {
                         <Kit n={me.shirt_number} kit="home" size="sm" />
                         <Kit n={me.shirt_number} kit="away" size="sm" />
                     </div>
+                </div>
+            </div>
+
+            <div className="nc-card">
+                <div className="nc-label">{t('perfil.season')}</div>
+                <div style={{ display: 'flex', gap: 26, marginTop: 12 }}>
+                    {[
+                        [t('perfil.matches'), season.matches],
+                        [t('perfil.attendance'), season.attendance_pct !== null ? `${season.attendance_pct}%` : '—'],
+                        [t('perfil.mvps'), season.mvps],
+                    ].map(([label, value]) => (
+                        <div key={label}>
+                            <div className="nc-display" style={{ fontSize: 30, lineHeight: 1 }}>{value}</div>
+                            <div className="nc-label" style={{ marginTop: 3 }}>{label}</div>
+                        </div>
+                    ))}
                 </div>
             </div>
 
@@ -82,17 +196,28 @@ export default function Perfil({ me, slots, roster }) {
                 <div style={{ marginTop: 6 }}>
                     {roster.map((p) => (
                         <div key={p.id} className="nc-row">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                                 <Kit n={p.shirt_number ?? '–'} size="sm" />
-                                <span style={{ fontSize: 14 }}>{p.name ?? '—'}</span>
+                                <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name ?? '—'}</span>
                             </div>
-                            <span className="nc-label">{p.position ?? ''}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                                <span className="nc-label">{p.position ?? ''}</span>
+                                {isManager && p.role === 'player' && p.id !== member.id && (
+                                    <ConfirmButton
+                                        className="nc-mini"
+                                        style={{ flex: 'none', minWidth: 0, padding: '6px 8px', fontSize: 10 }}
+                                        onConfirm={() => removeMember(p)}
+                                    >
+                                        <X size={12} /> {t('perfil.remove')}
+                                    </ConfirmButton>
+                                )}
+                            </div>
                         </div>
                     ))}
                 </div>
             </div>
 
-            {member?.role === 'manager' && (
+            {isManager && (
                 <div className="nc-card">
                     <div className="nc-label">{t('invite.hint')}</div>
                     <div className="nc-admin-actions">
@@ -131,6 +256,17 @@ export default function Perfil({ me, slots, roster }) {
             <button className="nc-btn ghost" onClick={() => router.post(route('salir'))}>
                 {t('auth.logout')}
             </button>
+
+            {editing && (
+                <EditSheet
+                    me={me}
+                    positions={positions}
+                    feet={feet}
+                    taken={taken}
+                    maxNumber={max_number}
+                    onClose={() => setEditing(false)}
+                />
+            )}
         </AppLayout>
     );
 }

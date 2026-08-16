@@ -65,6 +65,9 @@ Route::middleware('auth')->group(function () {
         Route::middleware(EnsureProfileComplete::class)->group(function () {
             Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda');
             Route::post('/eventos', [AgendaController::class, 'store'])->name('eventos.crear');
+            Route::put('/eventos/{event}', [AgendaController::class, 'update'])->name('eventos.actualizar');
+            Route::post('/eventos/{event}/cancelar', [AgendaController::class, 'cancel'])->name('eventos.cancelar');
+            Route::post('/eventos/{event}/resultado', [AgendaController::class, 'result'])->name('eventos.resultado');
             Route::post('/eventos/{event}/recordar', [AgendaController::class, 'remind'])->name('eventos.recordar');
             Route::post('/eventos/{event}/asistencia', [AttendanceController::class, 'store'])->name('asistencia');
             Route::get('/tabla', fn () => Inertia::render('Tabla', [
@@ -77,10 +80,13 @@ Route::middleware('auth')->group(function () {
             Route::get('/cuota', [CuotaController::class, 'show'])->name('cuota');
             Route::post('/cuota/{due}/pagar', [CuotaController::class, 'pay'])->name('cuota.pagar');
             Route::post('/cuota/reclamar', [CuotaController::class, 'claim'])->name('cuota.reclamar');
+            Route::post('/cuota/{due}/estado', [CuotaController::class, 'setStatus'])->name('cuota.estado');
             Route::post('/stripe/onboarding', [StripeConnectController::class, 'start'])->name('stripe.onboarding');
             Route::get('/stripe/retorno', [StripeConnectController::class, 'back'])->name('stripe.retorno');
             Route::get('/perfil', [PerfilController::class, 'show'])->name('perfil');
+            Route::patch('/perfil', [PerfilController::class, 'update'])->name('perfil.actualizar');
             Route::post('/perfil/disponibilidad', [PerfilController::class, 'updateAvailability'])->name('perfil.disponibilidad');
+            Route::post('/plantel/{member}/baja', [PerfilController::class, 'removeMember'])->name('plantel.baja');
 
             Route::post('/invitaciones', [InviteController::class, 'create'])->name('invitacion.crear');
         });

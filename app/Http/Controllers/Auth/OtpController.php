@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Auth\InviteController;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\SetLocale;
 use App\Models\User;
@@ -110,12 +111,10 @@ class OtpController extends Controller
         $request->session()->regenerate();
         $request->session()->forget('otp_phone');
 
-        // Si llegó con un link de invitación, se lo asocia al club acá.
+        // Si llegó con un link de invitación, se lo asocia al club acá
+        // (o se le levanta la baja si es un ex-member que vuelve).
         if ($clubId = $request->session()->pull('invite_club_id')) {
-            $user->members()->firstOrCreate(
-                ['club_id' => $clubId],
-                ['role' => 'player', 'joined_at' => now()],
-            );
+            InviteController::joinOrRejoin($user, $clubId);
         }
 
         return redirect()->intended(route('agenda'));

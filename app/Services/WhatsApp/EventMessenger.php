@@ -18,14 +18,19 @@ class EventMessenger
     {
     }
 
-    public function sendConvocation(Event $event, Member $member): void
+    /** $notice: new (convocatoria) | update (cambió) | cancel (se canceló) */
+    public function sendConvocation(Event $event, Member $member, string $notice = 'new'): void
     {
         $user = $member->user;
         $locale = $user->locale ?? config('app.fallback_locale');
 
-        $title = $event->isMatch()
-            ? trans('wa.match_title', ['opponent' => $event->opponent], $locale)
-            : trans('wa.training_title', [], $locale);
+        $titleKey = match ($notice) {
+            'update' => $event->isMatch() ? 'wa.updated_match' : 'wa.updated_training',
+            'cancel' => $event->isMatch() ? 'wa.cancelled_match' : 'wa.cancelled_training',
+            default => $event->isMatch() ? 'wa.match_title' : 'wa.training_title',
+        };
+
+        $title = trans($titleKey, ['opponent' => $event->opponent], $locale);
 
         $when = Carbon::parse($event->starts_at)
             ->locale($locale)

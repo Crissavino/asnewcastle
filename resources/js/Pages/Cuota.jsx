@@ -104,11 +104,26 @@ export default function Cuota({ currency, stripe_ready, my_due, caja }) {
                             <div className="nc-label" style={{ marginBottom: 2 }}>{t('cuota.owe')}</div>
                             {caja.debtors.map((d) => (
                                 <div key={d.due_id} className="nc-row">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                                         <Kit n={d.shirt_number} size="sm" />
-                                        <span style={{ fontSize: 14 }}>{d.name}</span>
+                                        <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
                                     </div>
-                                    <span className="nc-num nc-meta" style={{ fontSize: 13 }}>{money(d.amount_cents)} {currency}</span>
+                                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                                        <button
+                                            className="nc-mini"
+                                            style={{ flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 10 }}
+                                            onClick={() => router.post(route('cuota.estado', d.due_id), { status: 'paid' }, { preserveScroll: true })}
+                                        >
+                                            {t('cuota.cash')}
+                                        </button>
+                                        <button
+                                            className="nc-mini"
+                                            style={{ flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 10, opacity: 0.65 }}
+                                            onClick={() => router.post(route('cuota.estado', d.due_id), { status: 'waived' }, { preserveScroll: true })}
+                                        >
+                                            {t('cuota.waive')}
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
 

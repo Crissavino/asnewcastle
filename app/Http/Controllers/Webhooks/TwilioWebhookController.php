@@ -36,7 +36,7 @@ class TwilioWebhookController extends Controller
         $user = User::where('phone', $phone)->first();
         $event = Event::find($eventId);
 
-        if (! $user || ! $event) {
+        if (! $user || ! $event || $event->isCancelled()) {
             return $this->ok();
         }
 

@@ -26,6 +26,10 @@ class Event extends Model
         'notified_at',
         'reminded_at',
         'mvp_opened_at',
+        'mvp_closed_at',
+        'cancelled_at',
+        'goals_for',
+        'goals_against',
     ];
 
     protected function casts(): array
@@ -36,6 +40,10 @@ class Event extends Model
             'notified_at' => 'datetime',
             'reminded_at' => 'datetime',
             'mvp_opened_at' => 'datetime',
+            'mvp_closed_at' => 'datetime',
+            'cancelled_at' => 'datetime',
+            'goals_for' => 'integer',
+            'goals_against' => 'integer',
         ];
     }
 
@@ -73,6 +81,16 @@ class Event extends Model
     public function isFinished(): bool
     {
         return $this->starts_at->copy()->addHours(2)->isPast();
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->cancelled_at !== null;
+    }
+
+    public function hasResult(): bool
+    {
+        return $this->goals_for !== null && $this->goals_against !== null;
     }
 
     /** La votación de figura queda abierta 48hs desde el final del partido. */
