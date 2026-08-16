@@ -380,4 +380,14 @@ button.nc-day { width: 100%; background: none; border: none; border-top: 1px sol
   .nc-table tr.us:hover td { background: rgba(210,34,51,.1); }
 }
 
+/* iOS hace zoom automático al enfocar inputs con letra <16px:
+   en el teléfono ningún campo baja de 16 (el chat, los formularios, todo) */
+@media (max-width: 767px) {
+  .nc-composer input,
+  .nc-field-l input,
+  .nc-field-l select,
+  .nc-rsvp button + input { font-size: 16px; }
+  .nc-composer input { padding: 10px 12px; }
+}
+
 @media (prefers-reduced-motion: reduce) { .nc-root *, .nc-root *::before { animation: none !important; transition: none !important; } }
