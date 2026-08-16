@@ -1,59 +1,97 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/img/crest.png" alt="A.S New Castle" width="120">
 </p>
 
-## About Laravel
+<h1 align="center">A.S New Castle — Gestión del club</h1>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+<p align="center">
+  App de gestión para clubes de fútbol amateur. El cliente cero es la
+  <strong>Asociația Sportivă New Castle</strong> (Voluntari, Ilfov — Liga a V-a).
+</p>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Qué resuelve
 
-## Learning Laravel
+Todo lo que hoy se resuelve mal en un grupo de WhatsApp:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+1. **Nadie sabe quién va al partido** → convocatorias con Voy / Duda / No voy, contador en vivo y recordatorio automático a los que no contestaron.
+2. **Nadie sabe quién pagó la cuota** → cuotas mensuales con pago online (Stripe), efectivo marcado a mano, deudores a la vista y caja transparente con gastos.
+3. **La información se pierde** → horario, cancha y qué casaca llevar, siempre en el mismo lugar.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+No es una red social. Es una herramienta operativa semanal.
 
-## Laravel Sponsors
+## Las cinco pestañas
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+| Pestaña | Qué hace |
+|---|---|
+| **Agenda** | Partidos y entrenamientos con confirmación de asistencia, convocatoria copiable, edición/cancelación con aviso, resultados y racha |
+| **Tabla** | Clasament de la liga (scrapeado de frf-ajf.ro a diario) + campaña propia: posición, racha V-E-D y próximo rival |
+| **Vestuario** | Chat del equipo con fotos, mensajes del sistema, votación de figura post-partido y calificación ternaria anónima |
+| **Cuota** | Pago online en la cuenta del club (Stripe Connect), efectivo/condonaciones, estado del plantel y caja con gastos por categoría |
+| **Perfil** | Ficha del jugador (editable), disponibilidad por día, plantel, estadísticas de temporada y administración del club |
 
-### Premium Partners
+Además: **login por WhatsApp** (OTP, sin contraseña ni email), **tres idiomas** (inglés, rumano y español rioplatense), **PWA instalable**, y responsive real: app en el teléfono, riel en tablet, web con sidebar en escritorio.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Stack
 
-## Contributing
+- **Laravel 12** (PHP 8.3) + **Inertia 2** + **React 18**
+- MySQL 8 · CSS plano con variables (sin Tailwind) — el diseño sale de `docs/prototype.jsx`
+- **Twilio** (WhatsApp Business): OTP, convocatorias con botones, recordatorios
+- **Stripe Connect Express**: cada club cobra en **su propia cuenta** — la plata nunca pasa por la plataforma
+- Deploy: Laravel Forge (ver [`docs/deploy-forge.md`](docs/deploy-forge.md))
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Decisiones de arquitectura
 
-## Code of Conduct
+- **Aislamiento por club**: todo query filtra por `club_id` vía global scope + middleware que resuelve el club activo. Hay tests que verifican que un club no puede leer datos de otro.
+- **Roles**: `player` y `manager` — el manager también juega. Se administran desde la app.
+- **Canales intercambiables**: los envíos de WhatsApp salen por Twilio en producción y por el log en desarrollo (`OTP_CHANNEL=log`), sin tocar código.
+- **Webhooks firmados e idempotentes**: Twilio (HMAC-SHA1) y Stripe (firma + unicidad por `payment_intent_id`). El endpoint de Stripe escucha eventos de **cuentas conectadas**.
+- **Sin registro abierto**: se entra solo con link de invitación firmado que genera el delegado.
+- **i18n key-value**: `lang/{en,ro,es}.json` compartido a React por props de Inertia; los datos en DB son neutrales al idioma.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Desarrollo local
 
-## Security Vulnerabilities
+Requisitos: PHP 8.3+, Composer, Node 20+, MySQL.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
 
-## License
+# completar en .env: DB_*, SEED_MANAGER_PHONE (tu número E.164)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+php artisan migrate --seed          # club + delegado
+php artisan db:seed --class=DemoSeeder   # opcional: datos de demo para ver la app viva
+
+npm run dev
+php artisan serve
+```
+
+- El código OTP aparece en `storage/logs/laravel.log` (`OTP_CHANNEL=log`).
+- Pagos en local: `stripe listen --forward-connect-to 127.0.0.1:8000/webhooks/stripe`
+  (⚠️ `--forward-connect-to`, no `--forward-to`: los cargos son directos en la cuenta conectada).
+- Tarjeta de prueba: `4242 4242 4242 4242`.
+
+## Tests
+
+```bash
+php artisan test        # Pest — cubre OTP, aislamiento por club, webhooks, dorsales, cuotas, figura...
+```
+
+## Tareas programadas
+
+| Comando | Cuándo | Qué hace |
+|---|---|---|
+| `eventos:recordar` | cada hora | Recordatorio 24hs antes, solo a los que no contestaron |
+| `cuotas:generar` | día 1, 06:00 | Genera las cuotas del mes para los miembros activos |
+| `cuotas:avisar` | diario 09:00 | El día del vencimiento publica los deudores en el vestuario |
+| `figura:abrir` / `figura:cerrar` | cada hora | Abre la votación post-partido y anuncia al ganador a las 48hs |
+| `tabla:importar` | diario 07:00 | Scrapea el clasament de la AJF y actualiza la tabla |
+
+## Documentación
+
+- [`CLAUDE.md`](CLAUDE.md) — reglas del proyecto, modelo de datos y fases
+- [`docs/prototype.jsx`](docs/prototype.jsx) — el prototipo aprobado, fuente de verdad del diseño
+- [`docs/deploy-forge.md`](docs/deploy-forge.md) — runbook de deploy en producción
