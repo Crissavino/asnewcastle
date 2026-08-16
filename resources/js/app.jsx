@@ -17,6 +17,17 @@ createInertiaApp({
     },
 });
 
+// Altura REAL del viewport: Safari iOS mueve la barra de abajo y el teclado,
+// y 100vh/100dvh no siempre la siguen. visualViewport no miente nunca.
+const setAppVh = () => {
+    const h = window.visualViewport?.height ?? window.innerHeight;
+    document.documentElement.style.setProperty('--app-vh', `${h}px`);
+};
+setAppVh();
+window.visualViewport?.addEventListener('resize', setAppVh);
+window.addEventListener('resize', setAppVh);
+window.addEventListener('orientationchange', setAppVh);
+
 // PWA: el service worker cachea solo estáticos inmutables (ver public/sw.js)
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
