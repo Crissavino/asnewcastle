@@ -16,3 +16,12 @@ createInertiaApp({
         color: '#D22233',
     },
 });
+
+// PWA: el service worker cachea solo estáticos inmutables (ver public/sw.js)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {
+            // sin SW no pasa nada: la app funciona igual, solo no cachea estáticos
+        });
+    });
+}

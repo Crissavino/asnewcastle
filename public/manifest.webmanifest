@@ -1,0 +1,33 @@
+{
+    "name": "A.S New Castle",
+    "short_name": "New Castle",
+    "description": "La app del club: convocatorias, asistencia, cuotas y vestuario.",
+    "id": "/",
+    "start_url": "/agenda",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "lang": "es",
+    "background_color": "#F1F2EF",
+    "theme_color": "#D22233",
+    "icons": [
+        {
+            "src": "/img/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/img/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/img/icons/icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
