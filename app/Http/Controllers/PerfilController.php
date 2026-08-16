@@ -39,7 +39,8 @@ class PerfilController extends Controller
                 'shirt_number' => $m->shirt_number,
                 'position' => $m->position,
                 'role' => $m->role,
-                'due_status' => $dues->get($m->id)?->status,
+                // Hacia afuera solo "al día" o "debe": becados/condonados van al día
+                'due_status' => $dues->get($m->id)?->status === 'pending' ? 'pending' : 'paid',
             ]);
 
         return Inertia::render('Perfil', [

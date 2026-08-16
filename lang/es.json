@@ -224,5 +224,12 @@
     "tabla.next": "Próximo",
     "form.w": "V",
     "form.d": "E",
-    "form.l": "D"
+    "form.l": "D",
+    "cuota.settings": "Configuración de cuota",
+    "cuota.monthly_fee": "Cuota mensual (:currency)",
+    "cuota.fee_member": "Tipo de cuota por jugador",
+    "cuota.fee_privacy": "Esto lo ves solo vos. Los becados no generan cuota y para el plantel figuran al día.",
+    "fee.normal": "Normal",
+    "fee.becado": "Becado",
+    "fee.custom": "Personalizada"
 }

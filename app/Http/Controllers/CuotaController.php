@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Due;
 use App\Models\Event;
 use App\Models\Expense;
+use App\Models\Member;
 use App\Services\Stripe\StripeGateway;
 use App\Services\WhatsApp\WhatsAppChannel;
 use App\Support\CurrentClub;
@@ -83,6 +84,23 @@ class CuotaController extends Controller
 
             $props['categorias'] = Expense::CATEGORIES;
 
+            // Configuración de cuota: monto del club y tipo por jugador.
+            // SOLO manager: el tipo de cuota de cada uno no lo ve nadie más.
+            $props['config'] = [
+                'monthly_fee_cents' => $club->monthly_fee_cents,
+                'members' => $club->activeMembers()
+                    ->with('user:id,name')
+                    ->orderBy('shirt_number')
+                    ->get()
+                    ->map(fn ($m) => [
+                        'id' => $m->id,
+                        'name' => $m->user->name,
+                        'shirt_number' => $m->shirt_number,
+                        'fee_type' => $m->fee_type,
+                        'custom_fee_cents' => $m->custom_fee_cents,
+                    ]),
+            ];
+
             // Eventos recientes para atar un gasto (el árbitro del partido vs X)
             $props['eventos'] = Event::query()
                 ->orderByDesc('starts_at')
@@ -98,7 +116,11 @@ class CuotaController extends Controller
         return Inertia::render('Cuota', $props);
     }
 
-    /** Estado de cuota por jugador, visible para todo el plantel. */
+    /**
+     * Estado de cuota por jugador, visible para todo el plantel.
+     * Hacia afuera solo existe "al día" o "debe": becados y condonados
+     * figuran al día — el tipo de cuota de cada uno es privado.
+     */
     protected function squadStatus($period): array
     {
         $dues = Due::query()->whereDate('period', $period)->get()->keyBy('member_id');
@@ -111,10 +133,71 @@ class CuotaController extends Controller
                 'id' => $m->id,
                 'name' => $m->user->name,
                 'shirt_number' => $m->shirt_number,
-                'due_status' => $dues->get($m->id)?->status,
+                'due_status' => $dues->get($m->id)?->status === 'pending' ? 'pending' : 'paid',
             ])
             ->values()
             ->all();
+    }
+
+    /** El delegado edita la cuota mensual del club. */
+    public function updateConfig(Request $request): BaseResponse
+    {
+        Gate::authorize('create', Event::class);
+
+        $validated = $request->validate([
+            'monthly_fee_cents' => ['required', 'integer', 'min:0', 'max:10000000'],
+        ]);
+
+        $club = app(CurrentClub::class)->club();
+        $club->update(['monthly_fee_cents' => $validated['monthly_fee_cents']]);
+
+        // Las pendientes sin pagar del mes (de cuota normal) toman el monto nuevo
+        Due::query()
+            ->whereDate('period', now()->startOfMonth())
+            ->where('status', 'pending')
+            ->whereDoesntHave('payments')
+            ->whereHas('member', fn ($q) => $q->where('fee_type', 'normal'))
+            ->update(['amount_cents' => $validated['monthly_fee_cents']]);
+
+        return back();
+    }
+
+    /** Tipo de cuota por jugador: normal, becado o personalizada. Privado del manager. */
+    public function setMemberFee(Request $request, Member $member): BaseResponse
+    {
+        Gate::authorize('create', Event::class);
+        $current = app(CurrentClub::class);
+        abort_unless($member->club_id === $current->id(), 404);
+
+        $validated = $request->validate([
+            'fee_type' => ['required', Rule::in(Member::FEE_TYPES)],
+            'custom_fee_cents' => ['required_if:fee_type,custom', 'nullable', 'integer', 'min:1', 'max:10000000'],
+        ]);
+
+        $member->update([
+            'fee_type' => $validated['fee_type'],
+            'custom_fee_cents' => $validated['fee_type'] === 'custom' ? $validated['custom_fee_cents'] : null,
+        ]);
+
+        // La cuota pendiente del mes se ajusta al tipo nuevo (si no tiene pagos)
+        $due = Due::query()
+            ->where('member_id', $member->id)
+            ->whereDate('period', now()->startOfMonth())
+            ->where('status', 'pending')
+            ->whereDoesntHave('payments')
+            ->first();
+
+        if ($due) {
+            $amount = $member->fresh()->monthlyFeeCents();
+
+            if ($amount === null || $amount === 0) {
+                $due->delete();
+            } else {
+                $due->update(['amount_cents' => $amount]);
+            }
+        }
+
+        return back();
     }
 
     /** Saldo acumulado y movimientos del mes. Caja lógica, no el banco. */

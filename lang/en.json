@@ -224,5 +224,12 @@
     "tabla.next": "Next up",
     "form.w": "W",
     "form.d": "D",
-    "form.l": "L"
+    "form.l": "L",
+    "cuota.settings": "Dues settings",
+    "cuota.monthly_fee": "Monthly fee (:currency)",
+    "cuota.fee_member": "Fee type per player",
+    "cuota.fee_privacy": "Only you can see this. Scholarship players generate no dues and show as paid up to the squad.",
+    "fee.normal": "Standard",
+    "fee.becado": "Scholarship",
+    "fee.custom": "Custom"
 }

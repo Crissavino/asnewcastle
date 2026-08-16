@@ -21,15 +21,22 @@ class GenerateMonthlyDues extends Command
         $created = 0;
 
         Club::query()->where('monthly_fee_cents', '>', 0)->each(function (Club $club) use ($period, &$created) {
-            foreach ($club->activeMembers()->pluck('id') as $memberId) {
+            foreach ($club->activeMembers()->get() as $member) {
+                // Becados no generan cuota; custom usa su monto propio
+                $amount = $member->monthlyFeeCents();
+
+                if ($amount === null || $amount === 0) {
+                    continue;
+                }
+
                 $due = Due::withoutGlobalScopes()->firstOrCreate(
                     [
                         'club_id' => $club->id,
-                        'member_id' => $memberId,
+                        'member_id' => $member->id,
                         'period' => $period,
                     ],
                     [
-                        'amount_cents' => $club->monthly_fee_cents,
+                        'amount_cents' => $amount,
                         'status' => 'pending',
                         'due_date' => $period->copy()->day(20)->toDateString(),
                     ],

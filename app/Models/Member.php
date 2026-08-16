@@ -19,6 +19,8 @@ class Member extends Model
         'position',
         'preferred_foot',
         'availability',
+        'fee_type',
+        'custom_fee_cents',
         'joined_at',
         'left_at',
     ];
@@ -46,6 +48,18 @@ class Member extends Model
     public function isManager(): bool
     {
         return $this->role === 'manager';
+    }
+
+    public const FEE_TYPES = ['normal', 'becado', 'custom'];
+
+    /** El monto que le corresponde este mes, o null si es becado (no genera cuota). */
+    public function monthlyFeeCents(): ?int
+    {
+        return match ($this->fee_type) {
+            'becado' => null,
+            'custom' => $this->custom_fee_cents,
+            default => $this->club->monthly_fee_cents,
+        };
     }
 
     /** El alta está completa cuando el wizard cargó nombre, puesto, dorsal y disponibilidad. */

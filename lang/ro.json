@@ -224,5 +224,12 @@
     "tabla.next": "Urmează",
     "form.w": "V",
     "form.d": "E",
-    "form.l": "Î"
+    "form.l": "Î",
+    "cuota.settings": "Setări cotizație",
+    "cuota.monthly_fee": "Cotizația lunară (:currency)",
+    "cuota.fee_member": "Tip de cotizație pe jucător",
+    "cuota.fee_privacy": "Doar tu vezi asta. Bursierii nu generează cotizație și apar la zi pentru lot.",
+    "fee.normal": "Normală",
+    "fee.becado": "Bursier",
+    "fee.custom": "Personalizată"
 }

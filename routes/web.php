@@ -81,6 +81,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/cuota/{due}/pagar', [CuotaController::class, 'pay'])->name('cuota.pagar');
             Route::post('/cuota/reclamar', [CuotaController::class, 'claim'])->name('cuota.reclamar');
             Route::post('/cuota/{due}/estado', [CuotaController::class, 'setStatus'])->name('cuota.estado');
+            Route::patch('/cuota/config', [CuotaController::class, 'updateConfig'])->name('cuota.config');
+            Route::post('/plantel/{member}/cuota', [CuotaController::class, 'setMemberFee'])->name('plantel.cuota');
             Route::post('/stripe/onboarding', [StripeConnectController::class, 'start'])->name('stripe.onboarding');
             Route::get('/stripe/retorno', [StripeConnectController::class, 'back'])->name('stripe.retorno');
             Route::get('/perfil', [PerfilController::class, 'show'])->name('perfil');

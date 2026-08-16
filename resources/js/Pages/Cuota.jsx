@@ -98,7 +98,81 @@ function ConfirmMini({ onConfirm, children, style }) {
     );
 }
 
-export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, resumen, gastos, categorias, eventos }) {
+function FeeSettings({ config, currency }) {
+    const { t } = useTranslations();
+    const [fee, setFee] = useState(String(config.monthly_fee_cents / 100));
+
+    const saveFee = () => {
+        router.patch(route('cuota.config'), {
+            monthly_fee_cents: Math.round(parseFloat(fee) * 100),
+        }, { preserveScroll: true });
+    };
+
+    const setType = (member, type, customCents = null) => {
+        router.post(route('plantel.cuota', member.id), {
+            fee_type: type,
+            custom_fee_cents: customCents,
+        }, { preserveScroll: true });
+    };
+
+    return (
+        <div className="nc-card">
+            <div className="nc-label">{t('cuota.settings')}</div>
+
+            <label className="nc-field-l" style={{ marginTop: 10 }}>
+                <span className="nc-label">{t('cuota.monthly_fee', { currency })}</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                    <input type="number" min="0" step="1" inputMode="decimal" value={fee}
+                        onChange={(e) => setFee(e.target.value)} style={{ flex: 1 }} />
+                    <button className="nc-mini solid" style={{ flex: 'none', minWidth: 90 }}
+                        onClick={saveFee} disabled={fee === '' || parseFloat(fee) < 0}>
+                        {t('agenda.save')}
+                    </button>
+                </div>
+            </label>
+
+            <div className="nc-label" style={{ marginTop: 14 }}>{t('cuota.fee_member')}</div>
+            <p className="nc-meta" style={{ marginTop: 4 }}>{t('cuota.fee_privacy')}</p>
+
+            <div style={{ marginTop: 4 }}>
+                {config.members.map((m) => (
+                    <div key={m.id} className="nc-row" style={{ gap: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                            <Kit n={m.shirt_number} size="sm" />
+                            <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
+                            {m.fee_type === 'custom' && (
+                                <input
+                                    type="number" min="1" inputMode="decimal"
+                                    defaultValue={m.custom_fee_cents ? m.custom_fee_cents / 100 : ''}
+                                    onBlur={(e) => {
+                                        const v = parseFloat(e.target.value);
+                                        if (v > 0 && Math.round(v * 100) !== m.custom_fee_cents) {
+                                            setType(m, 'custom', Math.round(v * 100));
+                                        }
+                                    }}
+                                    style={{ width: 74, padding: '8px 8px', border: '1px solid var(--line)', borderRadius: 2, fontFamily: 'Rubik, sans-serif', fontSize: 13 }}
+                                />
+                            )}
+                            <select
+                                value={m.fee_type}
+                                onChange={(e) => setType(m, e.target.value, e.target.value === 'custom' ? (m.custom_fee_cents ?? config.monthly_fee_cents) : null)}
+                                style={{ padding: '8px 6px', border: '1px solid var(--line)', borderRadius: 2, fontFamily: 'Archivo, sans-serif', fontSize: 12, background: '#fff' }}
+                            >
+                                <option value="normal">{t('fee.normal')}</option>
+                                <option value="becado">{t('fee.becado')}</option>
+                                <option value="custom">{t('fee.custom')}</option>
+                            </select>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, resumen, gastos, categorias, eventos, config }) {
     const { t, locale } = useTranslations();
     const { member, flash, errors } = usePage().props;
     const [claimed, setClaimed] = useState(false);
@@ -248,6 +322,8 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
                     </button>
                 </div>
             )}
+
+            {isManager && config && <FeeSettings config={config} currency={currency} />}
 
             {isManager && !stripe_ready && (
                 <div className="nc-card">
