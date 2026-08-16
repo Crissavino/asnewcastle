@@ -101,11 +101,18 @@ function ConfirmMini({ onConfirm, children, style }) {
 function FeeSettings({ config, currency }) {
     const { t } = useTranslations();
     const [fee, setFee] = useState(String(config.monthly_fee_cents / 100));
+    const [savedFee, setSavedFee] = useState(false);
 
     const saveFee = () => {
         router.patch(route('cuota.config'), {
             monthly_fee_cents: Math.round(parseFloat(fee) * 100),
-        }, { preserveScroll: true });
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setSavedFee(true);
+                setTimeout(() => setSavedFee(false), 1600);
+            },
+        });
     };
 
     const setType = (member, type, customCents = null) => {
@@ -119,17 +126,19 @@ function FeeSettings({ config, currency }) {
         <div className="nc-card">
             <div className="nc-label">{t('cuota.settings')}</div>
 
-            <label className="nc-field-l" style={{ marginTop: 10 }}>
+            {/* div, NO label: un <button> dentro de <label> redirige su click
+                al input y nunca dispara el onClick (por eso no guardaba). */}
+            <div className="nc-field-l" style={{ marginTop: 10 }}>
                 <span className="nc-label">{t('cuota.monthly_fee', { currency })}</span>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, marginTop: 5 }}>
                     <input type="number" min="0" step="1" inputMode="decimal" value={fee}
-                        onChange={(e) => setFee(e.target.value)} style={{ flex: 1 }} />
-                    <button className="nc-mini solid" style={{ flex: 'none', minWidth: 90 }}
+                        onChange={(e) => setFee(e.target.value)} style={{ flex: 1, marginTop: 0 }} />
+                    <button type="button" className="nc-mini solid" style={{ flex: 'none', minWidth: 90 }}
                         onClick={saveFee} disabled={fee === '' || parseFloat(fee) < 0}>
-                        {t('agenda.save')}
+                        {savedFee ? `✓ ${t('cuota.saved')}` : t('agenda.save')}
                     </button>
                 </div>
-            </label>
+            </div>
 
             <div className="nc-label" style={{ marginTop: 14 }}>{t('cuota.fee_member')}</div>
             <p className="nc-meta" style={{ marginTop: 4 }}>{t('cuota.fee_privacy')}</p>
@@ -350,6 +359,23 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
                     </div>
                     <div className="nc-meta" style={{ marginTop: 8 }}>
                         {t('cuota.up_to_date', { paid: caja.paid_count, total: caja.total_count })}
+                    </div>
+
+                    {/* Histórico de cuotas: cobrado vs adeudado en todos los meses */}
+                    <div className="nc-admin" style={{ marginTop: 14 }}>
+                        <div className="nc-label" style={{ marginBottom: 2 }}>{t('cuota.all_time')}</div>
+                        <div className="nc-row">
+                            <span className="nc-meta">{t('cuota.total_paid')}</span>
+                            <span className="nc-num" style={{ fontSize: 14, color: 'var(--aqua-dk)', fontWeight: 700 }}>
+                                {money(caja.paid_all_cents)} {currency}
+                            </span>
+                        </div>
+                        <div className="nc-row">
+                            <span className="nc-meta">{t('cuota.total_owed')}</span>
+                            <span className="nc-num" style={{ fontSize: 14, color: caja.owed_all_cents > 0 ? 'var(--red-dk)' : 'inherit', fontWeight: 700 }}>
+                                {money(caja.owed_all_cents)} {currency}
+                            </span>
+                        </div>
                     </div>
 
                     {caja.debtors.length > 0 && (

@@ -59,6 +59,9 @@ class CuotaController extends Controller
                 'target_cents' => $active->sum('amount_cents'),
                 'paid_count' => $active->where('status', 'paid')->count(),
                 'total_count' => $active->count(),
+                // Histórico de cuotas (todos los meses): lo cobrado vs lo que se debe
+                'paid_all_cents' => (int) Due::query()->where('status', 'paid')->sum('amount_cents'),
+                'owed_all_cents' => (int) Due::query()->where('status', 'pending')->sum('amount_cents'),
                 'debtors' => $dues->where('status', 'pending')->values()->map(fn ($d) => [
                     'due_id' => $d->id,
                     'name' => $d->member->user->name,
