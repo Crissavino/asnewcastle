@@ -37,7 +37,7 @@ body { overscroll-behavior-y: none; }
 .nc-kit.ghost { opacity: .3; filter: grayscale(.85); }
 
 /* header: rojo a rayas + línea negra + filete celeste — los tres colores del club */
-.nc-top { position: sticky; top: 0; z-index: 20; color: #fff;
+.nc-top { position: relative; flex: none; z-index: 20; color: #fff;
   padding: calc(14px + env(safe-area-inset-top)) 16px 13px;
   display: flex; align-items: center; gap: 12px; border-bottom: 3px solid var(--ink);
   box-shadow: 0 3px 0 var(--aqua); }
@@ -49,8 +49,10 @@ body { overscroll-behavior-y: none; }
   font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .08em;
   text-transform: uppercase; padding: 6px 8px; border-radius: 2px; }
 .nc-role button.on { background: #fff; color: var(--red-dk); }
-/* el fondo: franjas de césped recién cortado, casi imperceptibles */
-.nc-body { flex: 1; padding: 16px 14px 100px;
+/* el fondo: franjas de césped recién cortado, casi imperceptibles.
+   Es EL área que scrollea: header y tabs viven afuera, clavados. */
+.nc-body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain; padding: 16px 14px 32px;
   background: repeating-linear-gradient(0deg, transparent 0 46px, rgba(18,18,18,.022) 46px 92px); }
 
 .nc-card { background: var(--card); border: 1px solid var(--line); border-radius: 2px; padding: 16px; margin-bottom: 12px;
@@ -110,11 +112,9 @@ body { overscroll-behavior-y: none; }
 .nc-table tr.us td { background: rgba(210,34,51,.07); color: var(--red-dk); font-weight: 700; }
 .nc-table tr.us td:first-child { box-shadow: inset 4px 0 0 var(--red); }
 
-/* vestuario: la página queda clavada y solo los mensajes scrollean,
-   como cualquier app de mensajería (header y compositor siempre fijos) */
-.nc-shell:has(.page-vestuario) { height: 100vh; height: 100dvh; height: var(--app-vh, 100dvh); overflow: hidden; }
-.nc-shell:has(.page-vestuario) .nc-main { height: 100%; min-height: 0; }
-.nc-body.page-vestuario { flex: 1; min-height: 0; overflow: hidden;
+/* vestuario: acá ni siquiera scrollea el body — scrollean solo los mensajes,
+   como cualquier app de mensajería (compositor siempre a la vista) */
+.nc-body.page-vestuario { overflow: hidden;
   display: flex; flex-direction: column; padding-bottom: 10px; }
 .nc-chat { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .nc-chat-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -210,7 +210,7 @@ body { overscroll-behavior-y: none; }
 .nc-icon-btn { background: var(--red); border: none; border-radius: 2px; width: 44px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; }
 
 /* tabs */
-.nc-tabs { position: sticky; bottom: 0; display: flex; background: #fff; border-top: 1px solid var(--line);
+.nc-tabs { flex: none; display: flex; background: #fff; border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom); }
 .nc-tabs a { flex: 1; padding: 10px 2px 12px; background: transparent; border: none; cursor: pointer;
   color: var(--stone); display: flex; flex-direction: column; align-items: center; gap: 4px;
@@ -279,11 +279,16 @@ button.nc-day { width: 100%; background: none; border: none; border-top: 1px sol
 /* como tarjeta centrada sobre el escenario oscuro del club.           */
 /* ------------------------------------------------------------------ */
 
-/* shell: la app con navegación; en mobile es idéntica a .nc-app */
-.nc-shell { width: 100%; max-width: 430px; min-height: 100vh; background: var(--paper);
+/* shell: la app con navegación queda CLAVADA a la altura real del viewport
+   (--app-vh la mide visualViewport en app.jsx: sigue a la barra de Safari y
+   al teclado). Header arriba, tabs abajo, y solo .nc-body scrollea adentro.
+   Sin scroll de página = sin barra de Safari tapando las tabs. */
+.nc-root:has(.nc-shell) { height: 100vh; height: 100dvh; height: var(--app-vh, 100dvh);
+  min-height: 0; overflow: hidden; }
+.nc-shell { width: 100%; max-width: 430px; height: 100%; background: var(--paper);
   display: flex; flex-direction: column; position: relative; box-shadow: 0 0 0 1px var(--line); }
 .nc-side { display: none; }
-.nc-main { flex: 1; display: flex; flex-direction: column; min-height: 100vh; min-width: 0; }
+.nc-main { flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 
 @media (min-width: 768px) {
   /* filete superior con los colores del club, en todas las pantallas */
@@ -318,7 +323,6 @@ button.nc-day { width: 100%; background: none; border: none; border-top: 1px sol
   .nc-tabs { display: none; }
 
   .nc-side { display: flex; flex-direction: column; width: 92px; flex: 0 0 auto;
-    position: sticky; top: 0; height: 100vh;
     background: repeating-linear-gradient(90deg, transparent 0 9px, rgba(255,255,255,.045) 9px 11px), var(--ink);
     color: #fff; border-right: 3px solid var(--red); }
   .nc-side-brand { display: flex; flex-direction: column; align-items: center; gap: 8px;
