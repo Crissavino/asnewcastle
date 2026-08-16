@@ -231,5 +231,7 @@
     "cuota.fee_privacy": "Esto lo ves solo vos. Los becados no generan cuota y para el plantel figuran al día.",
     "fee.normal": "Normal",
     "fee.becado": "Becado",
-    "fee.custom": "Personalizada"
+    "fee.custom": "Personalizada",
+    "invite.title": "Invitar jugadores",
+    "agenda.reminded": "Recordatorio enviado ✓"
 }

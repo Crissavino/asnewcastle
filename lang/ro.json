@@ -231,5 +231,7 @@
     "cuota.fee_privacy": "Doar tu vezi asta. Bursierii nu generează cotizație și apar la zi pentru lot.",
     "fee.normal": "Normală",
     "fee.becado": "Bursier",
-    "fee.custom": "Personalizată"
+    "fee.custom": "Personalizată",
+    "invite.title": "Invită jucători",
+    "agenda.reminded": "Memento trimis ✓"
 }

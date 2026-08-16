@@ -233,7 +233,8 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
 
             {isManager && (
                 <div className="nc-card">
-                    <div className="nc-label">{t('invite.hint')}</div>
+                    <div className="nc-label">{t('invite.title')}</div>
+                    <p className="nc-meta" style={{ marginTop: 6 }}>{t('invite.hint')}</p>
                     <div className="nc-admin-actions">
                         {flash.invite_url ? (
                             <button className="nc-mini solid" onClick={copyInvite}>

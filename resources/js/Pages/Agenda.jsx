@@ -221,6 +221,7 @@ function EventCard({ ev, onEdit }) {
     const { member } = usePage().props;
     const { day, time } = useDates();
     const [copied, setCopied] = useState(false);
+    const [reminded, setReminded] = useState(false);
     const [showWho, setShowWho] = useState(false);
     const isManager = member?.role === 'manager';
     const isMatch = ev.kind === 'match';
@@ -232,7 +233,13 @@ function EventCard({ ev, onEdit }) {
     };
 
     const remind = () => {
-        router.post(route('eventos.recordar', ev.id), {}, { preserveScroll: true });
+        router.post(route('eventos.recordar', ev.id), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setReminded(true);
+                setTimeout(() => setReminded(false), 2500);
+            },
+        });
     };
 
     const cancelEvent = () => {
@@ -343,8 +350,8 @@ function EventCard({ ev, onEdit }) {
                             <Copy size={13} /> {copied ? t('agenda.copied') : t('agenda.copy_list')}
                         </button>
                         {ev.counts.pending > 0 && (
-                            <button className="nc-mini solid" onClick={remind}>
-                                <Bell size={13} /> {t('agenda.remind', { count: ev.counts.pending })}
+                            <button className="nc-mini solid" onClick={remind} disabled={reminded}>
+                                <Bell size={13} /> {reminded ? t('agenda.reminded') : t('agenda.remind', { count: ev.counts.pending })}
                             </button>
                         )}
                     </div>
