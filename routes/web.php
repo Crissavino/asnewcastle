@@ -13,6 +13,7 @@ use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\TablaController;
 use App\Http\Controllers\VestuarioController;
+use App\Http\Controllers\ViewModeController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Controllers\Webhooks\TwilioWebhookController;
 use App\Http\Middleware\VerifyTwilioSignature;
@@ -94,6 +95,9 @@ Route::middleware('auth')->group(function () {
             Route::delete('/gastos/{expense}', [ExpenseController::class, 'destroy'])->name('gastos.borrar');
 
             Route::post('/invitaciones', [InviteController::class, 'create'])->name('invitacion.crear');
+
+            // Toggle admin/jugador (solo el dueño; el controlador lo valida)
+            Route::post('/ver-como', [ViewModeController::class, 'toggle'])->name('ver-como');
         });
     });
 });

@@ -19,7 +19,8 @@ class AgendaController extends Controller
     {
         $current = app(CurrentClub::class);
         $member = $current->member();
-        $isManager = $member->isManager();
+        // Rol EFECTIVO: si el dueño está "viendo como jugador", figura player.
+        $isManager = $current->actsAsManager();
 
         $rosterCount = $current->club()->activeMembers()->count();
 

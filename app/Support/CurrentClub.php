@@ -47,4 +47,32 @@ class CurrentClub
     {
         abort_unless($this->club && $model->club_id === $this->club->id, 404);
     }
+
+    /** El presidente/dueño del proyecto (por teléfono, config OWNER_PHONE). */
+    public function isOwner(): bool
+    {
+        $owner = config('app.owner_phone');
+
+        return $owner && $this->member?->user?->phone === $owner;
+    }
+
+    /**
+     * El dueño puede espiar la app "como jugador" (toggle en el header).
+     * Solo cambia lo que se muestra: los permisos reales quedan intactos.
+     */
+    public function viewingAsPlayer(): bool
+    {
+        return $this->isOwner() && (bool) session('view_as_player', false);
+    }
+
+    /** Rol EFECTIVO para la vista: el dueño en modo espía figura como player. */
+    public function actsAsManager(): bool
+    {
+        return (bool) $this->member?->isManager() && ! $this->viewingAsPlayer();
+    }
+
+    public function effectiveRole(): ?string
+    {
+        return $this->member ? ($this->actsAsManager() ? 'manager' : 'player') : null;
+    }
 }

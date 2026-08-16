@@ -23,7 +23,8 @@ class CuotaController extends Controller
         $current = app(CurrentClub::class);
         $club = $current->club();
         $member = $current->member();
-        $isManager = $member->isManager();
+        // Rol EFECTIVO: si el dueño está "viendo como jugador", acá figura player.
+        $isManager = $current->actsAsManager();
         $period = now()->startOfMonth();
 
         $myDue = Due::query()
@@ -47,29 +48,30 @@ class CuotaController extends Controller
             'resumen' => $this->cashSummary($period),
         ];
 
-        // La caja es solo del delegado: un player no la ve.
+        // La caja (recaudación del mes, histórico y deudores) la ve TODO el
+        // plantel — transparencia. Las ACCIONES (marcar pago, becar, reclamar)
+        // siguen siendo solo del manager: se gatean en el front por el rol.
+        $dues = Due::query()->whereDate('period', $period)->with('member.user:id,name')->get();
+        $active = $dues->where('status', '!=', 'waived'); // condonadas fuera del objetivo
+
+        $props['caja'] = [
+            'collected_cents' => $active->where('status', 'paid')->sum('amount_cents'),
+            'target_cents' => $active->sum('amount_cents'),
+            'paid_count' => $active->where('status', 'paid')->count(),
+            'total_count' => $active->count(),
+            // Histórico de cuotas (todos los meses): lo cobrado vs lo que se debe
+            'paid_all_cents' => (int) Due::query()->where('status', 'paid')->sum('amount_cents'),
+            'owed_all_cents' => (int) Due::query()->where('status', 'pending')->sum('amount_cents'),
+            'debtors' => $dues->where('status', 'pending')->values()->map(fn ($d) => [
+                'due_id' => $d->id,
+                'name' => $d->member->user->name,
+                'shirt_number' => $d->member->shirt_number,
+                'amount_cents' => $d->amount_cents,
+            ]),
+        ];
+
+        // Solo el delegado: configuración de cuota y gestión de gastos.
         if ($isManager) {
-            $dues = Due::query()->whereDate('period', $period)->with('member.user:id,name')->get();
-
-            // Las condonadas no cuentan ni como deuda ni como objetivo
-            $active = $dues->where('status', '!=', 'waived');
-
-            $props['caja'] = [
-                'collected_cents' => $active->where('status', 'paid')->sum('amount_cents'),
-                'target_cents' => $active->sum('amount_cents'),
-                'paid_count' => $active->where('status', 'paid')->count(),
-                'total_count' => $active->count(),
-                // Histórico de cuotas (todos los meses): lo cobrado vs lo que se debe
-                'paid_all_cents' => (int) Due::query()->where('status', 'paid')->sum('amount_cents'),
-                'owed_all_cents' => (int) Due::query()->where('status', 'pending')->sum('amount_cents'),
-                'debtors' => $dues->where('status', 'pending')->values()->map(fn ($d) => [
-                    'due_id' => $d->id,
-                    'name' => $d->member->user->name,
-                    'shirt_number' => $d->member->shirt_number,
-                    'amount_cents' => $d->amount_cents,
-                ]),
-            ];
-
             // El detalle de gastos del mes, con opción de borrar
             $props['gastos'] = Expense::query()
                 ->whereBetween('spent_on', [$period, $period->copy()->endOfMonth()])

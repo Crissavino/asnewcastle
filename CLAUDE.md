@@ -224,9 +224,15 @@ Escrito para que no aparezca por inercia:
 
 - Policies de Laravel en todo. Un `player` no puede crear eventos, editar la tabla, cargar gastos
   ni operar cuotas. **Sí ve** (decisión de producto, para generar conciencia): el estado de cuota
-  de cada compañero, el saldo de la caja y los gastos del mes por categoría. El detalle operativo
-  (montos de recaudación, acciones) es solo del manager. El día del vencimiento se publica en el
-  vestuario la lista de deudores con nombre.
+  de cada compañero, el saldo de la caja, los gastos del mes por categoría **y la caja completa**
+  (recaudación del mes, histórico cobrado/adeudado y la lista de deudores con monto). Lo único
+  reservado al manager son las **acciones** (marcar pago en efectivo, becar, reclamar) y la
+  **configuración** (monto de cuota, tipo por jugador, gestión de gastos). El día del vencimiento
+  se publica en el vestuario la lista de deudores con nombre.
+- **Toggle "ver como jugador"**: el dueño (config `OWNER_PHONE`) tiene en el header un switch
+  admin/jugador para previsualizar la app como la ve un player. Solo cambia el rol EFECTIVO
+  de la vista (prop compartido `member.role` y datos que se mandan); los permisos reales del
+  manager quedan intactos — la autorización server-side siempre usa el rol real.
 - Verificación de firma en los webhooks de Stripe **y** de Twilio.
 - Idempotencia en todo handler de webhook.
 - Los números de teléfono nunca aparecen en URLs ni en respuestas de API a otros jugadores.

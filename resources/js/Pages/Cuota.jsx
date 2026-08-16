@@ -345,7 +345,7 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
                 </div>
             )}
 
-            {isManager && caja && (
+            {caja && (
                 <div className="nc-card">
                     <div className="nc-label">{t('cuota.cash')} · {periodLabel}</div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 10 }}>
@@ -387,41 +387,49 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
                                         <Kit n={d.shirt_number} size="sm" />
                                         <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
                                     </div>
-                                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                                        <button
-                                            className="nc-mini"
-                                            style={{ flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 10 }}
-                                            onClick={() => router.post(route('cuota.estado', d.due_id), { status: 'paid' }, { preserveScroll: true })}
-                                        >
-                                            {t('cuota.mark_cash')}
-                                        </button>
-                                        <button
-                                            className="nc-mini"
-                                            style={{ flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 10, opacity: 0.65 }}
-                                            onClick={() => router.post(route('cuota.estado', d.due_id), { status: 'waived' }, { preserveScroll: true })}
-                                        >
-                                            {t('cuota.waive')}
-                                        </button>
-                                    </div>
+                                    {isManager ? (
+                                        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                                            <button
+                                                className="nc-mini"
+                                                style={{ flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 10 }}
+                                                onClick={() => router.post(route('cuota.estado', d.due_id), { status: 'paid' }, { preserveScroll: true })}
+                                            >
+                                                {t('cuota.mark_cash')}
+                                            </button>
+                                            <button
+                                                className="nc-mini"
+                                                style={{ flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 10, opacity: 0.65 }}
+                                                onClick={() => router.post(route('cuota.estado', d.due_id), { status: 'waived' }, { preserveScroll: true })}
+                                            >
+                                                {t('cuota.waive')}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <span className="nc-num nc-meta" style={{ fontSize: 13, flexShrink: 0 }}>
+                                            {money(d.amount_cents)} {currency}
+                                        </span>
+                                    )}
                                 </div>
                             ))}
 
-                            <div className="nc-admin">
-                                <div className="nc-meta">
-                                    {t('cuota.missing_close', {
-                                        amount: money(caja.target_cents - caja.collected_cents),
-                                        currency,
-                                    })}
+                            {isManager && (
+                                <div className="nc-admin">
+                                    <div className="nc-meta">
+                                        {t('cuota.missing_close', {
+                                            amount: money(caja.target_cents - caja.collected_cents),
+                                            currency,
+                                        })}
+                                    </div>
+                                    <div className="nc-admin-actions">
+                                        <button className="nc-mini solid" onClick={claim}>
+                                            <Bell size={13} />
+                                            {claimed || flash.status
+                                                ? t('cuota.claimed', { count: caja.debtors.length })
+                                                : t('cuota.claim', { count: caja.debtors.length })}
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="nc-admin-actions">
-                                    <button className="nc-mini solid" onClick={claim}>
-                                        <Bell size={13} />
-                                        {claimed || flash.status
-                                            ? t('cuota.claimed', { count: caja.debtors.length })
-                                            : t('cuota.claim', { count: caja.debtors.length })}
-                                    </button>
-                                </div>
-                            </div>
+                            )}
                         </div>
                     )}
                 </div>

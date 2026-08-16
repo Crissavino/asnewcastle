@@ -13,14 +13,16 @@ it('todo el plantel ve quién está al día y quién debe, y el resumen de caja'
     Due::factory()->forMember($manager)->paid()->create();
     Due::factory()->forMember($player)->create(); // pendiente
 
-    // El jugador ve el estado del plantel y el saldo, pero no la caja operativa
+    // El jugador ve el estado del plantel, el saldo y la caja (recaudación,
+    // histórico, deudores). Lo que NO ve es la gestión: config y gastos.
     $this->actingAs($player->user)
         ->get('/cuota')
         ->assertInertia(fn (Assert $page) => $page
             ->has('plantel', 2)
             ->where('plantel.0.due_status', fn ($s) => in_array($s, ['paid', 'pending'], true))
             ->where('resumen.balance_cents', 12000)
-            ->missing('caja')
+            ->has('caja')
+            ->missing('config')
             ->missing('gastos')
         );
 });

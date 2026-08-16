@@ -84,6 +84,9 @@ return [
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
+    // Teléfono del dueño/presidente: habilita el toggle "ver como jugador".
+    'owner_phone' => env('OWNER_PHONE'),
+
     /*
     |--------------------------------------------------------------------------
     | Encryption Key

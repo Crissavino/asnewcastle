@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { CalendarDays, ListOrdered, MessageSquare, Wallet, User } from 'lucide-react';
 import Crest from '../Components/Crest';
 import Kit from '../Components/Kit';
@@ -26,9 +26,11 @@ function NavLinks({ iconSize }) {
 
 export default function AppLayout({ tab, eyebrow, children }) {
     const { t } = useTranslations();
-    const { auth, club, member } = usePage().props;
+    const { auth, club, member, is_owner, viewing_as_player } = usePage().props;
 
     const title = t(`tabs.${tab}`);
+
+    const switchView = () => router.post(route('ver-como'), {}, { preserveScroll: true });
 
     return (
         <div className="nc-root">
@@ -59,6 +61,18 @@ export default function AppLayout({ tab, eyebrow, children }) {
                             <div className="nc-eyebrow">{eyebrow ?? t(`headers.${tab}_eyebrow`)}</div>
                             <h1 className="nc-display nc-h1">{title}</h1>
                         </div>
+                        {is_owner && (
+                            <div className="nc-role" role="group" aria-label={t('view.switch')}>
+                                <button type="button" className={!viewing_as_player ? 'on' : ''}
+                                    onClick={() => viewing_as_player && switchView()}>
+                                    {t('view.admin')}
+                                </button>
+                                <button type="button" className={viewing_as_player ? 'on' : ''}
+                                    onClick={() => !viewing_as_player && switchView()}>
+                                    {t('view.player')}
+                                </button>
+                            </div>
+                        )}
                     </header>
 
                     <main className={`nc-body page-${tab}`}>{children}</main>

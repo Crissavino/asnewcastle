@@ -30,7 +30,7 @@ it('genera las cuotas del mes para los miembros activos, una sola vez', function
         ->and($dues->first()->status)->toBe('pending');
 });
 
-it('el jugador ve su cuota pero no la caja del club', function () {
+it('el jugador ve su cuota y la caja, pero no la gestión (config/gastos)', function () {
     $member = Member::factory()->create();
     Due::factory()->forMember($member)->create();
 
@@ -39,7 +39,9 @@ it('el jugador ve su cuota pero no la caja del club', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->where('my_due.amount_cents', 12000)
             ->where('my_due.status', 'pending')
-            ->missing('caja')
+            ->has('caja')          // ahora la caja la ve todo el plantel
+            ->missing('config')    // pero no la configuración
+            ->missing('gastos')
         );
 });
 

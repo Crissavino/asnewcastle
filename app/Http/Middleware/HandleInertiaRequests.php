@@ -46,10 +46,15 @@ class HandleInertiaRequests extends Middleware
 
             'member' => fn () => $current->member() ? [
                 'id' => $current->member()->id,
-                'role' => $current->member()->role,
+                // Rol EFECTIVO: si el dueño está "viendo como jugador", figura player.
+                'role' => $current->effectiveRole(),
                 'shirt_number' => $current->member()->shirt_number,
                 'position' => $current->member()->position,
             ] : null,
+
+            // Solo el dueño ve el toggle admin/jugador, y en qué modo está.
+            'is_owner' => fn () => $current->isOwner(),
+            'viewing_as_player' => fn () => $current->viewingAsPlayer(),
 
             'flash' => [
                 'status' => fn () => $request->session()->get('status'),
