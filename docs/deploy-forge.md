@@ -27,9 +27,14 @@ git push -u origin master
 2. **Git Repository** → conectar GitHub → `TU_USUARIO/asnewcastle-app`, branch `master`.
 3. **Deploy Script** — reemplazar por:
 
+Los sitios nuevos usan **zero-downtime deployments** (no se puede desactivar): cada deploy
+clona el código en `releases/XXX` y activa con un symlink. El script DEBE incluir los macros
+de Forge — sin `$CREATE_RELEASE()` el release no existe y el deploy revienta:
+
 ```bash
-cd /home/forge/app.asnewcastle.ro
-git pull origin $FORGE_SITE_BRANCH
+$CREATE_RELEASE()
+
+cd $FORGE_RELEASE_DIRECTORY
 
 $FORGE_COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
@@ -41,11 +46,14 @@ $FORGE_PHP artisan migrate --force
 $FORGE_PHP artisan config:cache
 $FORGE_PHP artisan route:cache
 $FORGE_PHP artisan view:cache
-$FORGE_PHP artisan queue:restart
 
-( flock -w 10 9 || exit 1
-    echo 'Restarting FPM...'; sudo -S service $FORGE_PHP_FPM reload ) 9>/tmp/fpmlock
+$ACTIVATE_RELEASE()
+
+$RESTART_QUEUES()
 ```
+
+⚠️ Además, en Settings → Deployments → **Shared paths** agregar `storage`: sin eso,
+las fotos del chat se pierden en cada deploy (cada release es una carpeta nueva).
 
 4. En el DNS del dominio: registro A apuntando a la IP del server.
 5. **SSL → LetsEncrypt** (un click). Sin HTTPS no hay PWA ni webhooks.
