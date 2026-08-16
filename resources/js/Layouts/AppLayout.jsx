@@ -37,7 +37,7 @@ export default function AppLayout({ tab, eyebrow, children }) {
                 {/* Riel / sidebar: solo tablet y desktop */}
                 <aside className="nc-side">
                     <div className="nc-side-brand">
-                        <Crest size={40} />
+                        <Crest size={40} white />
                         <div>
                             <div className="nc-side-name">{club?.name}</div>
                             <div className="nc-side-league">{club?.league}</div>
@@ -54,7 +54,7 @@ export default function AppLayout({ tab, eyebrow, children }) {
 
                 <div className="nc-main">
                     <header className="nc-top nc-pinstripe">
-                        <Crest size={38} />
+                        <Crest size={38} white />
                         <div>
                             <div className="nc-eyebrow">{eyebrow ?? t(`headers.${tab}_eyebrow`)}</div>
                             <h1 className="nc-display nc-h1">{title}</h1>

@@ -1,9 +1,10 @@
 import { usePage } from '@inertiajs/react';
 
-// El escudo oficial, sin retoques. Archivo estático en public/img/crest.png.
-export default function Crest({ size = 38, style = {} }) {
+// El escudo oficial. Misma silueta siempre; `white` usa la versión en blanco
+// (knockout) para fondos oscuros/rojos —header y sidebar—, negro en el resto.
+export default function Crest({ size = 38, white = false, style = {} }) {
     const { club } = usePage().props;
-    const src = club?.crest ?? '/img/crest.png';
+    const src = white ? '/img/crest-white.png' : (club?.crest ?? '/img/crest.png');
 
     return (
         <img
