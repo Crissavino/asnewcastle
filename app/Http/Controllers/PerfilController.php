@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Support\CurrentClub;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,7 +36,23 @@ class PerfilController extends Controller
                 'preferred_foot' => $member->preferred_foot,
                 'availability' => $member->availability ?? [],
             ],
+            'slots' => AltaController::SLOTS,
             'roster' => $roster,
         ]);
+    }
+
+    /** La disponibilidad se edita desde el perfil, sin repetir el wizard. */
+    public function updateAvailability(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'availability' => ['required', 'array', 'min:1'],
+            'availability.*' => [Rule::in(AltaController::SLOTS)],
+        ]);
+
+        app(CurrentClub::class)->member()->update([
+            'availability' => array_values(array_unique($validated['availability'])),
+        ]);
+
+        return back();
     }
 }

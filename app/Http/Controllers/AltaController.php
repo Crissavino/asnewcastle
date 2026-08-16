@@ -18,7 +18,8 @@ class AltaController extends Controller
 
     public const FEET = ['right', 'left', 'both'];
 
-    public const SLOTS = ['tue-2030', 'thu-2030', 'sat-am', 'sun-am'];
+    /** Días de semana = entrenamiento (después de las 19/20); finde = partido. */
+    public const SLOTS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
     public const MAX_NUMBER = 30;
 

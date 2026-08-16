@@ -31,7 +31,11 @@ class EventMessenger
             ->locale($locale)
             ->translatedFormat('l j F · H:i');
 
-        $kit = trans($event->kit === 'away' ? 'wa.kit_away' : 'wa.kit_home', [], $locale);
+        $kit = ! $event->isMatch() ? '—' : trans(match ($event->kit) {
+            'away' => 'wa.kit_away',
+            'both' => 'wa.kit_both',
+            default => 'wa.kit_home',
+        }, [], $locale);
 
         $this->channel->sendTemplate($user->phone, config('services.twilio.event_template_sid') ?? 'event', [
             '1' => $title,

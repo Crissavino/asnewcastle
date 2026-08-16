@@ -79,7 +79,7 @@ class DemoSeeder extends Seeder
                     'shirt_number' => $number,
                     'position' => $position,
                     'preferred_foot' => 'right',
-                    'availability' => ['tue-2030', 'sat-am'],
+                    'availability' => ['tue', 'sat'],
                     'joined_at' => now()->subMonths(2),
                 ]);
             }

@@ -22,6 +22,7 @@ function NuevoEvento({ rosterCount, onClose }) {
     const { data, setData, post, processing, errors } = useForm({
         kind: 'match',
         opponent: '',
+        is_home: '1',
         date: '',
         time: '11:00',
         venue: '',
@@ -29,15 +30,17 @@ function NuevoEvento({ rosterCount, onClose }) {
         notes: '',
     });
 
-    const ok = data.date && data.time && data.venue.trim() && (data.kind === 'training' || data.opponent.trim());
+    const isMatch = data.kind === 'match';
+    const ok = data.date && data.time && data.venue.trim() && (!isMatch || data.opponent.trim());
 
     const submit = () => {
         router.post(route('eventos.crear'), {
             kind: data.kind,
-            opponent: data.opponent,
+            opponent: isMatch ? data.opponent : null,
+            is_home: isMatch ? data.is_home === '1' : null,
             starts_at: `${data.date} ${data.time}`,
             venue: data.venue,
-            kit: data.kit,
+            kit: isMatch ? data.kit : null,
             notes: data.notes || null,
         }, {
             onSuccess: onClose,
@@ -58,11 +61,21 @@ function NuevoEvento({ rosterCount, onClose }) {
                     </select>
                 </label>
 
-                {data.kind === 'match' && (
-                    <label className="nc-field-l">
-                        <span className="nc-label">{t('agenda.rival')}</span>
-                        <input value={data.opponent} onChange={(e) => setData('opponent', e.target.value)} placeholder="CS Găneasa" />
-                    </label>
+                {isMatch && (
+                    <>
+                        <label className="nc-field-l">
+                            <span className="nc-label">{t('agenda.rival')}</span>
+                            <input value={data.opponent} onChange={(e) => setData('opponent', e.target.value)} placeholder="CS Găneasa" />
+                        </label>
+
+                        <label className="nc-field-l">
+                            <span className="nc-label">{t('agenda.side')}</span>
+                            <select value={data.is_home} onChange={(e) => setData('is_home', e.target.value)}>
+                                <option value="1">{t('agenda.home_opt')}</option>
+                                <option value="0">{t('agenda.away_opt')}</option>
+                            </select>
+                        </label>
+                    </>
                 )}
 
                 <label className="nc-field-l">
@@ -80,13 +93,16 @@ function NuevoEvento({ rosterCount, onClose }) {
                     <input value={data.venue} onChange={(e) => setData('venue', e.target.value)} placeholder="Teren Voluntari" />
                 </label>
 
-                <label className="nc-field-l">
-                    <span className="nc-label">{t('agenda.kit')}</span>
-                    <select value={data.kit} onChange={(e) => setData('kit', e.target.value)}>
-                        <option value="home">{t('agenda.kit_home_opt')}</option>
-                        <option value="away">{t('agenda.kit_away_opt')}</option>
-                    </select>
-                </label>
+                {isMatch && (
+                    <label className="nc-field-l">
+                        <span className="nc-label">{t('agenda.kit')}</span>
+                        <select value={data.kit} onChange={(e) => setData('kit', e.target.value)}>
+                            <option value="home">{t('agenda.kit_home_opt')}</option>
+                            <option value="away">{t('agenda.kit_away_opt')}</option>
+                            <option value="both">{t('agenda.kit_both_opt')}</option>
+                        </select>
+                    </label>
+                )}
 
                 <label className="nc-field-l">
                     <span className="nc-label">{t('agenda.notes')}</span>
@@ -113,6 +129,8 @@ function EventCard({ ev }) {
     const [copied, setCopied] = useState(false);
     const isManager = member?.role === 'manager';
     const isMatch = ev.kind === 'match';
+    // Con "both" se llevan las dos casacas; las camisetas de la lista van en roja
+    const kitColor = ev.kit === 'away' ? 'away' : 'home';
 
     const setStatus = (status) => {
         router.post(route('asistencia', ev.id), { status }, { preserveScroll: true });
@@ -129,10 +147,10 @@ function EventCard({ ev }) {
     };
 
     return (
-        <div className={`nc-card ${isMatch ? (ev.kit === 'away' ? 'away-match' : 'match') : ''}`}>
+        <div className={`nc-card ${isMatch ? (ev.is_home ? 'match' : 'away-match') : ''}`}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                 <div>
-                    <div className="nc-label" style={{ color: isMatch ? (ev.kit === 'away' ? 'var(--aqua-dk)' : 'var(--red)') : 'var(--stone)' }}>
+                    <div className="nc-label" style={{ color: isMatch ? (ev.is_home ? 'var(--red)' : 'var(--aqua-dk)') : 'var(--stone)' }}>
                         {isMatch ? (ev.is_home ? t('agenda.match_home') : t('agenda.match_away')) : t('agenda.training')}
                     </div>
                     <h3 className="nc-display" style={{ fontSize: 19, margin: '5px 0 2px' }}>
@@ -142,9 +160,18 @@ function EventCard({ ev }) {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                     <div className="nc-num" style={{ fontSize: 19, fontWeight: 700 }}>{time(ev.starts_at)}</div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
-                        <Kit n={member.shirt_number} kit={ev.kit} size="sm" />
-                    </div>
+                    {isMatch && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 5, marginTop: 6 }}>
+                            {ev.kit === 'both' ? (
+                                <>
+                                    <Kit n={member.shirt_number} kit="home" size="sm" />
+                                    <Kit n={member.shirt_number} kit="away" size="sm" />
+                                </>
+                            ) : (
+                                <Kit n={member.shirt_number} kit={ev.kit} size="sm" />
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -176,8 +203,8 @@ function EventCard({ ev }) {
             </div>
 
             <div className="nc-kits">
-                {ev.going.map((p) => <Kit key={p.id} n={p.shirt_number} kit={ev.kit} size="sm" />)}
-                {ev.maybe.map((p) => <Kit key={p.id} n={p.shirt_number} kit={ev.kit} size="sm" ghost />)}
+                {ev.going.map((p) => <Kit key={p.id} n={p.shirt_number} kit={kitColor} size="sm" />)}
+                {ev.maybe.map((p) => <Kit key={p.id} n={p.shirt_number} kit={kitColor} size="sm" ghost />)}
             </div>
 
             {isManager && (

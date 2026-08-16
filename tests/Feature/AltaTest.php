@@ -13,7 +13,7 @@ function altaPayload(array $overrides = []): array
         'position' => 'MED',
         'preferred_foot' => 'right',
         'shirt_number' => 21,
-        'availability' => ['tue-2030', 'sat-am'],
+        'availability' => ['tue', 'sat'],
     ], $overrides);
 }
 
@@ -43,7 +43,7 @@ it('completa el alta y entra a la app', function () {
         ->and($member->position)->toBe('MED')
         ->and($member->preferred_foot)->toBe('right')
         ->and($member->shirt_number)->toBe(21)
-        ->and($member->availability)->toBe(['tue-2030', 'sat-am']);
+        ->and($member->availability)->toBe(['tue', 'sat']);
 
     $this->actingAs($member->user)->get('/agenda')->assertOk();
 });
@@ -107,6 +107,26 @@ it('valida puesto, perfil y disponibilidad contra las listas cerradas', function
             'availability' => ['lunes-a-la-nochecita'],
         ]))
         ->assertSessionHasErrors(['position', 'preferred_foot', 'availability.0']);
+});
+
+it('la disponibilidad se edita desde el perfil, solo con días válidos', function () {
+    $member = Member::factory()->create(['availability' => ['tue', 'sat']]);
+
+    $this->actingAs($member->user)
+        ->post('/perfil/disponibilidad', ['availability' => ['mon', 'wed', 'sun']])
+        ->assertRedirect();
+
+    expect($member->fresh()->availability)->toBe(['mon', 'wed', 'sun']);
+
+    $this->actingAs($member->user)
+        ->post('/perfil/disponibilidad', ['availability' => []])
+        ->assertSessionHasErrors('availability');
+
+    $this->actingAs($member->user)
+        ->post('/perfil/disponibilidad', ['availability' => ['feriados-nomas']])
+        ->assertSessionHasErrors('availability.0');
+
+    expect($member->fresh()->availability)->toBe(['mon', 'wed', 'sun']);
 });
 
 it('el perfil muestra el plantel del club sin teléfonos', function () {

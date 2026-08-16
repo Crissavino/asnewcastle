@@ -5,7 +5,7 @@ import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
 import { LOCALES, useTranslations } from '../i18n';
 
-export default function Perfil({ me, roster }) {
+export default function Perfil({ me, slots, roster }) {
     const { t, locale } = useTranslations();
     const { member, flash } = usePage().props;
     const [copied, setCopied] = useState(false);
@@ -22,6 +22,16 @@ export default function Perfil({ me, roster }) {
 
     const changeLocale = (code) => {
         router.post(route('idioma'), { locale: code }, { preserveScroll: true });
+    };
+
+    const toggleDay = (day) => {
+        const next = me.availability.includes(day)
+            ? me.availability.filter((d) => d !== day)
+            : [...me.availability, day];
+
+        if (next.length === 0) return; // al menos un día
+
+        router.post(route('perfil.disponibilidad'), { availability: next }, { preserveScroll: true });
     };
 
     return (
@@ -47,13 +57,23 @@ export default function Perfil({ me, roster }) {
 
             <div className="nc-card">
                 <div className="nc-label">{t('perfil.availability')}</div>
-                <div style={{ marginTop: 6 }}>
-                    {me.availability.map((s) => (
-                        <div key={s} className="nc-row">
-                            <span style={{ fontSize: 14 }}>{t(`slot.${s}`)}</span>
-                            <Check size={15} color="var(--aqua-dk)" />
-                        </div>
-                    ))}
+                <p className="nc-meta" style={{ marginTop: 6 }}>{t('perfil.availability_hint')}</p>
+                <div style={{ marginTop: 4 }}>
+                    {slots.map((s) => {
+                        const on = me.availability.includes(s);
+                        return (
+                            <button
+                                key={s}
+                                type="button"
+                                className="nc-row nc-day"
+                                onClick={() => toggleDay(s)}
+                                style={{ opacity: on ? 1 : 0.45 }}
+                            >
+                                <span style={{ fontSize: 14 }}>{t(`slot.${s}`)}</span>
+                                {on ? <Check size={15} color="var(--aqua-dk)" /> : <span className="nc-meta">—</span>}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 

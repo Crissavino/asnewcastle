@@ -218,6 +218,11 @@ html, body { margin: 0; padding: 0; }
 .nc-field-l input, .nc-field-l select { width: 100%; padding: 11px 12px; border: 1px solid var(--line);
   border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 14px; color: var(--ink); background: #fff; margin-top: 5px; }
 
+/* fila-botón de disponibilidad en el perfil */
+button.nc-day { width: 100%; background: none; border: none; border-top: 1px solid var(--line);
+  cursor: pointer; font-family: 'Archivo', sans-serif; color: var(--ink); text-align: left;
+  transition: opacity .12s; min-height: 44px; }
+
 /* error de validación */
 .nc-error { font-size: 13px; color: var(--red-dk); margin-top: 8px; line-height: 1.4; }
 

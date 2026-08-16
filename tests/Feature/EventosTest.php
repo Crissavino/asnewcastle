@@ -20,6 +20,7 @@ it('el manager crea un evento y la convocatoria sale a todo el plantel', functio
     $this->actingAs($manager->user)->post('/eventos', [
         'kind' => 'match',
         'opponent' => 'CS Afumați II',
+        'is_home' => true,
         'starts_at' => now()->addDays(3)->format('Y-m-d H:i'),
         'venue' => 'Teren Voluntari',
         'kit' => 'home',
@@ -32,6 +33,35 @@ it('el manager crea un evento y la convocatoria sale a todo el plantel', functio
 
     // El payload de los botones apunta al evento
     expect($this->whatsapp->templates[0]['variables']['5'])->toBe("att:{$event->id}:in");
+});
+
+it('un partido puede salir con las dos casacas, y local/visitante es independiente', function () {
+    $manager = Member::factory()->manager()->create();
+
+    $this->actingAs($manager->user)->post('/eventos', [
+        'kind' => 'match',
+        'opponent' => 'CS Găneasa',
+        'is_home' => false,
+        'starts_at' => now()->addDays(2)->format('Y-m-d H:i'),
+        'venue' => 'Teren Găneasa',
+        'kit' => 'both',
+    ])->assertRedirect(route('agenda'));
+
+    $event = Event::withoutGlobalScopes()->first();
+    expect($event->kit)->toBe('both')
+        ->and($event->is_home)->toBeFalse();
+});
+
+it('un entrenamiento se crea sin aclarar casaca ni condición', function () {
+    $manager = Member::factory()->manager()->create();
+
+    $this->actingAs($manager->user)->post('/eventos', [
+        'kind' => 'training',
+        'starts_at' => now()->addDay()->format('Y-m-d H:i'),
+        'venue' => 'Baza Sportivă Voluntari',
+    ])->assertRedirect(route('agenda'));
+
+    expect(Event::withoutGlobalScopes()->count())->toBe(1);
 });
 
 it('un jugador no puede crear eventos', function () {

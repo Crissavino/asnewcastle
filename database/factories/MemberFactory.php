@@ -20,7 +20,7 @@ class MemberFactory extends Factory
             'shirt_number' => fake()->unique()->numberBetween(1, 250),
             'position' => fake()->randomElement(['ARQ', 'DEF', 'MED', 'DEL']),
             'preferred_foot' => fake()->randomElement(['right', 'left', 'both']),
-            'availability' => ['tue-2030', 'sat-am'],
+            'availability' => ['tue', 'sat'],
             'joined_at' => now(),
         ];
     }

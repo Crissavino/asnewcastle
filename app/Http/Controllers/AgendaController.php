@@ -87,16 +87,20 @@ class AgendaController extends Controller
         $validated = $request->validate([
             'kind' => ['required', Rule::in(['match', 'training'])],
             'opponent' => ['required_if:kind,match', 'nullable', 'string', 'max:80'],
+            'is_home' => ['required_if:kind,match', 'nullable', 'boolean'],
             'starts_at' => ['required', 'date', 'after:now'],
             'venue' => ['required', 'string', 'max:120'],
-            'kit' => ['required', Rule::in(['home', 'away'])],
+            // La casaca es cosa de partidos ("both" = llevar las dos por las dudas);
+            // en los entrenamientos no se aclara
+            'kit' => ['required_if:kind,match', 'nullable', Rule::in(['home', 'away', 'both'])],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
         $event = Event::create([
             ...$validated,
             'opponent' => $validated['kind'] === 'match' ? $validated['opponent'] : null,
-            'is_home' => $validated['kit'] === 'home',
+            'is_home' => (bool) ($validated['is_home'] ?? true),
+            'kit' => $validated['kit'] ?? 'home',
             'created_by_member_id' => app(CurrentClub::class)->member()->id,
         ]);
 

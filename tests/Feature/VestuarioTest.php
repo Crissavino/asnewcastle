@@ -61,6 +61,7 @@ it('crear un evento deja un mensaje del sistema', function () {
     $this->actingAs($manager->user)->post('/eventos', [
         'kind' => 'match',
         'opponent' => 'AS Dascălu',
+        'is_home' => false,
         'starts_at' => now()->addDays(2)->format('Y-m-d H:i'),
         'venue' => 'Teren Voluntari',
         'kit' => 'away',

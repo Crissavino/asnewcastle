@@ -80,6 +80,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/stripe/onboarding', [StripeConnectController::class, 'start'])->name('stripe.onboarding');
             Route::get('/stripe/retorno', [StripeConnectController::class, 'back'])->name('stripe.retorno');
             Route::get('/perfil', [PerfilController::class, 'show'])->name('perfil');
+            Route::post('/perfil/disponibilidad', [PerfilController::class, 'updateAvailability'])->name('perfil.disponibilidad');
 
             Route::post('/invitaciones', [InviteController::class, 'create'])->name('invitacion.crear');
         });
