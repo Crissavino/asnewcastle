@@ -34,4 +34,9 @@ return [
         'channel' => env('WHATSAPP_CHANNEL', env('OTP_CHANNEL', 'twilio')),
     ],
 
+    'seed' => [
+        // Vía config y no env() directo: con config:cache, env() devuelve null
+        'manager_phone' => env('SEED_MANAGER_PHONE'),
+    ],
+
 ];

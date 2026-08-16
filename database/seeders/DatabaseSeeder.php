@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
                 ?? 'https://www.frf-ajf.ro/ilfov/competitii-fotbal/liga-a-5-a-15248/clasament',
         ]);
 
-        $phone = env('SEED_MANAGER_PHONE');
+        $phone = config('services.seed.manager_phone');
 
         if (! $phone) {
             $this->command?->warn('SEED_MANAGER_PHONE no está en .env: no se creó el delegado.');
