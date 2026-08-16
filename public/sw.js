@@ -3,7 +3,7 @@
  * (los assets de Vite llevan hash en el nombre) y las imágenes del club.
  * Las páginas y la API van siempre a la red — nunca datos viejos.
  */
-const CACHE = 'nc-static-v1';
+const CACHE = 'nc-static-v2';
 
 self.addEventListener('install', () => {
     self.skipWaiting();
