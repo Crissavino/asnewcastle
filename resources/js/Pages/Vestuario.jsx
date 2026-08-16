@@ -163,31 +163,61 @@ export default function Vestuario({ messages, mvp, roster_count }) {
         <AppLayout tab="vestuario" eyebrow={t('vestuario.players', { count: roster_count })}>
             <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
                 <div style={{ flex: 1 }}>
-                    {messages.map((m) =>
-                        m.system ? (
-                            <div key={m.id} className="nc-sys">{systemText(m.system)}</div>
-                        ) : (
-                            <div key={m.id} className={`nc-msg ${m.mine ? 'mine' : ''}`}>
-                                <Kit n={m.author?.shirt_number} size="sm" />
-                                <div>
-                                    <div className="nc-bubble">
-                                        {m.attachment && (
-                                            <img
-                                                className="nc-photo"
-                                                src={m.attachment}
-                                                alt=""
-                                                onClick={() => setLightbox(m.attachment)}
-                                            />
-                                        )}
-                                        {m.body}
+                    {(() => {
+                        // Mensajes agrupados por autor + separadores de día, estilo chat
+                        const items = [];
+                        let prevKey = null;
+                        let prevDay = null;
+
+                        messages.forEach((m) => {
+                            const day = new Date(m.at).toDateString();
+                            if (day !== prevDay) {
+                                items.push(
+                                    <div key={`d${m.id}`} className="nc-daysep">
+                                        <span>{new Date(m.at).toLocaleDateString(intl, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                                    </div>,
+                                );
+                                prevDay = day;
+                                prevKey = null;
+                            }
+
+                            if (m.system) {
+                                items.push(<div key={m.id} className="nc-sys">{systemText(m.system)}</div>);
+                                prevKey = null;
+                                return;
+                            }
+
+                            const key = (m.mine ? 'me' : m.author?.name ?? '?');
+                            const first = key !== prevKey;
+                            prevKey = key;
+
+                            items.push(
+                                <div key={m.id} className={`nc-msg ${m.mine ? 'mine' : ''} ${first ? 'first' : 'chain'}`}>
+                                    {!m.mine && (first
+                                        ? <Kit n={m.author?.shirt_number} size="sm" />
+                                        : <div className="nc-kit-spacer" />
+                                    )}
+                                    <div className="nc-msg-col">
+                                        {first && !m.mine && <div className="nc-author">{m.author?.name}</div>}
+                                        <div className="nc-bubble">
+                                            {m.attachment && (
+                                                <img
+                                                    className="nc-photo"
+                                                    src={m.attachment}
+                                                    alt=""
+                                                    onClick={() => setLightbox(m.attachment)}
+                                                />
+                                            )}
+                                            {m.body}
+                                            <span className="nc-time">{timeOf(m.at)}</span>
+                                        </div>
                                     </div>
-                                    <div className="nc-meta" style={{ fontSize: 11, marginTop: 3, textAlign: m.mine ? 'right' : 'left' }}>
-                                        {m.mine ? t('vestuario.you') : m.author?.name} · {timeOf(m.at)}
-                                    </div>
-                                </div>
-                            </div>
-                        )
-                    )}
+                                </div>,
+                            );
+                        });
+
+                        return items;
+                    })()}
                     <div ref={end} />
                 </div>
 

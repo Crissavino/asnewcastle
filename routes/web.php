@@ -11,6 +11,7 @@ use App\Http\Controllers\MvpVoteController;
 use App\Http\Controllers\PlayerRatingController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\StripeConnectController;
+use App\Http\Controllers\TablaController;
 use App\Http\Controllers\VestuarioController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Controllers\Webhooks\TwilioWebhookController;
@@ -71,9 +72,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/eventos/{event}/resultado', [AgendaController::class, 'result'])->name('eventos.resultado');
             Route::post('/eventos/{event}/recordar', [AgendaController::class, 'remind'])->name('eventos.recordar');
             Route::post('/eventos/{event}/asistencia', [AttendanceController::class, 'store'])->name('asistencia');
-            Route::get('/tabla', fn () => Inertia::render('Tabla', [
-                'standings' => app(\App\Support\CurrentClub::class)->club()->standings_json,
-            ]))->name('tabla');
+            Route::get('/tabla', [TablaController::class, 'show'])->name('tabla');
             Route::get('/vestuario', [VestuarioController::class, 'show'])->name('vestuario');
             Route::post('/vestuario', [VestuarioController::class, 'store'])->name('vestuario.enviar');
             Route::post('/eventos/{event}/figura', [MvpVoteController::class, 'store'])->name('figura.votar');

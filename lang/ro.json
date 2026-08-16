@@ -217,5 +217,12 @@
     "pill.due_ok": "La zi",
     "pill.due_owing": "Datorează",
     "system.dues_due": "A expirat cotizația pe :period — datorează: :names",
-    "cuota.mark_cash": "Numerar"
+    "cuota.mark_cash": "Numerar",
+    "tabla.campaign": "Campania noastră",
+    "tabla.position": "Poziția",
+    "tabla.form": "Formă",
+    "tabla.next": "Urmează",
+    "form.w": "V",
+    "form.d": "E",
+    "form.l": "Î"
 }

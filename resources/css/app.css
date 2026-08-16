@@ -84,6 +84,15 @@ html, body { margin: 0; padding: 0; }
 .nc-mini.solid { background: var(--ink); color: #fff; }
 .nc-namelist { font-size: 13px; line-height: 1.6; color: var(--ink); margin-top: 8px; }
 
+/* racha V-E-D */
+.nc-form { display: flex; gap: 7px; margin-top: 9px; }
+.nc-form i { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-style: normal; font-family: 'Rubik', sans-serif; font-weight: 700;
+  font-size: 12px; color: #fff; }
+.nc-form i.w { background: var(--aqua-dk); }
+.nc-form i.d { background: var(--stone); }
+.nc-form i.l { background: var(--red); }
+
 /* tabla */
 .nc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .nc-table th { font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--stone); text-align: right; padding: 0 0 8px; font-weight: 700; }
@@ -93,12 +102,28 @@ html, body { margin: 0; padding: 0; }
 .nc-table tr.us td { background: rgba(210,34,51,.07); color: var(--red-dk); font-weight: 700; }
 .nc-table tr.us td:first-child { box-shadow: inset 4px 0 0 var(--red); }
 
-/* chat */
-.nc-msg { margin-bottom: 13px; display: flex; gap: 10px; align-items: flex-start; }
+/* chat: burbujas agrupadas por autor, hora adentro, cola hacia el que habla */
+.nc-msg { margin: 2px 0; display: flex; gap: 8px; align-items: flex-end; }
+.nc-msg.first { margin-top: 14px; }
 .nc-msg.mine { flex-direction: row-reverse; }
-.nc-bubble { background: #fff; border: 1px solid var(--line); border-radius: 2px; padding: 9px 12px; max-width: 76%; font-size: 14px; line-height: 1.42;
-  box-shadow: 2px 2px 0 rgba(18,18,18,.07); }
-.nc-msg.mine .nc-bubble { background: var(--red); border-color: var(--red); color: #fff; box-shadow: 2px 2px 0 rgba(18,18,18,.35); }
+.nc-kit-spacer { width: 25px; flex: 0 0 auto; }
+.nc-msg-col { max-width: 76%; min-width: 0; display: flex; flex-direction: column;
+  align-items: flex-start; }
+.nc-msg.mine .nc-msg-col { align-items: flex-end; }
+.nc-author { font-size: 11px; font-weight: 700; color: var(--red-dk); margin: 0 0 3px 4px;
+  letter-spacing: .03em; }
+.nc-bubble { background: #fff; border: 1px solid var(--line); padding: 8px 12px 7px;
+  font-size: 14px; line-height: 1.42; border-radius: 12px 12px 12px 4px;
+  box-shadow: 1px 2px 0 rgba(18,18,18,.06); overflow-wrap: anywhere; }
+.nc-msg.chain .nc-bubble { border-radius: 12px 12px 12px 4px; }
+.nc-msg.mine .nc-bubble { background: var(--red); border-color: var(--red); color: #fff;
+  border-radius: 12px 12px 4px 12px; box-shadow: 1px 2px 0 rgba(18,18,18,.28); }
+.nc-time { float: right; font-family: 'Rubik', sans-serif; font-size: 10px; color: var(--stone);
+  margin: 9px -3px -2px 10px; }
+.nc-msg.mine .nc-time { color: rgba(255,255,255,.75); }
+.nc-daysep { text-align: center; margin: 18px 0 8px; }
+.nc-daysep span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
+  color: var(--stone); background: rgba(18,18,18,.06); padding: 4px 12px; border-radius: 12px; }
 /* los avisos del sistema como cinta de ticker */
 .nc-sys { text-align: center; font-size: 11px; color: var(--stone); letter-spacing: .07em; padding: 4px 0 14px; text-transform: uppercase; font-weight: 600; }
 .nc-sys::before { content: '— '; color: var(--aqua-dk); }
@@ -113,7 +138,7 @@ html, body { margin: 0; padding: 0; }
 .nc-composer input::placeholder { color: var(--stone); }
 
 /* fotos en el chat */
-.nc-photo { display: block; max-width: 100%; max-height: 260px; border-radius: 2px; margin: 2px 0 6px; cursor: pointer; }
+.nc-photo { display: block; max-width: 100%; max-height: 260px; border-radius: 9px; margin: 2px 0 6px; cursor: pointer; }
 .nc-bubble .nc-photo:only-child { margin-bottom: 0; }
 .nc-preview { display: flex; align-items: center; gap: 10px; padding: 8px 0 0; }
 .nc-preview img { width: 42px; height: 42px; object-fit: cover; border-radius: 2px; border: 1px solid var(--line); }

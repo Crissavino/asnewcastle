@@ -217,5 +217,12 @@
     "pill.due_ok": "Al día",
     "pill.due_owing": "Debe",
     "system.dues_due": "Venció la cuota de :period — deben: :names",
-    "cuota.mark_cash": "Efectivo"
+    "cuota.mark_cash": "Efectivo",
+    "tabla.campaign": "Nuestra campaña",
+    "tabla.position": "Posición",
+    "tabla.form": "Racha",
+    "tabla.next": "Próximo",
+    "form.w": "V",
+    "form.d": "E",
+    "form.l": "D"
 }
