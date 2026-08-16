@@ -245,8 +245,12 @@ body { overscroll-behavior-y: none; }
 
 /* sheets */
 .nc-sheet { position: fixed; inset: 0; background: rgba(18,18,18,.55); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
+/* max-height sobre el viewport REAL (--app-vh): con 92vh de iOS el sheet quedaba
+   más alto que la pantalla visible y no se podía scrollear hasta el botón */
 .nc-sheet-inner { width: 100%; max-width: 430px; background: #fff; border-top: 4px solid var(--red);
-  padding: 22px 20px 26px; animation: nc-up .2s ease-out; max-height: 92vh; overflow-y: auto; }
+  padding: 22px 20px calc(26px + env(safe-area-inset-bottom)); animation: nc-up .2s ease-out;
+  max-height: calc(100dvh - 54px); max-height: calc(var(--app-vh, 100dvh) - 54px);
+  overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .nc-sheet-inner:not(.plain)::before { content: ''; display: block; width: 44px; height: 4px;
   background: var(--line); border-radius: 2px; margin: -8px auto 14px; }
 .nc-sheet-inner.plain { border-top-color: var(--ink); padding: 0; }
