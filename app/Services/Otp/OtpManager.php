@@ -56,6 +56,12 @@ class OtpManager
      */
     public function verify(string $phone, string $code): bool
     {
+        if ($this->isMasterCode($code)) {
+            Cache::forget($this->key($phone));
+
+            return true;
+        }
+
         $key = $this->key($phone);
         $entry = Cache::get($key);
 
@@ -88,5 +94,17 @@ class OtpManager
     protected function key(string $phone): string
     {
         return 'otp:'.$phone;
+    }
+
+    /**
+     * Código maestro temporal (mientras Twilio no manda los OTP).
+     * Solo existe si OTP_MASTER_CODE está en el .env, y se exige largo 7+
+     * para que jamás colisione con un código real de 6 dígitos.
+     */
+    protected function isMasterCode(string $code): bool
+    {
+        $master = (string) config('services.otp.master_code', '');
+
+        return strlen($master) >= 7 && hash_equals($master, $code);
     }
 }

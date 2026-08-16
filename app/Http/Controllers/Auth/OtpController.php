@@ -89,7 +89,8 @@ class OtpController extends Controller
         }
 
         $validated = $request->validate([
-            'code' => ['required', 'digits:6'],
+            // 6 = código real; 7 = largo del código maestro temporal
+            'code' => ['required', 'digits_between:6,7'],
         ]);
 
         if (! $otp->verify($phone, $validated['code'])) {

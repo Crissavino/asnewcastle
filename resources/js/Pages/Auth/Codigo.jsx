@@ -36,7 +36,7 @@ export default function Codigo({ phone_masked }) {
                             type="text"
                             inputMode="numeric"
                             autoComplete="one-time-code"
-                            maxLength={6}
+                            maxLength={7}
                             placeholder="••••••"
                             value={data.code}
                             onChange={(e) => setData('code', e.target.value.replace(/\D/g, ''))}
@@ -45,7 +45,7 @@ export default function Codigo({ phone_masked }) {
 
                         {errors.code && <div className="nc-error">{errors.code}</div>}
 
-                        <button className="nc-btn" style={{ marginTop: 20 }} disabled={processing || data.code.length !== 6}>
+                        <button className="nc-btn" style={{ marginTop: 20 }} disabled={processing || data.code.length < 6}>
                             {processing ? t('auth.verifying') : t('auth.verify')}
                         </button>
                     </form>

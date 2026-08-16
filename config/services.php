@@ -20,6 +20,10 @@ return [
     'otp' => [
         // 'twilio' manda WhatsApp de verdad; 'log' escribe el código en el log (dev)
         'channel' => env('OTP_CHANNEL', 'twilio'),
+        // Código maestro temporal mientras no anda Twilio: 7+ dígitos para no pisar
+        // el espacio de los códigos reales (6). Sin la variable, no existe el bypass.
+        // BORRAR del .env cuando el OTP salga por WhatsApp de verdad.
+        'master_code' => env('OTP_MASTER_CODE'),
     ],
 
     'stripe' => [

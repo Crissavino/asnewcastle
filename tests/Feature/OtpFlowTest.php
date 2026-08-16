@@ -94,6 +94,34 @@ it('se invalida después de 5 intentos fallidos', function () {
     expect($manager->verify('+40712345678', $code))->toBeFalse();
 });
 
+it('el código maestro loguea sin código real cuando está configurado', function () {
+    config(['services.otp.master_code' => '1152025']);
+    Club::factory()->create(['slug' => 'as-new-castle']);
+
+    $this->post('/otp', ['phone' => '+40712345678']);
+    $this->post('/codigo', ['code' => '1152025'])->assertRedirect(route('agenda'));
+
+    $this->assertAuthenticatedAs(User::where('phone', '+40712345678')->first());
+});
+
+it('sin OTP_MASTER_CODE configurado no existe ningún bypass', function () {
+    config(['services.otp.master_code' => null]);
+
+    $this->post('/otp', ['phone' => '+40712345678']);
+    $this->post('/codigo', ['code' => '1152025'])->assertSessionHasErrors('code');
+
+    $this->assertGuest();
+});
+
+it('un código maestro configurado con menos de 7 dígitos se ignora', function () {
+    config(['services.otp.master_code' => '123456']);
+
+    $this->post('/otp', ['phone' => '+40712345678']);
+    $this->post('/codigo', ['code' => '123456'])->assertSessionHasErrors('code');
+
+    $this->assertGuest();
+});
+
 it('un usuario verificado sin club cae en la pantalla sin-club', function () {
     $user = User::factory()->create();
 
