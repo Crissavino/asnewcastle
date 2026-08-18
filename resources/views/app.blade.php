@@ -33,7 +33,7 @@
 <body>
     @inertia
     <noscript>
-        ASOCIAȚIA SPORTIVĂ NEW CASTLE (Asociatia Sportiva New Castle) — Str. Emil Racoviță 27C, parter, ap. 2, Voluntari, Ilfov 077190, România. CIF 53035344.
+        ASOCIAȚIA SPORTIVĂ NEW CASTLE (Asociatia Sportiva New Castle) — Voluntari, Ilfov, România. CIF 53035344.
     </noscript>
 </body>
 </html>

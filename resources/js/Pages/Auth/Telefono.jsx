@@ -91,10 +91,11 @@ export default function Telefono({ countries }) {
                     </div>
 
                     {/* Nombre legal del club en el pie: requerido por Meta para
-                        asociar el dominio al negocio en la verificación de WhatsApp. */}
+                        asociar el dominio al negocio en la verificación de WhatsApp.
+                        Sin la calle (sede = domicilio privado); solo nombre + zona + CIF. */}
                     <footer style={{ textAlign: 'center', fontSize: 10.5, lineHeight: 1.5, color: 'var(--stone)', opacity: 0.85, paddingTop: 4 }}>
                         ASOCIAȚIA SPORTIVĂ NEW CASTLE<br />
-                        Str. Emil Racoviță 27C, Voluntari, Ilfov, România · CIF 53035344
+                        Voluntari · Ilfov · România · CIF 53035344
                     </footer>
                 </div>
             </div>
