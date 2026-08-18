@@ -21,12 +21,18 @@ class AzureTranslator implements Translator
 
     public function translate(string $text, string $to): array
     {
+        $headers = [
+            'Ocp-Apim-Subscription-Key' => $this->key,
+            'Content-Type' => 'application/json',
+        ];
+
+        // Un recurso "global" no lleva header de región; uno regional sí.
+        if ($this->region !== '' && strtolower($this->region) !== 'global') {
+            $headers['Ocp-Apim-Subscription-Region'] = $this->region;
+        }
+
         try {
-            $response = Http::withHeaders([
-                'Ocp-Apim-Subscription-Key' => $this->key,
-                'Ocp-Apim-Subscription-Region' => $this->region,
-                'Content-Type' => 'application/json',
-            ])
+            $response = Http::withHeaders($headers)
                 ->timeout(8)
                 ->post(rtrim($this->endpoint, '/').'/translate?api-version=3.0&to='.$to, [
                     ['Text' => $text],
