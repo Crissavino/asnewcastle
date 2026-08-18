@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#D22233">
 
+    {{-- Nombre legal del club en el HTML servido: Meta lo exige en la web
+         para asociar el dominio al negocio en la verificación de WhatsApp. --}}
+    <meta name="description" content="App oficial de ASOCIAȚIA SPORTIVĂ NEW CASTLE (Asociatia Sportiva New Castle), club de fútbol de Voluntari, Ilfov, România. CIF 53035344.">
+    <meta property="og:site_name" content="ASOCIAȚIA SPORTIVĂ NEW CASTLE">
+    <meta property="og:title" content="ASOCIAȚIA SPORTIVĂ NEW CASTLE — A.S New Castle">
+
     <title inertia>{{ config('app.name') }}</title>
 
     <link rel="icon" href="/img/crest.png" type="image/png">
@@ -26,5 +32,8 @@
 </head>
 <body>
     @inertia
+    <noscript>
+        ASOCIAȚIA SPORTIVĂ NEW CASTLE (Asociatia Sportiva New Castle) — Str. Emil Racoviță 27C, parter, ap. 2, Voluntari, Ilfov 077190, România. CIF 53035344.
+    </noscript>
 </body>
 </html>
