@@ -104,7 +104,19 @@ class OtpController extends Controller
             ['locale' => $this->localeForPhone($phone)],
         );
 
-        $user->forceFill(['phone_verified_at' => now()])->save();
+        // La VERDAD es el idioma elegido en la app (users.locale, editable en el
+        // perfil). El del teléfono es solo el default INICIAL: se aplica si el
+        // usuario todavía no eligió uno de verdad, y nunca pisa una preferencia
+        // ya elegida — un +40 que habla español manda. Como el club es es/ro,
+        // 'en' (el fallback) cuenta como "sin elegir" y toma el default.
+        $chosen = in_array($user->locale, ['es', 'ro'], true)
+            ? $user->locale
+            : $this->localeForPhone($phone);
+
+        $user->forceFill([
+            'phone_verified_at' => now(),
+            'locale' => $chosen,
+        ])->save();
 
         // Sesión larga: el jugador se loguea una vez y no vuelve en meses.
         Auth::login($user, remember: true);
@@ -144,9 +156,9 @@ class OtpController extends Controller
     }
 
     /**
-     * Idioma por defecto según el prefijo del teléfono: rumano para +40,
-     * español para el resto del plantel (AR/CO/IT/ES). Se puede cambiar
-     * después desde el perfil.
+     * Default INICIAL de idioma según el prefijo del teléfono: rumano para +40,
+     * español para el resto (AR/CO/IT/ES). Es solo la primera adivinanza: en
+     * cuanto el jugador elige idioma en la app, esa preferencia es la que manda.
      */
     protected function localeForPhone(string $phone): string
     {

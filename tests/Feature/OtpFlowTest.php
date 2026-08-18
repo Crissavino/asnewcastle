@@ -122,6 +122,28 @@ it('un código maestro configurado con menos de 7 dígitos se ignora', function 
     $this->assertGuest();
 });
 
+it('el idioma ya elegido en la app manda: el +40 no lo pisa al loguear', function () {
+    Club::factory()->create(['slug' => 'as-new-castle']);
+    // Número rumano pero eligió español en la app (el caso del presidente)
+    $user = User::factory()->create(['phone' => '+40712345678', 'locale' => 'es']);
+
+    $this->post('/otp', ['phone' => '+40712345678']);
+    $this->post('/codigo', ['code' => $this->channel->lastCodeFor('+40712345678')]);
+
+    expect($user->fresh()->locale)->toBe('es');
+});
+
+it('a un usuario sin idioma elegido le pone el del teléfono al entrar', function () {
+    Club::factory()->create(['slug' => 'as-new-castle']);
+    // 'en' es el fallback (no una elección real del jugador); +40 → rumano
+    $user = User::factory()->create(['phone' => '+40712345678', 'locale' => 'en']);
+
+    $this->post('/otp', ['phone' => '+40712345678']);
+    $this->post('/codigo', ['code' => $this->channel->lastCodeFor('+40712345678')]);
+
+    expect($user->fresh()->locale)->toBe('ro');
+});
+
 it('un usuario verificado sin club cae en la pantalla sin-club', function () {
     $user = User::factory()->create();
 
