@@ -51,8 +51,10 @@ class MessageTranslationController extends Controller
             return response()->json(['ok' => false], 200);
         }
 
-        // Guardamos el idioma detectado (una sola vez) y cacheamos la traducción.
-        if (! $message->detected_locale && ! empty($result['from'])) {
+        // La detección de Azure es la autoritativa: corrige el idioma detectado
+        // aunque ya estuviera seteado (por si el detector local se equivocó).
+        // Así, si el mensaje estaba en el idioma del lector, el link desaparece.
+        if (! empty($result['from'])) {
             $message->update(['detected_locale' => substr($result['from'], 0, 2)]);
         }
 

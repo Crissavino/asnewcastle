@@ -96,6 +96,19 @@ it('corta a las 30 traducciones por usuario por hora', function () {
     $this->actingAs($reader->user)->postJson("/vestuario/{$extra->id}/traducir")->assertJson(['ok' => false]);
 });
 
+it('al traducir, corrige el idioma detectado con la detección real (Azure)', function () {
+    $this->app->instance(Translator::class, new CountingTranslator()); // from='es'
+
+    $reader = Member::factory()->manager()->create();
+    $reader->user->update(['locale' => 'ro']);
+    $author = Member::factory()->for($reader->club)->create();
+    $msg = chatMessage($author, 'Hola equipo', 'ro'); // mal detectado como rumano
+
+    $this->actingAs($reader->user)->postJson("/vestuario/{$msg->id}/traducir")->assertJson(['ok' => true]);
+
+    expect($msg->fresh()->detected_locale)->toBe('es'); // corregido
+});
+
 it('no rompe el chat si la API falla: devuelve ok=false', function () {
     $this->app->instance(Translator::class, new class implements Translator {
         public function translate(string $text, string $to): array
