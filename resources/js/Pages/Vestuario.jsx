@@ -78,7 +78,30 @@ export default function Vestuario({ messages, mvp, roster_count }) {
     const [preview, setPreview] = useState(null);
     const [lightbox, setLightbox] = useState(null);
     const [pollOpen, setPollOpen] = useState(false);
+    // Traducciones de mensajes de compañeros: { [id]: { status, text, showing } }
+    const [tr, setTr] = useState({});
     const { data, setData, post, processing, reset } = useForm({ body: '', image: null });
+
+    // Traduce un mensaje al tocar el link (nunca antes). El backend cachea:
+    // el segundo que traduce el mismo mensaje no genera otra llamada a la API.
+    const translate = (m) => {
+        const cur = tr[m.id];
+        if (cur?.status === 'loading') return;
+        if (cur?.status === 'done') {
+            // toggle traducción <-> original
+            setTr((s) => ({ ...s, [m.id]: { ...cur, showing: cur.showing === 'translation' ? 'original' : 'translation' } }));
+            return;
+        }
+        setTr((s) => ({ ...s, [m.id]: { status: 'loading' } }));
+        window.axios.post(route('vestuario.traducir', m.id))
+            .then((r) => setTr((s) => ({
+                ...s,
+                [m.id]: r.data?.ok
+                    ? { status: 'done', text: r.data.text, showing: 'translation' }
+                    : { status: 'failed' },
+            })))
+            .catch(() => setTr((s) => ({ ...s, [m.id]: { status: 'failed' } })));
+    };
 
     // Polling cada 8 segundos: refresca mensajes y votación, sin tocar el input
     useEffect(() => {
@@ -204,18 +227,46 @@ export default function Vestuario({ messages, mvp, roster_count }) {
                                     )}
                                     <div className="nc-msg-col">
                                         {first && !m.mine && <div className="nc-author">{m.author?.name}</div>}
-                                        <div className="nc-bubble">
-                                            {m.attachment && (
-                                                <img
-                                                    className="nc-photo"
-                                                    src={m.attachment}
-                                                    alt=""
-                                                    onClick={() => setLightbox(m.attachment)}
-                                                />
-                                            )}
-                                            {m.body}
-                                            <span className="nc-time">{timeOf(m.at)}</span>
-                                        </div>
+                                        {(() => {
+                                            const st = tr[m.id];
+                                            const showTr = st?.status === 'done' && st.showing === 'translation';
+                                            // Link solo en mensajes de otros, con texto y en otro idioma
+                                            const canTranslate = !m.mine && !!m.body && m.detected_locale !== locale;
+                                            return (
+                                                <>
+                                                    <div className="nc-bubble">
+                                                        {m.attachment && (
+                                                            <img
+                                                                className="nc-photo"
+                                                                src={m.attachment}
+                                                                alt=""
+                                                                onClick={() => setLightbox(m.attachment)}
+                                                            />
+                                                        )}
+                                                        {showTr ? (
+                                                            <>
+                                                                <span className="nc-orig">{m.body}</span>
+                                                                <span className="nc-tr-text">{st.text}</span>
+                                                            </>
+                                                        ) : m.body}
+                                                        <span className="nc-time">{timeOf(m.at)}</span>
+                                                    </div>
+                                                    {canTranslate && (
+                                                        <button
+                                                            type="button"
+                                                            className="nc-tr-link"
+                                                            onClick={() => translate(m)}
+                                                            disabled={st?.status === 'loading'}
+                                                        >
+                                                            {st?.status === 'loading' ? t('vestuario.translating')
+                                                                : st?.status === 'failed' ? t('vestuario.translate_failed')
+                                                                    : showTr ? t('vestuario.show_original')
+                                                                        : t('vestuario.translate')}
+                                                        </button>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
                                     </div>
                                 </div>,
                             );

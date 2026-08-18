@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Message;
+use App\Services\Translation\LocaleGuesser;
 use App\Support\CurrentClub;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,6 +30,8 @@ class VestuarioController extends Controller
                 'id' => $m->id,
                 'system' => $m->is_system ? json_decode($m->body, true) : null,
                 'body' => $m->is_system ? null : $m->body,
+                // Idioma detectado del mensaje: el front decide si ofrecer "traducir"
+                'detected_locale' => $m->detected_locale,
                 'attachment' => $m->attachment_path ? Storage::disk('public')->url($m->attachment_path) : null,
                 'mine' => $m->member_id === $me->id,
                 'author' => $m->member ? [
@@ -61,9 +64,13 @@ class VestuarioController extends Controller
             );
         }
 
+        $body = $validated['body'] ?? '';
+
         Message::create([
             'member_id' => app(CurrentClub::class)->member()->id,
-            'body' => $validated['body'] ?? '',
+            'body' => $body,
+            // Detección local (sin API) para saber si ofrecer traducir después
+            'detected_locale' => trim($body) !== '' ? LocaleGuesser::guess($body) : null,
             'attachment_path' => $path,
             'is_system' => false,
         ]);

@@ -17,6 +17,14 @@ return [
         'dues_template_sid' => env('TWILIO_DUES_TEMPLATE_SID'),
     ],
 
+    'translator' => [
+        // 'azure' llama a Azure Translator; 'null' devuelve el texto sin tocar (dev/tests)
+        'driver' => env('TRANSLATOR_DRIVER', 'null'),
+        'key' => env('AZURE_TRANSLATOR_KEY'),
+        'region' => env('AZURE_TRANSLATOR_REGION'),
+        'endpoint' => env('AZURE_TRANSLATOR_ENDPOINT', 'https://api.cognitive.microsofttranslator.com'),
+    ],
+
     'otp' => [
         // 'twilio' manda WhatsApp de verdad; 'log' escribe el código en el log (dev)
         'channel' => env('OTP_CHANNEL', 'twilio'),

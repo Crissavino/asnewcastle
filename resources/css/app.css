@@ -141,6 +141,13 @@ body { overscroll-behavior-y: none; }
 .nc-time { float: right; font-family: 'Rubik', sans-serif; font-size: 10px; color: var(--stone);
   margin: 9px -3px -2px 10px; }
 .nc-msg.mine .nc-time { color: rgba(255,255,255,.75); }
+/* traducción de mensajes de compañeros: original arriba (tenue) + traducción */
+.nc-orig { display: block; color: var(--stone); font-size: 12.5px; }
+.nc-tr-text { display: block; margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--line); }
+.nc-tr-link { align-self: flex-start; background: none; border: none; cursor: pointer; padding: 3px 4px 0;
+  font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 700; color: var(--aqua-dk);
+  letter-spacing: .04em; text-transform: uppercase; }
+.nc-tr-link:disabled { color: var(--stone); cursor: default; }
 .nc-daysep { text-align: center; margin: 18px 0 8px; }
 .nc-daysep span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
   color: var(--stone); background: rgba(18,18,18,.06); padding: 4px 12px; border-radius: 12px; }

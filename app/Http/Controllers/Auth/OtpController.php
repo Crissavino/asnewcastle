@@ -101,7 +101,7 @@ class OtpController extends Controller
 
         $user = User::firstOrCreate(
             ['phone' => $phone],
-            ['locale' => app()->getLocale()],
+            ['locale' => $this->localeForPhone($phone)],
         );
 
         $user->forceFill(['phone_verified_at' => now()])->save();
@@ -141,6 +141,16 @@ class OtpController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('entrar');
+    }
+
+    /**
+     * Idioma por defecto según el prefijo del teléfono: rumano para +40,
+     * español para el resto del plantel (AR/CO/IT/ES). Se puede cambiar
+     * después desde el perfil.
+     */
+    protected function localeForPhone(string $phone): string
+    {
+        return str_starts_with($phone, '+40') ? 'ro' : 'es';
     }
 
     /** Nunca mostramos el número completo: +40•••••678. */

@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\InviteController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\CuotaController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\MessageTranslationController;
 use App\Http\Controllers\MvpVoteController;
 use App\Http\Controllers\PlayerRatingController;
 use App\Http\Controllers\PerfilController;
@@ -76,6 +77,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/tabla', [TablaController::class, 'show'])->name('tabla');
             Route::get('/vestuario', [VestuarioController::class, 'show'])->name('vestuario');
             Route::post('/vestuario', [VestuarioController::class, 'store'])->name('vestuario.enviar');
+            Route::post('/vestuario/{message}/traducir', [MessageTranslationController::class, 'translate'])->name('vestuario.traducir');
             Route::post('/eventos/{event}/figura', [MvpVoteController::class, 'store'])->name('figura.votar');
             Route::post('/eventos/{event}/puntaje', [PlayerRatingController::class, 'store'])->name('puntaje.votar');
             Route::get('/cuota', [CuotaController::class, 'show'])->name('cuota');
