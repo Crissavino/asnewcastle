@@ -22,3 +22,8 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Firma de la app Android (NUNCA commitear la llave ni las passwords)
+asnewcastle-release.keystore
+keystore-credentials.txt
+android/keystore.properties
