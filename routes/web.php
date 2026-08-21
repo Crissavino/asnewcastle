@@ -11,6 +11,7 @@ use App\Http\Controllers\MessageTranslationController;
 use App\Http\Controllers\MvpVoteController;
 use App\Http\Controllers\PlayerRatingController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\PushTokenController;
 use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\TablaController;
 use App\Http\Controllers\VestuarioController;
@@ -57,6 +58,11 @@ Route::get('/invitacion/{club:slug}', [InviteController::class, 'accept'])
 
 Route::middleware('auth')->group(function () {
     Route::post('/salir', [OtpController::class, 'logout'])->name('salir');
+
+    // Registro del token de push del dispositivo (la app nativa lo manda al
+    // arrancar). Es del usuario, no del club: va fuera de SetActiveClub.
+    Route::post('/push/token', [PushTokenController::class, 'store'])->name('push.token');
+    Route::delete('/push/token', [PushTokenController::class, 'destroy'])->name('push.token.baja');
 
     // Sin club: usuario verificado que no es member de ningún club
     Route::get('/sin-club', fn () => Inertia::render('Auth/SinClub'))->name('sin-club');

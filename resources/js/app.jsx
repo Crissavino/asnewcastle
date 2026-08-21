@@ -2,6 +2,7 @@ import './bootstrap';
 
 import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
+import { Capacitor } from '@capacitor/core';
 
 createInertiaApp({
     title: (title) => (title ? `${title} — A.S New Castle` : 'A.S New Castle'),
@@ -36,3 +37,39 @@ if ('serviceWorker' in navigator) {
         });
     });
 }
+
+// Push nativas: solo dentro del shell de Capacitor (en el navegador es no-op).
+// Pide permiso una vez, registra el token en el servidor y abre la pantalla
+// correcta al tocar la notificación.
+async function setupNativePush() {
+    if (!Capacitor.isNativePlatform()) {
+        return;
+    }
+
+    const { PushNotifications } = await import('@capacitor/push-notifications');
+
+    let perm = await PushNotifications.checkPermissions();
+    if (perm.receive === 'prompt' || perm.receive === 'prompt-with-rationale') {
+        perm = await PushNotifications.requestPermissions();
+    }
+    if (perm.receive !== 'granted') {
+        return;
+    }
+
+    PushNotifications.addListener('registration', (token) => {
+        window.axios
+            .post('/push/token', { token: token.value, platform: Capacitor.getPlatform() })
+            .catch(() => {});
+    });
+
+    PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        const url = action.notification?.data?.url;
+        if (url) {
+            window.location.href = url;
+        }
+    });
+
+    await PushNotifications.register();
+}
+
+setupNativePush();

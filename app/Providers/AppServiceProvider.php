@@ -7,6 +7,9 @@ use App\Services\Otp\OtpChannel;
 use App\Services\Otp\TwilioOtpChannel;
 use App\Services\Stripe\RealStripeGateway;
 use App\Services\Stripe\StripeGateway;
+use App\Services\Push\FcmPushSender;
+use App\Services\Push\NullPushSender;
+use App\Services\Push\PushSender;
 use App\Services\Translation\AzureTranslator;
 use App\Services\Translation\NullTranslator;
 use App\Services\Translation\Translator;
@@ -34,6 +37,17 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(StripeGateway::class, function () {
             return new RealStripeGateway(new StripeClient(config('services.stripe.secret')));
+        });
+
+        $this->app->bind(PushSender::class, function () {
+            if (config('services.push.driver') === 'fcm') {
+                return new FcmPushSender(
+                    (string) config('services.push.fcm.credentials'),
+                    (string) config('services.push.fcm.project_id'),
+                );
+            }
+
+            return new NullPushSender();
         });
 
         $this->app->bind(Translator::class, function () {
