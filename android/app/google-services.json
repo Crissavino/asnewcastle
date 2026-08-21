@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "833883682611",
+    "project_id": "as-new-castle",
+    "storage_bucket": "as-new-castle.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833883682611:android:14341883c8ad96b22c7046",
+        "android_client_info": {
+          "package_name": "com.asnewcastle.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCct5ycV5VHyw0eTS1rYnf1BjWFFSinoZs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -21,10 +21,19 @@ class FcmPushSender implements PushSender
 
     public function __construct(string $credentials, private string $projectId)
     {
-        // `credentials` puede ser el JSON de la service account o una ruta a él.
-        $json = str_starts_with(trim($credentials), '{')
-            ? $credentials
-            : (is_file($credentials) ? (string) file_get_contents($credentials) : '');
+        // `credentials` admite tres formas, para que sea fácil en cualquier
+        // entorno: el JSON directo, una ruta a un archivo, o el JSON en base64
+        // (una sola línea, cómodo para pegar en el .env de Forge).
+        $trimmed = trim($credentials);
+
+        if (str_starts_with($trimmed, '{')) {
+            $json = $trimmed;
+        } elseif (is_file($trimmed)) {
+            $json = (string) file_get_contents($trimmed);
+        } else {
+            $decoded = base64_decode($trimmed, true);
+            $json = ($decoded !== false && str_starts_with(trim($decoded), '{')) ? $decoded : '';
+        }
 
         $sa = json_decode($json, true);
 
