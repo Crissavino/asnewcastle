@@ -1,6 +1,6 @@
 import './bootstrap';
 
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import { Capacitor } from '@capacitor/core';
 
@@ -41,6 +41,17 @@ if ('serviceWorker' in navigator) {
 // Push nativas: solo dentro del shell de Capacitor (en el navegador es no-op).
 // Pide permiso una vez, registra el token en el servidor y abre la pantalla
 // correcta al tocar la notificación.
+let fcmToken = null;
+
+function postToken() {
+    if (!fcmToken) {
+        return;
+    }
+    window.axios
+        .post('/push/token', { token: fcmToken, platform: Capacitor.getPlatform() })
+        .catch(() => {});
+}
+
 async function setupNativePush() {
     if (!Capacitor.isNativePlatform()) {
         return;
@@ -57,9 +68,8 @@ async function setupNativePush() {
     }
 
     PushNotifications.addListener('registration', (token) => {
-        window.axios
-            .post('/push/token', { token: token.value, platform: Capacitor.getPlatform() })
-            .catch(() => {});
+        fcmToken = token.value;
+        postToken();
     });
 
     PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
@@ -68,6 +78,11 @@ async function setupNativePush() {
             window.location.href = url;
         }
     });
+
+    // El token puede llegar antes del login (pantalla de teléfono), donde
+    // /push/token todavía da 401. Reintentamos tras cada navegación de Inertia
+    // (p. ej. después de entrar), así queda asociado al usuario apenas se loguea.
+    router.on('navigate', () => postToken());
 
     await PushNotifications.register();
 }
