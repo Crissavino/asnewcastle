@@ -1,0 +1,15 @@
+{
+  "appId": "com.asnewcastle.app",
+  "appName": "A.S New Castle",
+  "webDir": "public",
+  "server": {
+    "url": "https://as-new-castle.on-forge.com",
+    "androidScheme": "https",
+    "iosScheme": "https"
+  },
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}

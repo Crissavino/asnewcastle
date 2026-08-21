@@ -17,6 +17,16 @@ return [
         'dues_template_sid' => env('TWILIO_DUES_TEMPLATE_SID'),
     ],
 
+    'push' => [
+        // 'fcm' manda por Firebase Cloud Messaging; 'null' solo loguea (dev/tests)
+        'driver' => env('PUSH_DRIVER', 'null'),
+        'fcm' => [
+            // JSON de la service account (o ruta al archivo)
+            'credentials' => env('FCM_CREDENTIALS'),
+            'project_id' => env('FCM_PROJECT_ID'),
+        ],
+    ],
+
     'translator' => [
         // 'azure' llama a Azure Translator; 'null' devuelve el texto sin tocar (dev/tests)
         'driver' => env('TRANSLATOR_DRIVER', 'null'),
