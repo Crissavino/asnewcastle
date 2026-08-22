@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Webhooks;
 use App\Http\Controllers\Controller;
 use App\Models\Due;
 use App\Models\Payment;
+use App\Services\Notifications;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -49,7 +50,7 @@ class StripeWebhookController extends Controller
 
         // Idempotencia: el unique de stripe_payment_intent_id hace que un
         // reintento del webhook no duplique el pago ni el estado.
-        DB::transaction(function () use ($due, $session, $paymentIntentId) {
+        $isNew = DB::transaction(function () use ($due, $session, $paymentIntentId) {
             $payment = Payment::firstOrCreate(
                 ['stripe_payment_intent_id' => $paymentIntentId],
                 [
@@ -66,6 +67,13 @@ class StripeWebhookController extends Controller
             if ($payment->wasRecentlyCreated && $due->isPending()) {
                 $due->update(['status' => 'paid']);
             }
+
+            return $payment->wasRecentlyCreated;
         });
+
+        // Campanita al manager: entró un pago (solo la primera vez, idempotente)
+        if ($isNew) {
+            app(Notifications::class)->paymentReceived($due);
+        }
     }
 }

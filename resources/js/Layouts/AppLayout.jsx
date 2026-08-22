@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { CalendarDays, ListOrdered, MessageSquare, Wallet, User } from 'lucide-react';
 import Crest from '../Components/Crest';
 import Kit from '../Components/Kit';
+import NotificationBell from '../Components/NotificationBell';
 import { useTranslations } from '../i18n';
 
 const TABS = [
@@ -61,6 +62,7 @@ export default function AppLayout({ tab, eyebrow, children }) {
                             <div className="nc-eyebrow">{eyebrow ?? t(`headers.${tab}_eyebrow`)}</div>
                             <h1 className="nc-display nc-h1">{title}</h1>
                         </div>
+                        <NotificationBell />
                         {is_owner && (
                             <div className="nc-role" role="group" aria-label={t('view.switch')}>
                                 <button type="button" className={!viewing_as_player ? 'on' : ''}

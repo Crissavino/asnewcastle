@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Services\Notifications;
 use App\Services\SystemMessages;
 use App\Support\CurrentClub;
 use Illuminate\Http\RedirectResponse;
@@ -37,8 +38,13 @@ class AttendanceController extends Controller
             ],
         );
 
-        if ($attendance->status === 'in' && ($attendance->wasRecentlyCreated || $attendance->wasChanged('status'))) {
-            app(SystemMessages::class)->confirmed($member, $event);
+        if ($attendance->wasRecentlyCreated || $attendance->wasChanged('status')) {
+            if ($attendance->status === 'in') {
+                app(SystemMessages::class)->confirmed($member, $event);
+            }
+
+            // Aviso al manager: quién confirmó o rechazó (Duda no molesta)
+            app(Notifications::class)->attendanceResponded($member, $event, $attendance->status);
         }
 
         return back();

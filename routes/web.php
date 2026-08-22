@@ -9,6 +9,7 @@ use App\Http\Controllers\CuotaController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\MessageTranslationController;
 use App\Http\Controllers\MvpVoteController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PlayerRatingController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PushTokenController;
@@ -84,6 +85,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/eventos/{event}/recordar', [AgendaController::class, 'remind'])->name('eventos.recordar');
             Route::post('/eventos/{event}/asistencia', [AttendanceController::class, 'store'])->name('asistencia');
             Route::get('/tabla', [TablaController::class, 'show'])->name('tabla');
+            Route::post('/notificaciones/leidas', [NotificationController::class, 'markRead'])->name('notificaciones.leidas');
             Route::get('/vestuario', [VestuarioController::class, 'show'])->name('vestuario');
             Route::post('/vestuario', [VestuarioController::class, 'store'])->name('vestuario.enviar');
             Route::post('/vestuario/{message}/traducir', [MessageTranslationController::class, 'translate'])->name('vestuario.traducir');

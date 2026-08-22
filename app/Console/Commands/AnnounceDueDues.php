@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Club;
 use App\Models\Due;
 use App\Models\Message;
+use App\Services\Notifications;
 use Illuminate\Console\Command;
 
 class AnnounceDueDues extends Command
@@ -13,9 +14,9 @@ class AnnounceDueDues extends Command
 
     protected $description = 'El día del vencimiento publica en el vestuario quiénes deben — conciencia colectiva';
 
-    public function handle(): int
+    public function handle(Notifications $inApp): int
     {
-        Club::query()->each(function (Club $club) {
+        Club::query()->each(function (Club $club) use ($inApp) {
             $pending = Due::withoutGlobalScopes()
                 ->where('club_id', $club->id)
                 ->whereDate('due_date', today())
@@ -43,6 +44,11 @@ class AnnounceDueDues extends Command
                     ],
                 ]),
             ]);
+
+            // Y una campanita personal a cada deudor
+            foreach ($pending as $due) {
+                $inApp->dueDue($due);
+            }
         });
 
         $this->info('Avisos de vencimiento publicados.');

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Club;
 use App\Models\Due;
+use App\Services\Notifications;
 use Illuminate\Console\Command;
 
 class GenerateMonthlyDues extends Command
@@ -12,7 +13,7 @@ class GenerateMonthlyDues extends Command
 
     protected $description = 'Genera las cuotas del período para los miembros activos de cada club';
 
-    public function handle(): int
+    public function handle(Notifications $inApp): int
     {
         $period = $this->option('period')
             ? now()->parse($this->option('period'))->startOfMonth()
@@ -20,7 +21,7 @@ class GenerateMonthlyDues extends Command
 
         $created = 0;
 
-        Club::query()->where('monthly_fee_cents', '>', 0)->each(function (Club $club) use ($period, &$created) {
+        Club::query()->where('monthly_fee_cents', '>', 0)->each(function (Club $club) use ($period, $inApp, &$created) {
             foreach ($club->activeMembers()->get() as $member) {
                 // Becados no generan cuota; custom usa su monto propio
                 $amount = $member->monthlyFeeCents();
@@ -41,6 +42,10 @@ class GenerateMonthlyDues extends Command
                         'due_date' => $period->copy()->day(20)->toDateString(),
                     ],
                 );
+
+                if ($due->wasRecentlyCreated) {
+                    $inApp->dueGenerated($due);
+                }
 
                 $created += (int) $due->wasRecentlyCreated;
             }

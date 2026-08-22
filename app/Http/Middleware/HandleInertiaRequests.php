@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Notification;
 use App\Support\CurrentClub;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -52,6 +53,9 @@ class HandleInertiaRequests extends Middleware
                 'position' => $current->member()->position,
             ] : null,
 
+            // La campanita: contador de no-leídas + las últimas para el panel.
+            'notifications' => fn () => $current->member() ? $this->notifications($current) : null,
+
             // Solo el dueño ve el toggle admin/jugador, y en qué modo está.
             'is_owner' => fn () => $current->isOwner(),
             'viewing_as_player' => fn () => $current->viewingAsPlayer(),
@@ -60,6 +64,29 @@ class HandleInertiaRequests extends Middleware
                 'status' => fn () => $request->session()->get('status'),
                 'invite_url' => fn () => $request->session()->get('invite_url'),
             ],
+        ];
+    }
+
+    /** Campanita del jugador activo: no-leídas + las últimas 15 para el panel. */
+    protected function notifications(CurrentClub $current): array
+    {
+        $memberId = $current->member()->id;
+
+        return [
+            'unread' => Notification::where('member_id', $memberId)->whereNull('read_at')->count(),
+            'items' => Notification::where('member_id', $memberId)
+                ->latest()
+                ->limit(15)
+                ->get()
+                ->map(fn (Notification $n) => [
+                    'id' => $n->id,
+                    'key' => $n->body_key,
+                    'params' => $n->body_params,
+                    'url' => $n->url,
+                    'read' => $n->read_at !== null,
+                    'at' => $n->created_at->toIso8601String(),
+                ])
+                ->all(),
         ];
     }
 

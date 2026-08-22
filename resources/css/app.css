@@ -49,6 +49,31 @@ body { overscroll-behavior-y: none; }
   font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .08em;
   text-transform: uppercase; padding: 6px 8px; border-radius: 2px; }
 .nc-role button.on { background: #fff; color: var(--red-dk); }
+
+/* campanita de notificaciones: vive en el header, panel flotante blanco */
+.nc-bell { margin-left: auto; position: relative; }
+.nc-bell + .nc-role { margin-left: 8px; }
+.nc-bell-btn { position: relative; border: none; cursor: pointer; color: #fff;
+  background: rgba(0,0,0,.28); width: 38px; height: 38px; border-radius: 2px;
+  display: flex; align-items: center; justify-content: center; }
+.nc-bell-btn:active { background: rgba(0,0,0,.42); }
+.nc-bell-badge { position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px;
+  padding: 0 4px; background: var(--ink); color: #fff; border: 1.5px solid #fff;
+  border-radius: 9px; font-size: 10px; font-weight: 700; line-height: 14px; text-align: center; }
+.nc-notif-panel { position: absolute; top: calc(100% + 9px); right: 0; z-index: 50;
+  width: min(320px, calc(100vw - 28px)); background: var(--card); color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 3px; box-shadow: 6px 6px 0 rgba(0,0,0,.22);
+  overflow: hidden; }
+.nc-notif-head { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--stone); padding: 12px 14px 8px; }
+.nc-notif-list { max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.nc-notif-empty { color: var(--stone); font-size: 13px; text-align: center; padding: 26px 16px; margin: 0; }
+.nc-notif-item { display: flex; flex-direction: column; gap: 3px; min-height: 44px; justify-content: center;
+  padding: 10px 14px; border-top: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+.nc-notif-item:active { background: var(--paper); }
+.nc-notif-item.unread { background: rgba(210,34,51,.06); box-shadow: inset 3px 0 0 var(--red); }
+.nc-notif-text { font-size: 13px; line-height: 1.3; }
+.nc-notif-time { font-size: 11px; color: var(--stone); }
 /* el fondo: franjas de césped recién cortado, casi imperceptibles.
    Es EL área que scrollea: header y tabs viven afuera, clavados. */
 .nc-body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;

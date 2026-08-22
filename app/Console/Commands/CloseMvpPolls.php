@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Event;
+use App\Services\Notifications;
 use App\Services\SystemMessages;
 use Illuminate\Console\Command;
 
@@ -12,14 +13,14 @@ class CloseMvpPolls extends Command
 
     protected $description = 'Cierra las votaciones de figura vencidas y anuncia al ganador en el vestuario';
 
-    public function handle(SystemMessages $system): int
+    public function handle(SystemMessages $system, Notifications $inApp): int
     {
         $events = Event::query()
             ->where('kind', 'match')
             ->whereNotNull('mvp_opened_at')
             ->whereNull('mvp_closed_at')
             ->where('starts_at', '<', now()->subHours(50))
-            ->with('mvpVotes.voted.user')
+            ->with('mvpVotes.voted.user', 'attendances')
             ->get();
 
         foreach ($events as $event) {
@@ -42,6 +43,7 @@ class CloseMvpPolls extends Command
                 ->implode(' & ');
 
             $system->mvpWinner($event, $names, $max);
+            $inApp->mvpWinner($event, $event->attendances->where('status', 'in')->pluck('member_id'), $names);
         }
 
         $this->info("Votaciones cerradas: {$events->count()}");

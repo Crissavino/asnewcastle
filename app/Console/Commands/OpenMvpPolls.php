@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Event;
+use App\Services\Notifications;
 use App\Services\SystemMessages;
 use Illuminate\Console\Command;
 
@@ -12,7 +13,7 @@ class OpenMvpPolls extends Command
 
     protected $description = 'Abre la votación de figura para los partidos que terminaron';
 
-    public function handle(SystemMessages $system): int
+    public function handle(SystemMessages $system, Notifications $inApp): int
     {
         $events = Event::query()
             ->where('kind', 'match')
@@ -27,8 +28,11 @@ class OpenMvpPolls extends Command
             $event->forceFill(['mvp_opened_at' => now()])->save();
 
             // Sin al menos dos que hayan ido, no hay votación que valga
-            if ($event->attendances->where('status', 'in')->count() >= 2) {
+            $attended = $event->attendances->where('status', 'in');
+
+            if ($attended->count() >= 2) {
                 $system->mvpOpened($event);
+                $inApp->mvpOpened($event, $attended->pluck('member_id'));
             }
         }
 
