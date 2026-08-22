@@ -1,6 +1,5 @@
 import UIKit
 import Capacitor
-import FirebaseCore
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -8,8 +7,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Inicializa Firebase (necesario para FirebaseMessaging: token FCM en iOS)
-        FirebaseApp.configure()
+        // Firebase se inicializa solo desde el plugin @capacitor-firebase/messaging
+        // (usa GoogleService-Info.plist, agregado al target).
         return true
     }
 
