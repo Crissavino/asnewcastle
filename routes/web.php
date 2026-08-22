@@ -26,6 +26,9 @@ use Inertia\Inertia;
 
 Route::redirect('/', '/agenda');
 
+// Política de privacidad: pública (Google Play la exige y la revisa sin login)
+Route::view('/privacidad', 'privacidad')->name('privacidad');
+
 // Idioma: se puede cambiar logueado o no (pantalla de entrada)
 Route::post('/idioma', [OtpController::class, 'setLocale'])->name('idioma');
 
