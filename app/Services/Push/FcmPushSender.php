@@ -82,6 +82,27 @@ class FcmPushSender implements PushSender
         return $invalid;
     }
 
+    /** Diagnóstico: envía a un token y devuelve la respuesta cruda de FCM. */
+    public function probe(string $token): array
+    {
+        try {
+            $accessToken = $this->accessToken();
+        } catch (\Throwable $e) {
+            return ['error' => 'oauth2: '.$e->getMessage()];
+        }
+
+        $res = Http::withToken($accessToken)->timeout(8)->post(
+            'https://fcm.googleapis.com/v1/projects/'.$this->projectId.'/messages:send',
+            ['message' => [
+                'token' => $token,
+                'notification' => ['title' => '⚽ Prueba', 'body' => 'Diagnóstico de push'],
+                'apns' => ['payload' => ['aps' => ['alert' => ['title' => '⚽ Prueba', 'body' => 'Diagnóstico'], 'sound' => 'default']]],
+            ]]
+        );
+
+        return ['status' => $res->status(), 'body' => $res->body()];
+    }
+
     /** Access token OAuth2, cacheado ~50 min (dura 60). */
     private function accessToken(): string
     {
