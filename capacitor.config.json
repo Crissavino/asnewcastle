@@ -8,7 +8,7 @@
     "iosScheme": "https"
   },
   "plugins": {
-    "PushNotifications": {
+    "FirebaseMessaging": {
       "presentationOptions": ["badge", "sound", "alert"]
     }
   }

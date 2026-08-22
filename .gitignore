@@ -27,3 +27,7 @@ Thumbs.db
 asnewcastle-release.keystore
 keystore-credentials.txt
 android/keystore.properties
+
+# APNs key de Apple (push iOS) — NUNCA commitear
+*.p8
+ios-push-credentials.txt

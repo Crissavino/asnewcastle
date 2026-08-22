@@ -57,23 +57,26 @@ async function setupNativePush() {
         return;
     }
 
-    const { PushNotifications } = await import('@capacitor/push-notifications');
+    // Firebase Cloud Messaging: da un token FCM tanto en Android como en iOS
+    // (en iOS, Firebase hace el puente con APNs), así el servidor manda por un
+    // solo canal para las dos plataformas.
+    const { FirebaseMessaging } = await import('@capacitor-firebase/messaging');
 
-    let perm = await PushNotifications.checkPermissions();
+    let perm = await FirebaseMessaging.checkPermissions();
     if (perm.receive === 'prompt' || perm.receive === 'prompt-with-rationale') {
-        perm = await PushNotifications.requestPermissions();
+        perm = await FirebaseMessaging.requestPermissions();
     }
     if (perm.receive !== 'granted') {
         return;
     }
 
-    PushNotifications.addListener('registration', (token) => {
-        fcmToken = token.value;
+    FirebaseMessaging.addListener('tokenReceived', (event) => {
+        fcmToken = event.token;
         postToken();
     });
 
-    PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-        const url = action.notification?.data?.url;
+    FirebaseMessaging.addListener('notificationActionPerformed', (event) => {
+        const url = event.notification?.data?.url;
         if (url) {
             window.location.href = url;
         }
@@ -84,7 +87,13 @@ async function setupNativePush() {
     // (p. ej. después de entrar), así queda asociado al usuario apenas se loguea.
     router.on('navigate', () => postToken());
 
-    await PushNotifications.register();
+    try {
+        const { token } = await FirebaseMessaging.getToken();
+        fcmToken = token;
+        postToken();
+    } catch {
+        // sin token no pasa nada: la app funciona igual, solo no recibe push
+    }
 }
 
 setupNativePush();
