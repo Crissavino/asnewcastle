@@ -1,7 +1,7 @@
 {
   "appId": "com.asnewcastle.app",
   "appName": "A.S New Castle",
-  "webDir": "public",
+  "webDir": "capacitor-shell",
   "server": {
     "url": "https://as-new-castle.on-forge.com",
     "androidScheme": "https",
