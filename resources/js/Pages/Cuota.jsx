@@ -223,6 +223,14 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
     const pay = () => router.post(route('cuota.pagar', my_due.id));
     const subscribe = () => router.post(route('cuota.suscribir'));
 
+    // El débito automático es el camino principal; el pago manual, la excepción cara.
+    const isSub = subscription?.status === 'active';
+    const isPastDue = subscription?.status === 'past_due';
+    const canSubscribe = subscription && (subscription.subscribed_fee_cents ?? 0) > 0 && stripe_ready;
+    const hasDiscount = subscription && subscription.discount_cents > 0;
+    const baseFee = my_due?.amount_cents ?? (subscription ? subscription.subscribed_fee_cents + subscription.discount_cents : 0);
+    const annualSurcharge = subscription ? subscription.discount_cents * 12 : 0;
+
     const claim = () => {
         router.post(route('cuota.reclamar'), {}, {
             preserveScroll: true,
@@ -232,80 +240,87 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
 
     return (
         <AppLayout tab="cuota" eyebrow={periodLabel}>
-            <div className="nc-card">
-                <div className="nc-label">{t('cuota.yours')} · {periodLabel}</div>
-                {my_due ? (
-                    <>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, margin: '10px 0 0' }}>
-                            <span className="nc-display" style={{ fontSize: 42, lineHeight: 1 }}>{money(my_due.amount_cents)}</span>
-                            <span className="nc-num nc-meta" style={{ fontSize: 14, fontWeight: 600 }}>
-                                {t('cuota.per_month', { currency })}
-                            </span>
-                        </div>
-                        <div style={{ marginTop: 12 }}>
-                            <span className={`nc-pill ${my_due.status === 'paid' ? 'ok' : 'no'}`}>
-                                {my_due.status === 'paid'
-                                    ? t('cuota.paid_pill')
-                                    : t('cuota.pending_pill', { date: new Date(my_due.due_date).toLocaleDateString(intl, { day: 'numeric', month: 'long' }) })}
-                            </span>
-                        </div>
-                        <p className="nc-meta" style={{ marginTop: 14 }}>{t('cuota.covers')}</p>
-
-                        {my_due.status === 'pending' && justPaid && (
-                            <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.processing')}</p>
-                        )}
-
-                        {my_due.status === 'pending' && !justPaid && (
-                            stripe_ready ? (
-                                <button className="nc-btn" style={{ marginTop: 16 }} onClick={pay}>
-                                    {t('cuota.pay', { amount: money(my_due.amount_cents), currency })}
-                                </button>
-                            ) : (
-                                <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.not_ready')}</p>
-                            )
-                        )}
-                    </>
-                ) : (
-                    <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.none')}</p>
-                )}
-            </div>
-
-            {/* Débito automático mensual (suscripción de Stripe) */}
-            {subscription && (
+            {/* HERO: el débito automático es el camino principal */}
+            {subscription && (isSub || isPastDue || justSubscribed || canSubscribe) && (
                 <div className="nc-card">
-                    <div className="nc-label">{t('cuota.autopay')}</div>
-                    {subscription.status === 'active' ? (
+                    <div className="nc-label">
+                        {t('cuota.autopay')}{!isSub && !isPastDue && !justSubscribed ? ` · ${t('cuota.recommended')}` : ''}
+                    </div>
+
+                    {isSub ? (
                         <>
                             <div style={{ marginTop: 10 }}><span className="nc-pill ok">{t('cuota.autopay_on')}</span></div>
-                            <p className="nc-meta" style={{ marginTop: 12 }}>{t('cuota.autopay_active_note')}</p>
+                            <p className="nc-meta" style={{ marginTop: 12 }}>
+                                {t('cuota.autopay_active_full', { amount: money(subscription.subscribed_fee_cents), currency })}
+                            </p>
                         </>
-                    ) : subscription.status === 'past_due' ? (
+                    ) : isPastDue ? (
                         <>
                             <div style={{ marginTop: 10 }}><span className="nc-pill no">{t('cuota.autopay_failed')}</span></div>
                             <p className="nc-meta" style={{ marginTop: 12 }}>{t('cuota.autopay_failed_note')}</p>
+                            {stripe_ready && (
+                                <button className="nc-btn" style={{ marginTop: 14 }} onClick={subscribe}>{t('cuota.autopay_retry')}</button>
+                            )}
                         </>
                     ) : justSubscribed ? (
                         <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.autopay_processing')}</p>
-                    ) : (subscription.subscribed_fee_cents ?? 0) > 0 ? (
-                        stripe_ready ? (
-                            <>
-                                <p className="nc-meta" style={{ marginTop: 10 }}>
-                                    {t('cuota.autopay_pitch', { amount: money(subscription.subscribed_fee_cents), currency })}
-                                </p>
-                                <button className="nc-btn" style={{ marginTop: 14 }} onClick={subscribe}>
-                                    {subscription.discount_cents > 0
-                                        ? t('cuota.autopay_cta_save', { amount: money(subscription.discount_cents * 12), currency })
-                                        : t('cuota.autopay_cta')}
-                                </button>
-                            </>
-                        ) : (
-                            <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.not_ready')}</p>
-                        )
                     ) : (
-                        <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.autopay_becado')}</p>
+                        <>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, margin: '10px 0 0' }}>
+                                <span className="nc-display" style={{ fontSize: 42, lineHeight: 1 }}>{money(subscription.subscribed_fee_cents)}</span>
+                                <span className="nc-num nc-meta" style={{ fontSize: 14, fontWeight: 600 }}>{t('cuota.per_month', { currency })}</span>
+                            </div>
+                            <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.autopay_pitch_short')}</p>
+                            <button className="nc-btn" style={{ marginTop: 14 }} onClick={subscribe}>{t('cuota.autopay_cta')}</button>
+                            {hasDiscount && (
+                                <p className="nc-meta" style={{ marginTop: 10 }}>
+                                    {t('cuota.manual_surcharge', { base: money(baseFee), annual: money(annualSurcharge), currency })}
+                                </p>
+                            )}
+                        </>
                     )}
                 </div>
             )}
+
+            {/* Pago de este mes: principal si no puede suscribirse, secundario si sí */}
+            {my_due && !isSub && !justSubscribed ? (
+                <div className="nc-card">
+                    <div className="nc-label">
+                        {canSubscribe ? t('cuota.manual_title') : t('cuota.yours')} · {periodLabel}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, margin: '10px 0 0' }}>
+                        <span className="nc-display" style={{ fontSize: canSubscribe ? 28 : 42, lineHeight: 1 }}>{money(my_due.amount_cents)}</span>
+                        <span className="nc-num nc-meta" style={{ fontSize: 14, fontWeight: 600 }}>{t('cuota.per_month', { currency })}</span>
+                    </div>
+                    <div style={{ marginTop: 12 }}>
+                        <span className={`nc-pill ${my_due.status === 'paid' ? 'ok' : 'no'}`}>
+                            {my_due.status === 'paid'
+                                ? t('cuota.paid_pill')
+                                : t('cuota.pending_pill', { date: new Date(my_due.due_date).toLocaleDateString(intl, { day: 'numeric', month: 'long' }) })}
+                        </span>
+                    </div>
+                    {!canSubscribe && <p className="nc-meta" style={{ marginTop: 14 }}>{t('cuota.covers')}</p>}
+
+                    {my_due.status === 'pending' && justPaid && (
+                        <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.processing')}</p>
+                    )}
+
+                    {my_due.status === 'pending' && !justPaid && (
+                        stripe_ready ? (
+                            <button className={`nc-btn${canSubscribe ? ' dark' : ''}`} style={{ marginTop: 16 }} onClick={pay}>
+                                {t('cuota.pay', { amount: money(my_due.amount_cents), currency })}
+                            </button>
+                        ) : (
+                            <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.not_ready')}</p>
+                        )
+                    )}
+                </div>
+            ) : (!my_due && !isSub && !justSubscribed && (subscription?.subscribed_fee_cents ?? 0) <= 0) ? (
+                <div className="nc-card">
+                    <div className="nc-label">{t('cuota.yours')} · {periodLabel}</div>
+                    <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.none')}</p>
+                </div>
+            ) : null}
 
             {/* Caja transparente: saldo y movimientos, para todo el plantel */}
             {resumen && (
