@@ -12,6 +12,7 @@ export default function Tabla({ standings, fixture, us, form, next }) {
     const intl = INTL_LOCALES[locale] ?? 'en-GB';
     const rows = standings ?? [];
     const matches = fixture ?? [];
+    const upcoming = matches.filter((m) => !m.played).slice(0, 5);
 
     const nextLabel = next && new Date(next.starts_at).toLocaleDateString(intl, {
         weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
@@ -69,40 +70,27 @@ export default function Tabla({ standings, fixture, us, form, next }) {
                 </div>
             )}
 
-            {/* Fixture del club: el calendario oficial scrapeado de la liga */}
-            {matches.length > 0 && (
+            {/* Próximos partidos: los 5 que vienen, del fixture oficial de la liga */}
+            {upcoming.length > 0 && (
                 <div className="nc-card">
-                    <div className="nc-label">{t('tabla.fixture')}</div>
+                    <div className="nc-label">{t('tabla.next_matches')}</div>
                     <div style={{ marginTop: 8 }}>
-                        {matches.map((m, i) => {
-                            const our = m.is_home ? m.home_score : m.away_score;
-                            const their = m.is_home ? m.away_score : m.home_score;
-                            const outcome = m.played ? (our > their ? 1 : our < their ? -1 : 0) : null;
-                            return (
-                                <div key={i} className="nc-row">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                                        <Kit n={member?.shirt_number} kit={m.is_home ? 'home' : 'away'} size="sm" />
-                                        <div style={{ minWidth: 0 }}>
-                                            <div style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                vs {m.opponent}
-                                            </div>
-                                            <div className="nc-meta" style={{ fontSize: 12 }}>
-                                                {t('tabla.round', { n: m.etapa })} · {m.is_home ? t('tabla.home_short') : t('tabla.away_short')}
-                                            </div>
+                        {upcoming.map((m, i) => (
+                            <div key={i} className="nc-row">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                                    <Kit n={member?.shirt_number} kit={m.is_home ? 'home' : 'away'} size="sm" />
+                                    <div style={{ minWidth: 0 }}>
+                                        <div style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            vs {m.opponent}
+                                        </div>
+                                        <div className="nc-meta" style={{ fontSize: 12 }}>
+                                            {t('tabla.round', { n: m.etapa })} · {m.is_home ? t('tabla.home_short') : t('tabla.away_short')}
                                         </div>
                                     </div>
-                                    <div style={{ flexShrink: 0, paddingLeft: 8 }}>
-                                        {m.played ? (
-                                            <span className="nc-num" style={{ fontWeight: 700, color: outcome > 0 ? 'var(--aqua-dk)' : outcome < 0 ? 'var(--red-dk)' : 'inherit' }}>
-                                                {our}–{their}
-                                            </span>
-                                        ) : (
-                                            <span className="nc-meta nc-num" style={{ fontSize: 13 }}>{matchDate(m.date)}</span>
-                                        )}
-                                    </div>
                                 </div>
-                            );
-                        })}
+                                <span className="nc-meta nc-num" style={{ fontSize: 13, flexShrink: 0, paddingLeft: 8 }}>{matchDate(m.date)}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}

@@ -31,6 +31,13 @@ class StandingsScraper
 
         $rows = $this->parse($html, $club->name);
 
+        // Pretemporada: el clasament está vacío. Armamos la tabla con los
+        // equipos participantes (todos en 0) para que se vea igual, y de paso
+        // no falla el import diario hasta que se juegue la 1ª fecha.
+        if (count($rows) < 2) {
+            $rows = $this->fromEchipe($club);
+        }
+
         if (count($rows) < 2) {
             throw new RuntimeException('El clasament vino vacío o cambió el formato de la página.');
         }
@@ -40,10 +47,63 @@ class StandingsScraper
         return $rows;
     }
 
+    /** Tabla en 0 a partir de la lista de equipos participantes (/echipe). */
+    protected function fromEchipe(Club $club): array
+    {
+        $url = str_replace('/clasament', '/echipe', $club->standings_url);
+
+        if ($url === $club->standings_url) {
+            return [];
+        }
+
+        try {
+            $html = Http::withHeaders(['User-Agent' => 'Mozilla/5.0 (compatible; NewCastleApp/1.0)'])
+                ->timeout(30)
+                ->get($url)
+                ->throw()
+                ->body();
+        } catch (\Throwable) {
+            return [];
+        }
+
+        return $this->parseEchipe($html, $club->name);
+    }
+
+    /** @return array<int, array{pos: int, team: string, pj: int, dg: int, pts: int, us: bool}> */
+    public function parseEchipe(string $html, string $clubName): array
+    {
+        $doc = new DOMDocument;
+        libxml_use_internal_errors(true);
+        $doc->loadHTML(mb_encode_numericentity($html, [0x80, 0x10FFFF, 0, ~0], 'UTF-8'));
+        libxml_clear_errors();
+
+        $rows = [];
+        $pos = 0;
+
+        foreach ((new DOMXPath($doc))->query("//*[contains(@class,'title_lista_echipe')]") as $node) {
+            $team = trim(preg_replace('/\s+/u', ' ', $node->textContent));
+
+            if ($team === '') {
+                continue;
+            }
+
+            $rows[] = [
+                'pos' => ++$pos,
+                'team' => $team,
+                'pj' => 0,
+                'dg' => 0,
+                'pts' => 0,
+                'us' => $this->normalize($team) === $this->normalize($clubName),
+            ];
+        }
+
+        return $rows;
+    }
+
     /** @return array<int, array{pos: int, team: string, pj: int, dg: int, pts: int, us: bool}> */
     public function parse(string $html, string $clubName): array
     {
-        $doc = new DOMDocument();
+        $doc = new DOMDocument;
         libxml_use_internal_errors(true);
         $doc->loadHTML(mb_encode_numericentity($html, [0x80, 0x10FFFF, 0, ~0], 'UTF-8'));
         libxml_clear_errors();

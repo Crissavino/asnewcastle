@@ -268,6 +268,7 @@
     "tabla.position": "Position",
     "tabla.form": "Form",
     "tabla.fixture": "Fixtures",
+    "tabla.next_matches": "Next matches",
     "tabla.round": "Round :n",
     "tabla.home_short": "Home",
     "tabla.away_short": "Away",

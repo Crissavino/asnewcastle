@@ -44,7 +44,12 @@ it('el comando importa la tabla y la deja en standings_json', function () {
 });
 
 it('si la página cambió de formato no pisa la tabla que ya estaba', function () {
-    Http::fake([CLASAMENT_URL => Http::response('<html><body>mantenimiento</body></html>')]);
+    // El clasament roto dispara el fallback a /echipe; si ese también viene
+    // roto, no hay tabla nueva y NO se pisa la que ya estaba.
+    Http::fake([
+        CLASAMENT_URL => Http::response('<html><body>mantenimiento</body></html>'),
+        str_replace('/clasament', '/echipe', CLASAMENT_URL) => Http::response('<html><body>mantenimiento</body></html>'),
+    ]);
 
     $vieja = [['pos' => 1, 'team' => 'ACS PERIS', 'pj' => 2, 'dg' => 3, 'pts' => 6, 'us' => false]];
     $club = Club::factory()->create([
@@ -55,6 +60,43 @@ it('si la página cambió de formato no pisa la tabla que ya estaba', function (
     $this->artisan('tabla:importar')->assertFailed();
 
     expect($club->fresh()->standings_json)->toBe($vieja);
+});
+
+it('en pretemporada arma la tabla en 0 desde la lista de equipos (/echipe)', function () {
+    $html = '<html><body>'
+        .'<div class="name title_lista_echipe">1 DECEMBRIE</div>'
+        .'<div class="name title_lista_echipe">AS NEW CASTLE</div>'
+        .'<div class="name title_lista_echipe">CS DARASTI</div>'
+        .'</body></html>';
+
+    $rows = app(StandingsScraper::class)->parseEchipe($html, 'A.S New Castle');
+
+    expect($rows)->toHaveCount(3)
+        ->and($rows[0])->toBe(['pos' => 1, 'team' => '1 DECEMBRIE', 'pj' => 0, 'dg' => 0, 'pts' => 0, 'us' => false])
+        ->and($rows[1]['team'])->toBe('AS NEW CASTLE')
+        ->and($rows[1]['us'])->toBeTrue();
+});
+
+it('si el clasament está vacío, el comando arma la tabla desde /echipe', function () {
+    $echipeUrl = 'https://www.frf-ajf.ro/ilfov/competitii-fotbal/liga-a-5-a-16633/echipe';
+    $clasamentUrl = 'https://www.frf-ajf.ro/ilfov/competitii-fotbal/liga-a-5-a-16633/clasament';
+
+    Http::fake([
+        $clasamentUrl => Http::response('<html><body><table><tr><th>#</th><th>Echipa</th></tr></table></body></html>'),
+        $echipeUrl => Http::response('<div class="name title_lista_echipe">1 DECEMBRIE</div><div class="name title_lista_echipe">AS NEW CASTLE</div>'),
+    ]);
+
+    $club = Club::factory()->create([
+        'name' => 'A.S New Castle',
+        'standings_url' => $clasamentUrl,
+        'fixture_url' => null,
+    ]);
+
+    $this->artisan('tabla:importar')->assertSuccessful();
+
+    $rows = $club->fresh()->standings_json;
+    expect($rows)->toHaveCount(2)
+        ->and(collect($rows)->firstWhere('us', true)['team'])->toBe('AS NEW CASTLE');
 });
 
 it('la tabla importada se ve en la pestaña Tabla con el club resaltado', function () {
