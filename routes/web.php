@@ -12,6 +12,7 @@ use App\Http\Controllers\MvpVoteController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PlayerRatingController;
 use App\Http\Controllers\PresenceController;
+use App\Http\Controllers\StatsController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PushTokenController;
 use App\Http\Controllers\StripeConnectController;
@@ -108,6 +109,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/stripe/onboarding', [StripeConnectController::class, 'start'])->name('stripe.onboarding');
             Route::get('/stripe/retorno', [StripeConnectController::class, 'back'])->name('stripe.retorno');
             Route::get('/perfil', [PerfilController::class, 'show'])->name('perfil');
+            Route::get('/estadisticas', [StatsController::class, 'own'])->name('estadisticas');
+            Route::get('/plantel/{member}/estadisticas', [StatsController::class, 'member'])->name('plantel.estadisticas');
             Route::patch('/perfil', [PerfilController::class, 'update'])->name('perfil.actualizar');
             Route::post('/perfil/disponibilidad', [PerfilController::class, 'updateAvailability'])->name('perfil.disponibilidad');
             Route::post('/plantel/{member}/baja', [PerfilController::class, 'removeMember'])->name('plantel.baja');

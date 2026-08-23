@@ -96,12 +96,14 @@ events
   kit: home | away
   notes (nullable)
   notified_at (nullable)
+  attendance_confirmed_at (nullable)  -- cuándo el manager confirmó presentes
   timestamps
 
 attendances
   id, event_id, member_id
-  status: in | maybe | out
-  responded_at, source: app | whatsapp
+  status: in | maybe | out (nullable: el manager puede marcar presente a quien nunca contestó)
+  attended (bool nullable)   -- lo que PASÓ, confirmado por el manager; status es lo que DIJO
+  responded_at (nullable), source: app | whatsapp
   unique(event_id, member_id)
 
 messages           -- chat del vestuario
@@ -203,9 +205,25 @@ Chat simple del equipo.
 - Polling cada 8 segundos. **No** WebSockets, no Reverb, no Echo en v1.
 - Mensajes del sistema automáticos cuando alguien confirma o se crea un evento
 - Fotos en el chat (disco público, sin galería aparte). Sin reacciones, sin hilos, sin edición
-- Post-partido (2hs después, ventana de 48hs): votación de figura entre los que fueron,
+- Post-partido (2hs después, ventana de 48hs): votación de figura entre los que estuvieron,
   y calificación ternaria anónima de cada compañero (le costó / cumplió / crack —
-  la más baja nunca es hiriente). Sin puntajes numéricos ni estadísticas acumuladas.
+  la más baja nunca es hiriente). Vota y califica solo el que estuvo; autovoto bloqueado.
+
+### Estadísticas personales y presentes (agregado aprobado el 23.08.2026)
+
+Decisión del dueño: las estadísticas por jugador SÍ van, "cuantas más mejor",
+pero salen SOLO de datos que la app ya registra — nada de carga manual de goles.
+
+- **Presentes**: pasado el partido, el manager confirma quiénes estuvieron
+  (`attended` en `attendances`, `attendance_confirmed_at` en `events`), con los
+  "Voy" pre-marcados. Sin confirmar, "Voy" cuenta como jugó (fallback).
+- **StatsService** calcula todo al leer, sin tablas de agregados: jugados, % de
+  asistencia (partidos y entrenos), racha, faltazos (dijo "Voy" y no estuvo),
+  figuras, votos acumulados, distribución le costó/cumplió/crack y el partido a
+  partido. Pantalla `Estadisticas` (`/estadisticas` y `/plantel/{member}/estadisticas`).
+- **Visibilidad**: cada jugador ve SOLO sus propias estadísticas; el manager
+  (rol real) ve las de todos. Las calificaciones siempre agregadas y anónimas:
+  nunca se muestra quién puso qué.
 
 ## Lo que NO va en v1
 
@@ -213,7 +231,7 @@ Escrito para que no aparezca por inercia:
 
 - Crowdfunding y donaciones
 - Notificaciones push web
-- Estadísticas de jugadores (goles, tarjetas, minutos)
+- Estadísticas de goles, tarjetas y minutos (las personales de asistencia/votos SÍ van, ver Fase 5)
 - Formación táctica / pizarra
 - WebSockets
 - Panel de administración de la plataforma (Filament u otro)

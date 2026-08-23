@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Attendance;
 use App\Models\Due;
-use App\Models\Event;
 use App\Models\Member;
+use App\Services\StatsService;
 use App\Support\CurrentClub;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
@@ -160,39 +159,12 @@ class PerfilController extends Controller
     /** Números de la temporada: sale todo de asistencias y votos, sin planilla. */
     protected function season(Member $member): array
     {
-        $pastEvents = Event::query()
-            ->whereNull('cancelled_at')
-            ->where('starts_at', '<', now())
-            ->when($member->joined_at, fn ($q) => $q->where('starts_at', '>=', $member->joined_at));
-
-        $totalPast = (clone $pastEvents)->count();
-
-        $attended = Attendance::query()
-            ->where('member_id', $member->id)
-            ->where('status', 'in')
-            ->whereIn('event_id', (clone $pastEvents)->pluck('id'));
-
-        $matchesPlayed = (clone $attended)
-            ->whereIn('event_id', (clone $pastEvents)->where('kind', 'match')->pluck('id'))
-            ->count();
-
-        // Figuras: partidos con votación cerrada donde este member quedó arriba
-        $mvps = Event::query()
-            ->where('kind', 'match')
-            ->whereNotNull('mvp_closed_at')
-            ->with('mvpVotes')
-            ->get()
-            ->filter(function (Event $event) use ($member) {
-                $counts = $event->mvpVotes->countBy('voted_member_id');
-
-                return $counts->isNotEmpty() && $counts->get($member->id, 0) === $counts->max();
-            })
-            ->count();
+        $stats = app(StatsService::class)->forMember($member);
 
         return [
-            'matches' => $matchesPlayed,
-            'attendance_pct' => $totalPast > 0 ? (int) round($attended->count() / $totalPast * 100) : null,
-            'mvps' => $mvps,
+            'matches' => $stats['matches_played'],
+            'attendance_pct' => $stats['attendance_pct'],
+            'mvps' => $stats['mvps'],
         ];
     }
 }

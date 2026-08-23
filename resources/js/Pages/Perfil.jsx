@@ -1,5 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
-import { Check, Pencil, X } from 'lucide-react';
+import { BarChart2, Check, Pencil, X } from 'lucide-react';
 import { useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
@@ -167,6 +167,9 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
                         </div>
                     ))}
                 </div>
+                <button className="nc-mini" style={{ marginTop: 14 }} onClick={() => router.visit(route('estadisticas'))}>
+                    <BarChart2 size={13} /> {t('stats.view')}
+                </button>
             </div>
 
             <div className="nc-card">
@@ -205,6 +208,17 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                                 <span className="nc-label">{p.position ?? ''}</span>
+                                {isManager && (
+                                    <button
+                                        type="button"
+                                        className="nc-mini"
+                                        style={{ flex: 'none', minWidth: 0, padding: '6px 8px' }}
+                                        onClick={() => router.visit(route('plantel.estadisticas', p.id))}
+                                        aria-label={t('stats.view')}
+                                    >
+                                        <BarChart2 size={12} />
+                                    </button>
+                                )}
                                 {isManager && p.id !== member.id && (
                                     <>
                                         <ConfirmButton
