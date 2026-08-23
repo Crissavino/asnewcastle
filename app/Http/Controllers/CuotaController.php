@@ -46,6 +46,12 @@ class CuotaController extends Controller
             'plantel' => $this->squadStatus($period),
             // Saldo y movimientos del mes: transparencia para todos
             'resumen' => $this->cashSummary($period),
+            // Débito automático del jugador: estado + monto con descuento
+            'subscription' => [
+                'status' => $member->subscription_status,
+                'discount_cents' => $club->subscription_discount_cents,
+                'subscribed_fee_cents' => $member->subscribedFeeCents(),
+            ],
         ];
 
         // La caja (recaudación del mes, histórico y deudores) la ve TODO el
@@ -93,6 +99,7 @@ class CuotaController extends Controller
             // SOLO manager: el tipo de cuota de cada uno no lo ve nadie más.
             $props['config'] = [
                 'monthly_fee_cents' => $club->monthly_fee_cents,
+                'subscription_discount_cents' => $club->subscription_discount_cents,
                 'members' => $club->activeMembers()
                     ->with('user:id,name')
                     ->orderBy('shirt_number')
@@ -103,6 +110,7 @@ class CuotaController extends Controller
                         'shirt_number' => $m->shirt_number,
                         'fee_type' => $m->fee_type,
                         'custom_fee_cents' => $m->custom_fee_cents,
+                        'subscription_status' => $m->subscription_status,
                     ]),
             ];
 
@@ -151,10 +159,14 @@ class CuotaController extends Controller
 
         $validated = $request->validate([
             'monthly_fee_cents' => ['required', 'integer', 'min:0', 'max:10000000'],
+            'subscription_discount_cents' => ['nullable', 'integer', 'min:0', 'max:10000000'],
         ]);
 
         $club = app(CurrentClub::class)->club();
-        $club->update(['monthly_fee_cents' => $validated['monthly_fee_cents']]);
+        $club->update([
+            'monthly_fee_cents' => $validated['monthly_fee_cents'],
+            'subscription_discount_cents' => $validated['subscription_discount_cents'] ?? $club->subscription_discount_cents,
+        ]);
 
         // Las pendientes sin pagar del mes (de cuota normal) toman el monto nuevo
         Due::query()
@@ -242,6 +254,42 @@ class CuotaController extends Controller
         );
 
         return Inertia::location($url);
+    }
+
+    /**
+     * El jugador activa el débito automático mensual. Se le cobra la cuota
+     * con descuento todos los meses, sobre la cuenta conectada del club.
+     */
+    public function subscribe(StripeGateway $stripe): BaseResponse
+    {
+        $current = app(CurrentClub::class);
+        $member = $current->member();
+
+        abort_unless($current->club()->stripe_onboarded_at !== null, 400);
+        // Becado o sin monto: no hay suscripción posible
+        abort_if(($member->subscribedFeeCents() ?? 0) <= 0, 400);
+        // Ya suscripto: no duplicar
+        abort_if($member->isSubscribed(), 400);
+
+        $url = $stripe->createSubscriptionCheckoutUrl(
+            $member,
+            route('cuota').'?suscripcion=ok',
+            route('cuota').'?suscripcion=cancelado',
+        );
+
+        return Inertia::location($url);
+    }
+
+    /** Solo el delegado corta el débito automático de un jugador. */
+    public function cancelSubscription(Member $member, StripeGateway $stripe): BaseResponse
+    {
+        Gate::authorize('create', Event::class);
+        abort_unless($member->club_id === app(CurrentClub::class)->id(), 404);
+
+        $stripe->cancelSubscription($member);
+        $member->update(['subscription_status' => 'canceled', 'stripe_subscription_id' => null]);
+
+        return back();
     }
 
     /**

@@ -4,13 +4,12 @@ namespace App\Services\Stripe;
 
 use App\Models\Club;
 use App\Models\Due;
+use App\Models\Member;
 use Stripe\StripeClient;
 
 class RealStripeGateway implements StripeGateway
 {
-    public function __construct(protected StripeClient $client)
-    {
-    }
+    public function __construct(protected StripeClient $client) {}
 
     public function createExpressAccount(Club $club): string
     {
@@ -98,5 +97,48 @@ class RealStripeGateway implements StripeGateway
         ], ['stripe_account' => $club->stripe_account_id]));
 
         return $session->url;
+    }
+
+    public function createSubscriptionCheckoutUrl(Member $member, string $successUrl, string $cancelUrl): string
+    {
+        $club = $member->club;
+        $amount = (int) $member->subscribedFeeCents();
+        // application_fee viene en basis points (100 = 1%); acá va como porcentaje
+        $feePercent = config('services.stripe.application_fee_bps') / 100;
+
+        $session = $this->quiet(fn () => $this->client->checkout->sessions->create([
+            'mode' => 'subscription',
+            'line_items' => [[
+                'quantity' => 1,
+                'price_data' => [
+                    'currency' => strtolower($club->currency),
+                    'unit_amount' => $amount,
+                    'recurring' => ['interval' => 'month'],
+                    'product_data' => ['name' => $club->name.' · Cuota mensual'],
+                ],
+            ]],
+            'subscription_data' => array_filter([
+                'application_fee_percent' => $feePercent ?: null,
+                'metadata' => ['member_id' => $member->id],
+            ]),
+            'metadata' => ['member_id' => $member->id],
+            'success_url' => $successUrl,
+            'cancel_url' => $cancelUrl,
+        ], ['stripe_account' => $club->stripe_account_id]));
+
+        return $session->url;
+    }
+
+    public function cancelSubscription(Member $member): void
+    {
+        if (! $member->stripe_subscription_id) {
+            return;
+        }
+
+        $this->quiet(fn () => $this->client->subscriptions->cancel(
+            $member->stripe_subscription_id,
+            [],
+            ['stripe_account' => $member->club->stripe_account_id],
+        ));
     }
 }

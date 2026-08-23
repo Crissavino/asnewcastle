@@ -23,6 +23,12 @@ class GenerateMonthlyDues extends Command
 
         Club::query()->where('monthly_fee_cents', '>', 0)->each(function (Club $club) use ($period, $inApp, &$created) {
             foreach ($club->activeMembers()->get() as $member) {
+                // Los suscriptos al débito automático generan su cuota vía la
+                // invoice de Stripe (con descuento), no por acá: no duplicar.
+                if ($member->subscription_status === 'active') {
+                    continue;
+                }
+
                 // Becados no generan cuota; custom usa su monto propio
                 $amount = $member->monthlyFeeCents();
 

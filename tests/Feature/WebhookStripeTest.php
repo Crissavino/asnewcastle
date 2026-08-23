@@ -87,3 +87,94 @@ it('ignora eventos sin cuota conocida sin romper', function () {
 
     expect(Payment::count())->toBe(0);
 });
+
+// --- Débito automático (suscripciones) ---
+
+function subInvoicePaid(Member $member, string $pi = 'pi_sub_1', int $amount = 25000): array
+{
+    return [
+        'id' => 'evt_inv',
+        'type' => 'invoice.paid',
+        'data' => ['object' => [
+            'id' => 'in_1',
+            'object' => 'invoice',
+            'subscription' => 'sub_'.$member->id,
+            'customer' => 'cus_'.$member->id,
+            'payment_intent' => $pi,
+            'amount_paid' => $amount,
+            'subscription_details' => ['metadata' => ['member_id' => (string) $member->id]],
+        ]],
+    ];
+}
+
+it('el checkout de suscripción vincula al jugador', function () {
+    $member = Member::factory()->create();
+
+    stripePost($this, [
+        'id' => 'evt_cs',
+        'type' => 'checkout.session.completed',
+        'data' => ['object' => [
+            'id' => 'cs_sub', 'object' => 'checkout.session', 'mode' => 'subscription',
+            'subscription' => 'sub_'.$member->id, 'customer' => 'cus_'.$member->id,
+            'metadata' => ['member_id' => (string) $member->id],
+        ]],
+    ])->assertOk();
+
+    $member->refresh();
+    expect($member->subscription_status)->toBe('active')
+        ->and($member->stripe_subscription_id)->toBe('sub_'.$member->id)
+        ->and($member->stripe_customer_id)->toBe('cus_'.$member->id);
+});
+
+it('invoice.paid marca la cuota del mes pagada y registra el pago', function () {
+    $member = Member::factory()->create();
+    $member->update(['stripe_subscription_id' => 'sub_'.$member->id, 'subscription_status' => 'active']);
+
+    stripePost($this, subInvoicePaid($member, 'pi_sub_a', 25000))->assertOk();
+
+    $due = Due::withoutGlobalScopes()->where('member_id', $member->id)->first();
+    expect($due)->not->toBeNull()
+        ->and($due->status)->toBe('paid')
+        ->and($due->amount_cents)->toBe(25000)
+        ->and(Payment::where('stripe_payment_intent_id', 'pi_sub_a')->count())->toBe(1);
+});
+
+it('invoice.paid es idempotente: reintento no duplica', function () {
+    $member = Member::factory()->create();
+    $member->update(['stripe_subscription_id' => 'sub_'.$member->id, 'subscription_status' => 'active']);
+
+    stripePost($this, subInvoicePaid($member, 'pi_sub_rep'))->assertOk();
+    stripePost($this, subInvoicePaid($member, 'pi_sub_rep'))->assertOk();
+
+    expect(Payment::where('stripe_payment_intent_id', 'pi_sub_rep')->count())->toBe(1)
+        ->and(Due::withoutGlobalScopes()->where('member_id', $member->id)->count())->toBe(1);
+});
+
+it('invoice.payment_failed deja la suscripción en past_due', function () {
+    $member = Member::factory()->create();
+    $member->update(['stripe_subscription_id' => 'sub_'.$member->id, 'subscription_status' => 'active']);
+
+    stripePost($this, [
+        'id' => 'evt_f', 'type' => 'invoice.payment_failed',
+        'data' => ['object' => [
+            'id' => 'in_f', 'subscription' => 'sub_'.$member->id,
+            'subscription_details' => ['metadata' => ['member_id' => (string) $member->id]],
+        ]],
+    ])->assertOk();
+
+    expect($member->fresh()->subscription_status)->toBe('past_due');
+});
+
+it('customer.subscription.deleted corta el débito automático', function () {
+    $member = Member::factory()->create();
+    $member->update(['stripe_subscription_id' => 'sub_'.$member->id, 'subscription_status' => 'active']);
+
+    stripePost($this, [
+        'id' => 'evt_d', 'type' => 'customer.subscription.deleted',
+        'data' => ['object' => ['id' => 'sub_'.$member->id, 'object' => 'subscription', 'status' => 'canceled']],
+    ])->assertOk();
+
+    $member->refresh();
+    expect($member->subscription_status)->toBe('canceled')
+        ->and($member->stripe_subscription_id)->toBeNull();
+});

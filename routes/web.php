@@ -93,6 +93,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/eventos/{event}/puntaje', [PlayerRatingController::class, 'store'])->name('puntaje.votar');
             Route::get('/cuota', [CuotaController::class, 'show'])->name('cuota');
             Route::post('/cuota/{due}/pagar', [CuotaController::class, 'pay'])->name('cuota.pagar');
+            Route::post('/cuota/suscribir', [CuotaController::class, 'subscribe'])->name('cuota.suscribir');
+            Route::post('/plantel/{member}/suscripcion/cancelar', [CuotaController::class, 'cancelSubscription'])->name('cuota.suscripcion.cancelar');
             Route::post('/cuota/reclamar', [CuotaController::class, 'claim'])->name('cuota.reclamar');
             Route::post('/cuota/{due}/estado', [CuotaController::class, 'setStatus'])->name('cuota.estado');
             Route::patch('/cuota/config', [CuotaController::class, 'updateConfig'])->name('cuota.config');

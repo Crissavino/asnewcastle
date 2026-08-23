@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\MemberFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Member extends Model
 {
-    /** @use HasFactory<\Database\Factories\MemberFactory> */
+    /** @use HasFactory<MemberFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -21,6 +22,9 @@ class Member extends Model
         'availability',
         'fee_type',
         'custom_fee_cents',
+        'stripe_customer_id',
+        'stripe_subscription_id',
+        'subscription_status',
         'joined_at',
         'left_at',
     ];
@@ -60,6 +64,27 @@ class Member extends Model
             'custom' => $this->custom_fee_cents,
             default => $this->club->monthly_fee_cents,
         };
+    }
+
+    /** ¿Tiene el débito automático activo? */
+    public function isSubscribed(): bool
+    {
+        return $this->subscription_status === 'active';
+    }
+
+    /**
+     * Monto mensual con el descuento por suscribirse, o null si es becado.
+     * Es la cuota base menos el descuento del club (nunca por debajo de 0).
+     */
+    public function subscribedFeeCents(): ?int
+    {
+        $base = $this->monthlyFeeCents();
+
+        if ($base === null || $base === 0) {
+            return null;
+        }
+
+        return max($base - $this->club->subscription_discount_cents, 0);
     }
 
     /** El alta está completa cuando el wizard cargó nombre, puesto, dorsal y disponibilidad. */

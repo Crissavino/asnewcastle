@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\ClubFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Club extends Model
 {
-    /** @use HasFactory<\Database\Factories\ClubFactory> */
+    /** @use HasFactory<ClubFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -20,6 +21,7 @@ class Club extends Model
         'stripe_account_id',
         'stripe_onboarded_at',
         'monthly_fee_cents',
+        'subscription_discount_cents',
         'currency',
         'standings_json',
         'standings_url',
@@ -31,6 +33,7 @@ class Club extends Model
             'stripe_onboarded_at' => 'datetime',
             'standings_json' => 'array',
             'monthly_fee_cents' => 'integer',
+            'subscription_discount_cents' => 'integer',
         ];
     }
 

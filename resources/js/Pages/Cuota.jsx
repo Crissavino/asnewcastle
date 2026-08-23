@@ -101,11 +101,13 @@ function ConfirmMini({ onConfirm, children, style }) {
 function FeeSettings({ config, currency }) {
     const { t } = useTranslations();
     const [fee, setFee] = useState(String(config.monthly_fee_cents / 100));
+    const [disc, setDisc] = useState(String((config.subscription_discount_cents ?? 0) / 100));
     const [savedFee, setSavedFee] = useState(false);
 
     const saveFee = () => {
         router.patch(route('cuota.config'), {
             monthly_fee_cents: Math.round(parseFloat(fee) * 100),
+            subscription_discount_cents: Math.round((parseFloat(disc) || 0) * 100),
         }, {
             preserveScroll: true,
             onSuccess: () => {
@@ -113,6 +115,10 @@ function FeeSettings({ config, currency }) {
                 setTimeout(() => setSavedFee(false), 1600);
             },
         });
+    };
+
+    const cancelSub = (memberId) => {
+        router.post(route('cuota.suscripcion.cancelar', memberId), {}, { preserveScroll: true });
     };
 
     const setType = (member, type, customCents = null) => {
@@ -140,12 +146,21 @@ function FeeSettings({ config, currency }) {
                 </div>
             </div>
 
+            {/* Descuento por débito automático: incentivo para que se suscriban */}
+            <div className="nc-field-l" style={{ marginTop: 10 }}>
+                <span className="nc-label">{t('cuota.sub_discount', { currency })}</span>
+                <input type="number" min="0" step="1" inputMode="decimal" value={disc}
+                    onChange={(e) => setDisc(e.target.value)} style={{ marginTop: 5 }} />
+                <p className="nc-meta" style={{ marginTop: 4 }}>{t('cuota.sub_discount_hint')}</p>
+            </div>
+
             <div className="nc-label" style={{ marginTop: 14 }}>{t('cuota.fee_member')}</div>
             <p className="nc-meta" style={{ marginTop: 4 }}>{t('cuota.fee_privacy')}</p>
 
             <div style={{ marginTop: 4 }}>
                 {config.members.map((m) => (
-                    <div key={m.id} className="nc-row" style={{ gap: 8 }}>
+                    <div key={m.id}>
+                    <div className="nc-row" style={{ gap: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
                             <Kit n={m.shirt_number} size="sm" />
                             <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</span>
@@ -175,13 +190,22 @@ function FeeSettings({ config, currency }) {
                             </select>
                         </div>
                     </div>
+                    {(m.subscription_status === 'active' || m.subscription_status === 'past_due') && (
+                        <div className="nc-row" style={{ paddingLeft: 34, marginTop: -2, marginBottom: 6 }}>
+                            <span className="nc-meta" style={{ fontSize: 11, color: m.subscription_status === 'active' ? 'var(--aqua-dk)' : 'var(--red-dk)' }}>
+                                {m.subscription_status === 'active' ? t('cuota.autopay_on') : t('cuota.autopay_failed')}
+                            </span>
+                            <ConfirmMini onConfirm={() => cancelSub(m.id)}>{t('cuota.autopay_cancel')}</ConfirmMini>
+                        </div>
+                    )}
+                    </div>
                 ))}
             </div>
         </div>
     );
 }
 
-export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, resumen, gastos, categorias, eventos, config }) {
+export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, resumen, subscription, gastos, categorias, eventos, config }) {
     const { t, locale } = useTranslations();
     const { member, flash, errors } = usePage().props;
     const [claimed, setClaimed] = useState(false);
@@ -192,9 +216,12 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
     const periodLabel = new Date(my_due?.period ?? Date.now())
         .toLocaleDateString(intl, { month: 'long', year: 'numeric' });
 
-    const justPaid = typeof window !== 'undefined' && window.location.search.includes('pago=ok');
+    const search = typeof window !== 'undefined' ? window.location.search : '';
+    const justPaid = search.includes('pago=ok');
+    const justSubscribed = search.includes('suscripcion=ok');
 
     const pay = () => router.post(route('cuota.pagar', my_due.id));
+    const subscribe = () => router.post(route('cuota.suscribir'));
 
     const claim = () => {
         router.post(route('cuota.reclamar'), {}, {
@@ -242,6 +269,43 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
                     <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.none')}</p>
                 )}
             </div>
+
+            {/* Débito automático mensual (suscripción de Stripe) */}
+            {subscription && (
+                <div className="nc-card">
+                    <div className="nc-label">{t('cuota.autopay')}</div>
+                    {subscription.status === 'active' ? (
+                        <>
+                            <div style={{ marginTop: 10 }}><span className="nc-pill ok">{t('cuota.autopay_on')}</span></div>
+                            <p className="nc-meta" style={{ marginTop: 12 }}>{t('cuota.autopay_active_note')}</p>
+                        </>
+                    ) : subscription.status === 'past_due' ? (
+                        <>
+                            <div style={{ marginTop: 10 }}><span className="nc-pill no">{t('cuota.autopay_failed')}</span></div>
+                            <p className="nc-meta" style={{ marginTop: 12 }}>{t('cuota.autopay_failed_note')}</p>
+                        </>
+                    ) : justSubscribed ? (
+                        <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.autopay_processing')}</p>
+                    ) : (subscription.subscribed_fee_cents ?? 0) > 0 ? (
+                        stripe_ready ? (
+                            <>
+                                <p className="nc-meta" style={{ marginTop: 10 }}>
+                                    {t('cuota.autopay_pitch', { amount: money(subscription.subscribed_fee_cents), currency })}
+                                </p>
+                                <button className="nc-btn" style={{ marginTop: 14 }} onClick={subscribe}>
+                                    {subscription.discount_cents > 0
+                                        ? t('cuota.autopay_cta_save', { amount: money(subscription.discount_cents * 12), currency })
+                                        : t('cuota.autopay_cta')}
+                                </button>
+                            </>
+                        ) : (
+                            <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.not_ready')}</p>
+                        )
+                    ) : (
+                        <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.autopay_becado')}</p>
+                    )}
+                </div>
+            )}
 
             {/* Caja transparente: saldo y movimientos, para todo el plantel */}
             {resumen && (

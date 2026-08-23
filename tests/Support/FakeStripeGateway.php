@@ -4,11 +4,16 @@ namespace Tests\Support;
 
 use App\Models\Club;
 use App\Models\Due;
+use App\Models\Member;
 use App\Services\Stripe\StripeGateway;
 
 class FakeStripeGateway implements StripeGateway
 {
     public array $checkoutsFor = [];
+
+    public array $subscriptionsFor = [];
+
+    public array $canceledFor = [];
 
     public bool $chargesEnabled = true;
 
@@ -32,5 +37,17 @@ class FakeStripeGateway implements StripeGateway
         $this->checkoutsFor[] = $due->id;
 
         return 'https://checkout.stripe.test/pay/due-'.$due->id;
+    }
+
+    public function createSubscriptionCheckoutUrl(Member $member, string $successUrl, string $cancelUrl): string
+    {
+        $this->subscriptionsFor[] = $member->id;
+
+        return 'https://checkout.stripe.test/sub/member-'.$member->id;
+    }
+
+    public function cancelSubscription(Member $member): void
+    {
+        $this->canceledFor[] = $member->id;
     }
 }
