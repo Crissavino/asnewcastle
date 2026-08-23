@@ -10,9 +10,14 @@ export const isNative = () => Capacitor.isNativePlatform();
  */
 export async function openCheckout(url) {
     if (Capacitor.isNativePlatform()) {
-        const { Browser } = await import('@capacitor/browser');
-        await Browser.open({ url });
-    } else {
-        window.location.href = url;
+        try {
+            const { Browser } = await import('@capacitor/browser');
+            await Browser.open({ url });
+            return;
+        } catch (e) {
+            // Si el plugin Browser no está en el build nativo, abrimos igual:
+            // el checkout va al navegador y la vuelta usa el esquema asnewcastle://
+        }
     }
+    window.location.href = url;
 }
