@@ -70,6 +70,10 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<!-- Solo HTTPS estándar: exento de la declaración de export compliance,
+	     así los builds no vuelven a pedir "Missing Compliance". -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
