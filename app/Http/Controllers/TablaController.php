@@ -43,6 +43,7 @@ class TablaController extends Controller
 
         return Inertia::render('Tabla', [
             'standings' => $standings,
+            'fixture' => $club->fixture_json,
             'us' => $us,
             'form' => $form,
             'next' => $next ? [
