@@ -4,6 +4,7 @@ import { useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
 import { useTranslations } from '../i18n';
+import { isNative, openCheckout } from '../native';
 
 const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB' };
 
@@ -220,8 +221,12 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
     const justPaid = search.includes('pago=ok');
     const justSubscribed = search.includes('suscripcion=ok');
 
-    const pay = () => router.post(route('cuota.pagar', my_due.id));
-    const subscribe = () => router.post(route('cuota.suscribir'));
+    // El checkout se abre según plataforma: navegador del sistema en la app
+    // (para Apple/Google Pay), redirección normal en la web.
+    const pay = () => window.axios.post(route('cuota.pagar', my_due.id), { native: isNative() })
+        .then((r) => openCheckout(r.data.url));
+    const subscribe = () => window.axios.post(route('cuota.suscribir'), { native: isNative() })
+        .then((r) => openCheckout(r.data.url));
 
     // El débito automático es el camino principal; el pago manual, la excepción cara.
     const isSub = subscription?.status === 'active';

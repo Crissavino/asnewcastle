@@ -30,6 +30,10 @@ Route::redirect('/', '/agenda');
 // Política de privacidad: pública (Google Play la exige y la revisa sin login)
 Route::view('/privacidad', 'privacidad')->name('privacidad');
 
+// Puente de retorno del checkout de Stripe en la app nativa: reabre la app por
+// deep link (asnewcastle://). Pública: el navegador del sistema no tiene sesión.
+Route::view('/pago/volver', 'pago-volver')->name('pago.volver');
+
 // Idioma: se puede cambiar logueado o no (pantalla de entrada)
 Route::post('/idioma', [OtpController::class, 'setLocale'])->name('idioma');
 

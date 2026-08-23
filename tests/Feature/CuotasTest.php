@@ -69,8 +69,9 @@ it('pagar manda al checkout de Stripe de la cuenta conectada', function () {
     $due = Due::factory()->forMember($member)->create();
 
     $this->actingAs($member->user)
-        ->post("/cuota/{$due->id}/pagar")
-        ->assertRedirect('https://checkout.stripe.test/pay/due-'.$due->id);
+        ->postJson("/cuota/{$due->id}/pagar")
+        ->assertOk()
+        ->assertJson(['url' => 'https://checkout.stripe.test/pay/due-'.$due->id]);
 
     expect($this->stripe->checkoutsFor)->toBe([$due->id]);
 });

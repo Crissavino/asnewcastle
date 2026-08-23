@@ -97,3 +97,23 @@ async function setupNativePush() {
 }
 
 setupNativePush();
+
+// Deep links: al volver del checkout de Stripe, la página puente redirige a
+// asnewcastle://cuota?... — acá cerramos el navegador y llevamos a la pantalla.
+async function setupDeepLinks() {
+    if (!Capacitor.isNativePlatform()) {
+        return;
+    }
+
+    const { App } = await import('@capacitor/app');
+    const { Browser } = await import('@capacitor/browser');
+
+    App.addListener('appUrlOpen', ({ url }) => {
+        // asnewcastle://cuota?suscripcion=ok  →  /cuota?suscripcion=ok
+        const path = url.replace(/^asnewcastle:\/\//i, '/');
+        Browser.close().catch(() => {});
+        router.visit(path.startsWith('/') ? path : `/${path}`);
+    });
+}
+
+setupDeepLinks();

@@ -238,7 +238,7 @@ class CuotaController extends Controller
         ];
     }
 
-    public function pay(Due $due, StripeGateway $stripe): BaseResponse
+    public function pay(Request $request, Due $due, StripeGateway $stripe): BaseResponse
     {
         $current = app(CurrentClub::class);
         $current->assertOwns($due);
@@ -247,20 +247,35 @@ class CuotaController extends Controller
         abort_unless($due->isPending(), 400);
         abort_unless($current->club()->stripe_onboarded_at !== null, 400);
 
+        $native = $request->boolean('native');
+
         $url = $stripe->createCheckoutUrl(
             $due,
-            route('cuota').'?pago=ok',
-            route('cuota').'?pago=cancelado',
+            $this->returnUrl('pago', 'ok', $native),
+            $this->returnUrl('pago', 'cancelado', $native),
         );
 
-        return Inertia::location($url);
+        return response()->json(['url' => $url]);
+    }
+
+    /**
+     * URL de retorno del checkout. En la app nativa pasa por la página puente
+     * (/pago/volver) que reabre la app por deep link; en la web va directo.
+     */
+    protected function returnUrl(string $key, string $value, bool $native): string
+    {
+        if ($native) {
+            return route('pago.volver', ['to' => 'cuota', $key => $value]);
+        }
+
+        return route('cuota').'?'.$key.'='.$value;
     }
 
     /**
      * El jugador activa el débito automático mensual. Se le cobra la cuota
      * con descuento todos los meses, sobre la cuenta conectada del club.
      */
-    public function subscribe(StripeGateway $stripe): BaseResponse
+    public function subscribe(Request $request, StripeGateway $stripe): BaseResponse
     {
         $current = app(CurrentClub::class);
         $member = $current->member();
@@ -271,13 +286,15 @@ class CuotaController extends Controller
         // Ya suscripto: no duplicar
         abort_if($member->isSubscribed(), 400);
 
+        $native = $request->boolean('native');
+
         $url = $stripe->createSubscriptionCheckoutUrl(
             $member,
-            route('cuota').'?suscripcion=ok',
-            route('cuota').'?suscripcion=cancelado',
+            $this->returnUrl('suscripcion', 'ok', $native),
+            $this->returnUrl('suscripcion', 'cancelado', $native),
         );
 
-        return Inertia::location($url);
+        return response()->json(['url' => $url]);
     }
 
     /** Solo el delegado corta el débito automático de un jugador. */

@@ -35,8 +35,9 @@ it('el monto suscripto es la cuota base menos el descuento', function () {
 it('el jugador se suscribe y va al checkout de suscripción', function () {
     $member = Member::factory()->for(readyClub())->create();
 
-    $this->actingAs($member->user)->post('/cuota/suscribir')
-        ->assertRedirect('https://checkout.stripe.test/sub/member-'.$member->id);
+    $this->actingAs($member->user)->postJson('/cuota/suscribir')
+        ->assertOk()
+        ->assertJson(['url' => 'https://checkout.stripe.test/sub/member-'.$member->id]);
 
     expect($this->stripe->subscriptionsFor)->toBe([$member->id]);
 });
