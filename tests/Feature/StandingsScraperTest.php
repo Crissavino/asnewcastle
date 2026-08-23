@@ -67,6 +67,7 @@ it('en pretemporada arma la tabla en 0 desde la lista de equipos (/echipe)', fun
         .'<div class="name title_lista_echipe">1 DECEMBRIE</div>'
         .'<div class="name title_lista_echipe">AS NEW CASTLE</div>'
         .'<div class="name title_lista_echipe">CS DARASTI</div>'
+        .'<div class="name title_lista_echipe">STA ACEASTA ETAPA</div>' // comodín: se filtra
         .'</body></html>';
 
     $rows = app(StandingsScraper::class)->parseEchipe($html, 'A.S New Castle');

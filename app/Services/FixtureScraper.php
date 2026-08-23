@@ -76,6 +76,11 @@ class FixtureScraper
                 continue;
             }
 
+            // Fecha libre (vs el comodín "STA ACEASTA ETAPA"): no es un partido
+            if ($this->isBye($isHome ? $away : $home)) {
+                continue;
+            }
+
             [$homeScore, $awayScore] = $this->parseScore($cells[3]);
 
             $fixture[] = [
@@ -106,5 +111,11 @@ class FixtureScraper
     protected function normalize(string $name): string
     {
         return preg_replace('/[^A-Z0-9]/', '', mb_strtoupper($name));
+    }
+
+    /** "STA ACEASTA ETAPA" = descansa esta fecha (comodín), no un partido real. */
+    protected function isBye(string $team): bool
+    {
+        return str_contains($this->normalize($team), 'ACEASTAETAPA');
     }
 }

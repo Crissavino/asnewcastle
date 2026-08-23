@@ -83,7 +83,7 @@ class StandingsScraper
         foreach ((new DOMXPath($doc))->query("//*[contains(@class,'title_lista_echipe')]") as $node) {
             $team = trim(preg_replace('/\s+/u', ' ', $node->textContent));
 
-            if ($team === '') {
+            if ($team === '' || $this->isBye($team)) {
                 continue;
             }
 
@@ -125,6 +125,11 @@ class StandingsScraper
 
             $team = $cells[1];
 
+            // "STA ACEASTA ETAPA" es el comodín de fecha libre, no un equipo real
+            if ($this->isBye($team)) {
+                continue;
+            }
+
             $standings[] = [
                 'pos' => (int) $cells[0],
                 'team' => $team,
@@ -142,5 +147,11 @@ class StandingsScraper
     protected function normalize(string $name): string
     {
         return preg_replace('/[^A-Z0-9]/', '', mb_strtoupper($name));
+    }
+
+    /** "STA ACEASTA ETAPA" = descansa esta fecha (comodín), no un equipo real. */
+    protected function isBye(string $team): bool
+    {
+        return str_contains($this->normalize($team), 'ACEASTAETAPA');
     }
 }
