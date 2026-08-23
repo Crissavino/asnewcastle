@@ -51,7 +51,7 @@ body { overscroll-behavior-y: none; }
 .nc-role button.on { background: #fff; color: var(--red-dk); }
 
 /* campanita de notificaciones: vive en el header, panel flotante blanco */
-.nc-bell { margin-left: auto; position: relative; }
+.nc-bell { margin-left: auto; }
 .nc-bell + .nc-role { margin-left: 8px; }
 .nc-bell-btn { position: relative; border: none; cursor: pointer; color: #fff;
   background: rgba(0,0,0,.28); width: 38px; height: 38px; border-radius: 2px;
@@ -60,7 +60,9 @@ body { overscroll-behavior-y: none; }
 .nc-bell-badge { position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px;
   padding: 0 4px; background: var(--ink); color: #fff; border: 1.5px solid #fff;
   border-radius: 9px; font-size: 10px; font-weight: 700; line-height: 14px; text-align: center; }
-.nc-notif-panel { position: absolute; top: calc(100% + 9px); right: 0; z-index: 50;
+/* Anclado al header (.nc-top es position:relative), no a la campanita, para
+   que en mobile no se salga por la izquierda de la pantalla. */
+.nc-notif-panel { position: absolute; top: calc(100% + 9px); right: 14px; z-index: 50;
   width: min(320px, calc(100vw - 28px)); background: var(--card); color: var(--ink);
   border: 2px solid var(--ink); border-radius: 3px; box-shadow: 6px 6px 0 rgba(0,0,0,.22);
   overflow: hidden; }
