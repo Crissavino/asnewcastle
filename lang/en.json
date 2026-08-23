@@ -302,5 +302,9 @@
     "notifications.mvp_winner": "Man of the match vs :opponent: :name",
     "notifications.attendance_in": ":name is in",
     "notifications.attendance_out": ":name is out",
-    "notifications.payment": ":name paid their dues"
+    "notifications.payment": ":name paid their dues",
+    "agenda.presence_title": "Who was there?",
+    "agenda.presence_hint": "This feeds everyone's stats: confirm who actually showed up.",
+    "agenda.presence_btn": "Attendance",
+    "agenda.presence_pending": "Confirm attendance"
 }

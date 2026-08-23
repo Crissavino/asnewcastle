@@ -22,12 +22,11 @@ class MvpVoteController extends Controller
             'member_id' => ['required', 'integer'],
         ]);
 
-        $isCandidate = $event->attendances()
-            ->where('status', 'in')
-            ->where('member_id', $validated['member_id'])
-            ->exists();
+        // Vota solo el que estuvo, y a sí mismo no
+        abort_unless($event->wasPresent($current->member()->id), 403);
+        abort_if((int) $validated['member_id'] === $current->member()->id, 403);
 
-        if (! $isCandidate) {
+        if (! $event->wasPresent((int) $validated['member_id'])) {
             throw ValidationException::withMessages([
                 'member_id' => __('vestuario.mvp_not_candidate'),
             ]);

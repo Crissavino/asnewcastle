@@ -183,3 +183,49 @@ it('el vestuario muestra la encuesta con totales anónimos', function () {
             ->missing('mvp.candidates.0.rater_member_id')
         );
 });
+
+it('quien no estuvo en el partido no puede votar ni calificar', function () {
+    $manager = Member::factory()->manager()->create();
+    $fue = Member::factory()->for($manager->club)->create();
+    $otro = Member::factory()->for($manager->club)->create();
+    $noFue = Member::factory()->for($manager->club)->create();
+    $event = partidoTerminado($manager);
+    fueron($event, $manager, $fue, $otro);
+
+    $this->actingAs($noFue->user)
+        ->post("/eventos/{$event->id}/figura", ['member_id' => $fue->id])
+        ->assertForbidden();
+
+    $this->actingAs($noFue->user)
+        ->post("/eventos/{$event->id}/puntaje", ['member_id' => $fue->id, 'rating' => 3])
+        ->assertForbidden();
+
+    expect(MvpVote::count())->toBe(0)
+        ->and(PlayerRating::count())->toBe(0);
+});
+
+it('nadie puede votarse figura a sí mismo', function () {
+    $manager = Member::factory()->manager()->create();
+    $a = Member::factory()->for($manager->club)->create();
+    $event = partidoTerminado($manager);
+    fueron($event, $manager, $a);
+
+    $this->actingAs($a->user)
+        ->post("/eventos/{$event->id}/figura", ['member_id' => $a->id])
+        ->assertForbidden();
+});
+
+it('con presentes confirmados, el que no estuvo deja de ser candidato aunque haya dicho Voy', function () {
+    $manager = Member::factory()->manager()->create();
+    $fue = Member::factory()->for($manager->club)->create();
+    $falto = Member::factory()->for($manager->club)->create();
+    $event = partidoTerminado($manager);
+    fueron($event, $manager, $fue, $falto);
+
+    $this->actingAs($manager->user)
+        ->post("/eventos/{$event->id}/presentes", ['present_ids' => [$manager->id, $fue->id]]);
+
+    $this->actingAs($manager->user)
+        ->post("/eventos/{$event->id}/figura", ['member_id' => $falto->id])
+        ->assertSessionHasErrors('member_id');
+});

@@ -27,12 +27,12 @@ class OpenMvpPolls extends Command
             // Marcar siempre, para no reevaluar el mismo partido cada hora
             $event->forceFill(['mvp_opened_at' => now()])->save();
 
-            // Sin al menos dos que hayan ido, no hay votación que valga
-            $attended = $event->attendances->where('status', 'in');
+            // Sin al menos dos que hayan estado, no hay votación que valga
+            $present = $event->presentMemberIds();
 
-            if ($attended->count() >= 2) {
+            if ($present->count() >= 2) {
                 $system->mvpOpened($event);
-                $inApp->mvpOpened($event, $attended->pluck('member_id'));
+                $inApp->mvpOpened($event, $present);
             }
         }
 

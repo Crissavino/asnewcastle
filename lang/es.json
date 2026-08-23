@@ -302,5 +302,9 @@
     "notifications.mvp_winner": "La figura vs :opponent: :name",
     "notifications.attendance_in": ":name confirmó que va",
     "notifications.attendance_out": ":name avisó que no va",
-    "notifications.payment": ":name pagó la cuota"
+    "notifications.payment": ":name pagó la cuota",
+    "agenda.presence_title": "¿Quiénes estuvieron?",
+    "agenda.presence_hint": "Esto alimenta las estadísticas de todos: confirmá quién estuvo de verdad.",
+    "agenda.presence_btn": "Presentes",
+    "agenda.presence_pending": "Confirmar presentes"
 }

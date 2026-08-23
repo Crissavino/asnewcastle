@@ -17,6 +17,7 @@ class Attendance extends Model
         'event_id',
         'member_id',
         'status',
+        'attended',
         'responded_at',
         'source',
     ];
@@ -24,6 +25,7 @@ class Attendance extends Model
     protected function casts(): array
     {
         return [
+            'attended' => 'boolean',
             'responded_at' => 'datetime',
         ];
     }

@@ -216,6 +216,52 @@ function ResultSheet({ ev, onClose }) {
     );
 }
 
+function PresentesSheet({ ev, onClose }) {
+    const { t } = useTranslations();
+    const [ids, setIds] = useState(ev.presence.players.filter((p) => p.present).map((p) => p.id));
+
+    const toggle = (id) => setIds(ids.includes(id) ? ids.filter((i) => i !== id) : [...ids, id]);
+
+    const save = () => {
+        router.post(route('eventos.presentes', ev.id), { present_ids: ids }, {
+            onSuccess: onClose,
+            preserveScroll: true,
+        });
+    };
+
+    return (
+        <div className="nc-sheet" onClick={onClose}>
+            <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
+                <h3 className="nc-display" style={{ fontSize: 21, margin: '5px 0 4px' }}>{t('agenda.presence_title')}</h3>
+                <p className="nc-meta" style={{ margin: '0 0 8px' }}>{t('agenda.presence_hint')}</p>
+                <div style={{ maxHeight: '55vh', overflowY: 'auto' }}>
+                    {ev.presence.players.map((p) => {
+                        const on = ids.includes(p.id);
+                        return (
+                            <button
+                                key={p.id}
+                                type="button"
+                                className="nc-row nc-day"
+                                onClick={() => toggle(p.id)}
+                                style={{ opacity: on ? 1 : 0.45 }}
+                            >
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                                    <Kit n={p.shirt_number ?? '–'} size="sm" />
+                                    <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name ?? '—'}</span>
+                                </span>
+                                {on ? <Check size={15} color="var(--aqua-dk)" /> : <X size={15} style={{ opacity: 0.5 }} />}
+                            </button>
+                        );
+                    })}
+                </div>
+                <button className="nc-btn" style={{ marginTop: 12 }} onClick={save}>
+                    {t('agenda.save')}
+                </button>
+            </div>
+        </div>
+    );
+}
+
 function EventCard({ ev, onEdit }) {
     const { t } = useTranslations();
     const { member } = usePage().props;
@@ -369,7 +415,7 @@ function EventCard({ ev, onEdit }) {
     );
 }
 
-function RecentResults({ recent, onLoadResult }) {
+function RecentResults({ recent, onLoadResult, onLoadPresence }) {
     const { t } = useTranslations();
     const { member, club } = usePage().props;
     const { day } = useDates();
@@ -391,17 +437,28 @@ function RecentResults({ recent, onLoadResult }) {
                                 {day(m.starts_at)}{m.mvp && ` · ${t('agenda.mvp_of', { name: m.mvp })}`}
                             </div>
                         </div>
-                        {m.result ? (
-                            <span className="nc-display nc-num" style={{ fontSize: 21, flexShrink: 0 }}>
-                                {m.is_home ? `${m.result.gf}–${m.result.ga}` : `${m.result.ga}–${m.result.gf}`}
-                            </span>
-                        ) : isManager ? (
-                            <button className="nc-mini" style={{ flex: 'none' }} onClick={() => onLoadResult(m)}>
-                                {t('agenda.result_btn')}
-                            </button>
-                        ) : (
-                            <span className="nc-meta">—</span>
-                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                            {isManager && m.presence && (
+                                <button
+                                    className={`nc-mini${m.presence.confirmed ? '' : ' solid'}`}
+                                    style={{ flex: 'none', minWidth: 0, padding: '6px 8px', fontSize: 10 }}
+                                    onClick={() => onLoadPresence(m)}
+                                >
+                                    {m.presence.confirmed ? t('agenda.presence_btn') : t('agenda.presence_pending')}
+                                </button>
+                            )}
+                            {m.result ? (
+                                <span className="nc-display nc-num" style={{ fontSize: 21 }}>
+                                    {m.is_home ? `${m.result.gf}–${m.result.ga}` : `${m.result.ga}–${m.result.gf}`}
+                                </span>
+                            ) : isManager ? (
+                                <button className="nc-mini" style={{ flex: 'none' }} onClick={() => onLoadResult(m)}>
+                                    {t('agenda.result_btn')}
+                                </button>
+                            ) : (
+                                <span className="nc-meta">—</span>
+                            )}
+                        </div>
                     </div>
                 ))}
             </div>
@@ -414,6 +471,7 @@ export default function Agenda({ events, recent, roster_count }) {
     const { member } = usePage().props;
     const [formEvent, setFormEvent] = useState(null); // null cerrado · false alta · {ev} edición
     const [resultFor, setResultFor] = useState(null);
+    const [presenceFor, setPresenceFor] = useState(null);
     const isManager = member?.role === 'manager';
 
     return (
@@ -436,7 +494,7 @@ export default function Agenda({ events, recent, roster_count }) {
 
             {events.map((ev) => <EventCard key={ev.id} ev={ev} onEdit={(e) => setFormEvent(e)} />)}
 
-            <RecentResults recent={recent} onLoadResult={setResultFor} />
+            <RecentResults recent={recent} onLoadResult={setResultFor} onLoadPresence={setPresenceFor} />
 
             {events.length > 0 && (
                 <p className="nc-meta" style={{ textAlign: 'center', padding: '8px 22px' }}>{t('agenda.kit_note')}</p>
@@ -446,6 +504,7 @@ export default function Agenda({ events, recent, roster_count }) {
                 <EventForm event={formEvent || null} rosterCount={roster_count} onClose={() => setFormEvent(null)} />
             )}
             {resultFor && <ResultSheet ev={resultFor} onClose={() => setResultFor(null)} />}
+            {presenceFor && <PresentesSheet ev={presenceFor} onClose={() => setPresenceFor(null)} />}
         </AppLayout>
     );
 }

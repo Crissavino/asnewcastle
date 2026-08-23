@@ -24,15 +24,11 @@ class PlayerRatingController extends Controller
             'rating' => ['required', Rule::in([1, 2, 3])],
         ]);
 
-        // A uno mismo no: eso sería inflarse el promedio
+        // Califica solo el que estuvo, y a uno mismo no: sería inflarse el promedio
+        abort_unless($event->wasPresent($current->member()->id), 403);
         abort_if((int) $validated['member_id'] === $current->member()->id, 403);
 
-        $isCandidate = $event->attendances()
-            ->where('status', 'in')
-            ->where('member_id', $validated['member_id'])
-            ->exists();
-
-        if (! $isCandidate) {
+        if (! $event->wasPresent((int) $validated['member_id'])) {
             throw ValidationException::withMessages([
                 'member_id' => __('vestuario.mvp_not_candidate'),
             ]);

@@ -98,8 +98,10 @@ class VestuarioController extends Controller
         $ratingsByPlayer = $event->playerRatings->groupBy('rated_member_id');
         $myRatings = $event->playerRatings->where('rater_member_id', $myMemberId);
 
+        $presentIds = $event->presentMemberIds();
+
         $candidates = $event->attendances
-            ->where('status', 'in')
+            ->whereIn('member_id', $presentIds->all())
             ->map(function ($a) use ($votes, $ratingsByPlayer, $myRatings) {
                 $ratings = $ratingsByPlayer->get($a->member_id, collect())->countBy('rating');
 

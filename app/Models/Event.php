@@ -27,6 +27,7 @@ class Event extends Model
         'reminded_at',
         'mvp_opened_at',
         'mvp_closed_at',
+        'attendance_confirmed_at',
         'cancelled_at',
         'goals_for',
         'goals_against',
@@ -41,6 +42,7 @@ class Event extends Model
             'reminded_at' => 'datetime',
             'mvp_opened_at' => 'datetime',
             'mvp_closed_at' => 'datetime',
+            'attendance_confirmed_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'goals_for' => 'integer',
             'goals_against' => 'integer',
@@ -91,6 +93,26 @@ class Event extends Model
     public function hasResult(): bool
     {
         return $this->goals_for !== null && $this->goals_against !== null;
+    }
+
+    /**
+     * Ids de los que estuvieron: los presentes confirmados por el manager o,
+     * si todavía no confirmó, los que dijeron "Voy".
+     */
+    public function presentMemberIds(): \Illuminate\Support\Collection
+    {
+        $attendances = $this->relationLoaded('attendances')
+            ? $this->attendances
+            : $this->attendances()->get();
+
+        return $this->attendance_confirmed_at
+            ? $attendances->where('attended', true)->pluck('member_id')->values()
+            : $attendances->where('status', 'in')->pluck('member_id')->values();
+    }
+
+    public function wasPresent(int $memberId): bool
+    {
+        return $this->presentMemberIds()->contains($memberId);
     }
 
     /** La votación de figura queda abierta 48hs desde el final del partido. */

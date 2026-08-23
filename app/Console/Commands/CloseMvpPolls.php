@@ -43,7 +43,7 @@ class CloseMvpPolls extends Command
                 ->implode(' & ');
 
             $system->mvpWinner($event, $names, $max);
-            $inApp->mvpWinner($event, $event->attendances->where('status', 'in')->pluck('member_id'), $names);
+            $inApp->mvpWinner($event, $event->presentMemberIds(), $names);
         }
 
         $this->info("Votaciones cerradas: {$events->count()}");

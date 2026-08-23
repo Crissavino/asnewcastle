@@ -21,6 +21,8 @@ function MvpPoll({ mvp, onClose }) {
     };
 
     const maxVotes = Math.max(...mvp.candidates.map((c) => c.votes), 1);
+    // Vota y califica solo el que estuvo en el partido (es candidato)
+    const canVote = mvp.candidates.some((c) => c.id === member?.id);
 
     return (
         <div className="nc-sheet" onClick={onClose}>
@@ -38,6 +40,7 @@ function MvpPoll({ mvp, onClose }) {
                                     type="button"
                                     className={`nc-star ${mvp.my_vote === c.id ? 'on' : ''}`}
                                     onClick={() => voteFigura(c.id)}
+                                    disabled={!canVote || c.id === member?.id}
                                     aria-label={t('vestuario.mvp_title')}
                                 >
                                     <Star size={16} fill={mvp.my_vote === c.id ? 'currentColor' : 'none'} />
@@ -47,7 +50,7 @@ function MvpPoll({ mvp, onClose }) {
                             <div className="nc-poll-bar">
                                 <i style={{ width: `${(c.votes / maxVotes) * 100}%` }} />
                             </div>
-                            {c.id !== member?.id && (
+                            {canVote && c.id !== member?.id && (
                                 <div className="nc-rate">
                                     {[1, 2, 3].map((r) => (
                                         <button

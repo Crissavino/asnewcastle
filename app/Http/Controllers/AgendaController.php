@@ -190,15 +190,22 @@ class AgendaController extends Controller
     /** Los últimos 3 partidos jugados, con resultado y figura si ya cerró. */
     protected function recentMatches(): array
     {
+        $current = app(CurrentClub::class);
+        $isManager = $current->actsAsManager();
+        // Para confirmar presentes: el plantel activo, una sola vez
+        $roster = $isManager
+            ? $current->club()->activeMembers()->with('user:id,name')->orderBy('shirt_number')->get()
+            : null;
+
         return Event::query()
             ->where('kind', 'match')
             ->whereNull('cancelled_at')
             ->where('starts_at', '<', now()->subHours(2))
             ->orderByDesc('starts_at')
             ->limit(3)
-            ->with(['mvpVotes.voted.user:id,name'])
+            ->with(['mvpVotes.voted.user:id,name', 'attendances'])
             ->get()
-            ->map(function (Event $event) {
+            ->map(function (Event $event) use ($isManager, $roster) {
                 $winner = null;
 
                 if ($event->mvp_closed_at && $event->mvpVotes->isNotEmpty()) {
@@ -208,7 +215,7 @@ class AgendaController extends Controller
                         ?->voted?->user?->name;
                 }
 
-                return [
+                $data = [
                     'id' => $event->id,
                     'opponent' => $event->opponent,
                     'is_home' => $event->is_home,
@@ -218,6 +225,22 @@ class AgendaController extends Controller
                         : null,
                     'mvp' => $winner,
                 ];
+
+                if ($isManager) {
+                    $data['presence'] = [
+                        'confirmed' => $event->attendance_confirmed_at !== null,
+                        'players' => $roster->map(fn ($m) => [
+                            'id' => $m->id,
+                            'name' => $m->user->name,
+                            'shirt_number' => $m->shirt_number,
+                            'present' => $event->attendance_confirmed_at
+                                ? (bool) $event->attendances->firstWhere('member_id', $m->id)?->attended
+                                : $event->attendances->firstWhere('member_id', $m->id)?->status === 'in',
+                        ])->values(),
+                    ];
+                }
+
+                return $data;
             })
             ->all();
     }

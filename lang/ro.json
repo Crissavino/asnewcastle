@@ -302,5 +302,9 @@
     "notifications.mvp_winner": "Omul meciului cu :opponent: :name",
     "notifications.attendance_in": ":name vine",
     "notifications.attendance_out": ":name nu vine",
-    "notifications.payment": ":name a plătit cotizația"
+    "notifications.payment": ":name a plătit cotizația",
+    "agenda.presence_title": "Cine a fost?",
+    "agenda.presence_hint": "De aici se calculează statisticile: confirmă cine a fost cu adevărat.",
+    "agenda.presence_btn": "Prezenți",
+    "agenda.presence_pending": "Confirmă prezența"
 }
