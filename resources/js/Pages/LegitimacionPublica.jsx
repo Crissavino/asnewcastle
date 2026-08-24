@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import Crest from '../Components/Crest';
 import LegitimacionForm from '../Components/LegitimacionForm';
 import { useTranslations } from '../i18n';
 
@@ -28,7 +29,7 @@ export default function LegitimacionPublica({ club, registration, missing, confi
             <div className="nc-shell">
                 <div className="nc-main">
                     <header className="nc-top nc-pinstripe">
-                        {club.crest && <img src={club.crest} alt="" width={38} height={38} />}
+                        <Crest size={38} white />
                         <div style={{ minWidth: 0 }}>
                             <div className="nc-eyebrow">{club.name}</div>
                             <h1 className="nc-display nc-h1">{t('tabs.legitimacion')}</h1>
