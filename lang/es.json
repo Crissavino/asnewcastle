@@ -420,5 +420,6 @@
     "legitimacion.public_link_hint": "Sin cuenta en la app: abre solo este formulario. Vence en 30 días.",
     "legitimacion.guest": "sin cuenta en la app",
     "legitimacion.guest_unnamed": "(sin nombre todavía)",
-    "legitimacion.public_intro": "Con esto :club te inscribe en la Federación para jugar la 2026-27. Podés guardar a medias y volver más tarde desde este mismo teléfono."
+    "legitimacion.public_intro": "Con esto :club te inscribe en la Federación para jugar la 2026-27. Podés guardar a medias y volver más tarde desde este mismo teléfono.",
+    "legitimacion.photo_hint": "Sacate una foto de frente, con fondo blanco y buena luz, sin gorra ni lentes. Nosotros nos encargamos de imprimirla."
 }

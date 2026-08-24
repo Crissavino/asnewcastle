@@ -420,5 +420,6 @@
     "legitimacion.public_link_hint": "Fără cont în aplicație: deschide doar acest formular. Expiră în 30 de zile.",
     "legitimacion.guest": "fără cont în aplicație",
     "legitimacion.guest_unnamed": "(încă fără nume)",
-    "legitimacion.public_intro": "Cu asta, :club te înscrie la Federație pentru sezonul 2026-27. Poți salva pe jumătate și reveni mai târziu de pe același telefon."
+    "legitimacion.public_intro": "Cu asta, :club te înscrie la Federație pentru sezonul 2026-27. Poți salva pe jumătate și reveni mai târziu de pe același telefon.",
+    "legitimacion.photo_hint": "Fă-ți o poză din față, pe fundal alb, cu lumină bună, fără șapcă sau ochelari. De imprimat ne ocupăm noi."
 }

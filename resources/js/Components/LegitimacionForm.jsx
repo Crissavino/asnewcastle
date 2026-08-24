@@ -224,6 +224,7 @@ export default function LegitimacionForm({ registration, missing, config, action
                 <FileField label={t('legitimacion.photo')} uploaded={registration.files.photo}
                     file={files.photo} accept="image/*" error={errors.photo}
                     onChange={(f) => setFiles((x) => ({ ...x, photo: f }))} />
+                <p className="nc-meta" style={{ fontSize: 12, marginTop: 6 }}>{t('legitimacion.photo_hint')}</p>
                 <FileField label={t('legitimacion.id_doc')} uploaded={registration.files.id_doc}
                     file={files.id_doc} error={errors.id_doc}
                     onChange={(f) => setFiles((x) => ({ ...x, id_doc: f }))} />
