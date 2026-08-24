@@ -413,5 +413,7 @@
     "legitimacion.f_played_federated": "Federated before?",
     "legitimacion.f_federated_details": "Federated details",
     "legitimacion.f_payment": "Transfer",
-    "legitimacion.f_consent": "Consent"
+    "legitimacion.f_consent": "Consent",
+    "legitimacion.banner_one": "Federation registration: 1 day left!",
+    "legitimacion.deadline_one": "1 day left! · deadline 25.08"
 }

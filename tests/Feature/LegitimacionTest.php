@@ -122,6 +122,13 @@ it('rechaza un CNP inválido en el formulario', function () {
         ->assertSessionHasErrors('cnp');
 });
 
+it('la primera visita crea la ficha en pendiente, nunca "completa"', function () {
+    $member = Member::factory()->create();
+
+    $this->actingAs($member->user)->get('/legitimacion')
+        ->assertInertia(fn ($page) => $page->where('registration.status', 'pendiente'));
+});
+
 it('el roster solo lo recibe el manager', function () {
     $manager = Member::factory()->manager()->create();
     $player = Member::factory()->for($manager->club)->create();

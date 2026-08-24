@@ -413,5 +413,7 @@
     "legitimacion.f_played_federated": "¿Federado antes?",
     "legitimacion.f_federated_details": "Detalle de federado",
     "legitimacion.f_payment": "Transferencia",
-    "legitimacion.f_consent": "Consentimiento"
+    "legitimacion.f_consent": "Consentimiento",
+    "legitimacion.banner_one": "Legitimación: ¡queda 1 día!",
+    "legitimacion.deadline_one": "¡Queda 1 día! · cierre 25.08"
 }

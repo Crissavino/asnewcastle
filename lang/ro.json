@@ -413,5 +413,7 @@
     "legitimacion.f_played_federated": "Legitimat înainte?",
     "legitimacion.f_federated_details": "Detalii legitimare",
     "legitimacion.f_payment": "Transfer",
-    "legitimacion.f_consent": "Consimțământ"
+    "legitimacion.f_consent": "Consimțământ",
+    "legitimacion.banner_one": "Legitimare: mai e o zi!",
+    "legitimacion.deadline_one": "Mai e o zi! · termen 25.08"
 }

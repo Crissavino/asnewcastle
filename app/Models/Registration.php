@@ -25,6 +25,10 @@ class Registration extends Model
 
     protected $guarded = [];
 
+    // firstOrCreate no relee los defaults de la DB: sin esto, una ficha
+    // recién creada llega al front con status null y figura "completa"
+    protected $attributes = ['status' => self::STATUS_PENDIENTE];
+
     protected function casts(): array
     {
         return [

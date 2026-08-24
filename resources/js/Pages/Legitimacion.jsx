@@ -340,11 +340,13 @@ function ManagerBoard({ roster }) {
 export default function Legitimacion({ registration, missing, config, roster }) {
     const { t } = useTranslations();
 
-    const deadline = config.daysLeft > 0
+    const deadline = config.daysLeft > 1
         ? t('legitimacion.deadline_banner', { days: config.daysLeft })
-        : config.daysLeft === 0
-            ? t('legitimacion.deadline_today')
-            : t('legitimacion.deadline_overdue');
+        : config.daysLeft === 1
+            ? t('legitimacion.deadline_one')
+            : config.daysLeft === 0
+                ? t('legitimacion.deadline_today')
+                : t('legitimacion.deadline_overdue');
 
     return (
         <AppLayout tab="legitimacion" eyebrow={t('legitimacion.eyebrow', { season: config.season })}>

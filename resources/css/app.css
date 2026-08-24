@@ -411,9 +411,10 @@ button.nc-day { width: 100%; background: none; border: none; border-top: 1px sol
     display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; align-content: start; }
   .nc-body > * { min-width: 0; }
   .nc-body > .nc-btn, .nc-body > p { grid-column: 1 / -1; }
-  /* tabla y vestuario se leen mejor en una sola columna cómoda */
+  /* tabla, vestuario y legitimación se leen mejor en una sola columna cómoda */
   .nc-body.page-tabla { display: block; max-width: 780px; }
   .nc-body.page-vestuario { display: flex; max-width: 780px; }
+  .nc-body.page-legitimacion { display: block; max-width: 780px; }
 }
 
 /* micro-interacciones solo donde hay puntero (desktop) */

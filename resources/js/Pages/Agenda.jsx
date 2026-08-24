@@ -483,11 +483,13 @@ export default function Agenda({ events, recent, roster_count, legitimacion }) {
                     background: 'var(--red, #D22233)', borderColor: 'var(--red-dk, #9C1523)',
                 }}>
                     <div style={{ fontWeight: 700, fontSize: 14 }}>
-                        {legitimacion.daysLeft > 0
+                        {legitimacion.daysLeft > 1
                             ? t('legitimacion.banner', { days: legitimacion.daysLeft })
-                            : legitimacion.daysLeft === 0
-                                ? t('legitimacion.banner_today')
-                                : t('legitimacion.banner_overdue')}
+                            : legitimacion.daysLeft === 1
+                                ? t('legitimacion.banner_one')
+                                : legitimacion.daysLeft === 0
+                                    ? t('legitimacion.banner_today')
+                                    : t('legitimacion.banner_overdue')}
                     </div>
                     <div style={{ fontSize: 12, opacity: 0.85, marginTop: 3 }}>{t('legitimacion.banner_cta')}</div>
                 </Link>
