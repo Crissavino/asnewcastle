@@ -260,6 +260,14 @@ it('el link público firmado abre el formulario sin login', function () {
             ->where('club.name', $club->name));
 });
 
+it('un member logueado que abre el link público va a su propia ficha', function () {
+    $member = Member::factory()->create();
+
+    $this->actingAs($member->user)
+        ->get(linkPublico($member->club))
+        ->assertRedirect(route('legitimacion'));
+});
+
 it('sin firma válida no hay formulario público', function () {
     $club = App\Models\Club::factory()->create();
 

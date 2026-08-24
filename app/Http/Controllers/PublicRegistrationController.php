@@ -24,8 +24,15 @@ class PublicRegistrationController extends Controller
     }
 
     /** El link firmado abre el formulario y deja el club en sesión. */
-    public function show(Request $request, Club $club): Response
+    public function show(Request $request, Club $club): Response|RedirectResponse
     {
+        // Un member logueado del club no llena una ficha de invitado (sería
+        // un duplicado): va derecho a la suya. Así el mismo link sirve para
+        // todo el grupo, tenga cuenta o no.
+        if ($request->user()?->activeMembers()->where('club_id', $club->id)->exists()) {
+            return redirect()->route('legitimacion');
+        }
+
         $request->session()->put('legitimacion_publica_club_id', $club->id);
 
         $reg = $this->sessionRegistration($request, $club->id);
