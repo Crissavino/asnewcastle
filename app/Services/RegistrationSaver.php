@@ -60,11 +60,10 @@ class RegistrationSaver
             }
         }
 
-        // Coherencia: un rumano no carga pasaporte y un extranjero no carga CNP
+        // Coherencia: un rumano no carga pasaporte. El CNP lo tienen todos
+        // (los extranjeros en el permiso de residencia), así que no se toca.
         if ($reg->nationality === 'RO') {
             $reg->passport_number = null;
-        } elseif ($reg->nationality) {
-            $reg->cnp = null;
         }
 
         $reg->save();

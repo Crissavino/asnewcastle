@@ -27,6 +27,7 @@ class RegistrationFactory extends Factory
             'full_name' => fake()->name(),
             'birth_date' => '1995-05-10',
             'nationality' => 'AR',
+            'cnp' => '1980716123453', // checksum válido; extranjero con residencia
             'passport_number' => 'AAB123456',
             'passport_path' => 'legitimacion/x/passport.jpg',
             'photo_path' => 'legitimacion/x/photo.jpg',

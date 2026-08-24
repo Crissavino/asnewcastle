@@ -79,11 +79,12 @@ class Registration extends Model
         if (! $this->nationality) {
             $missing[] = 'nationality';
         }
-        if ($this->nationality === 'RO') {
-            if (! $this->cnp) {
-                $missing[] = 'cnp';
-            }
-        } elseif ($this->nationality) {
+        // El CNP lo tienen todos: los rumanos en el buletin y los extranjeros
+        // en el permiso de residencia. Los extranjeros suman el pasaporte.
+        if (! $this->cnp) {
+            $missing[] = 'cnp';
+        }
+        if ($this->nationality && $this->nationality !== 'RO') {
             if (! $this->passport_number) {
                 $missing[] = 'passport_number';
             }

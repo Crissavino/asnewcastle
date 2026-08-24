@@ -43,13 +43,17 @@ it('vuelve a pendiente si deja de estar completo, salvo enviado_federacion', fun
     expect($enviado->fresh()->status)->toBe('enviado_federacion');
 });
 
-it('un rumano necesita CNP y un extranjero pasaporte', function () {
+it('todos necesitan CNP; el extranjero suma el pasaporte', function () {
     $ro = Registration::factory()->complete()->make(['nationality' => 'RO', 'cnp' => null]);
     expect($ro->missingFields())->toContain('cnp')
         ->and($ro->missingFields())->not->toContain('passport_number');
 
     $ar = Registration::factory()->complete()->make(['passport_number' => null]);
     expect($ar->missingFields())->toContain('passport_number');
+
+    // extranjero sin CNP (del permiso de residencia): también le falta
+    $sinCnp = Registration::factory()->complete()->make(['cnp' => null]);
+    expect($sinCnp->missingFields())->toContain('cnp');
 });
 
 it('el detalle de federado solo es obligatorio si contestó que sí', function () {

@@ -424,5 +424,10 @@
     "legitimacion.photo_hint": "Sacate una foto de frente, con fondo blanco y buena luz, sin gorra ni lentes. Nosotros nos encargamos de imprimirla.",
     "legitimacion.mark_sent": "Marcar presentado",
     "legitimacion.unmark_sent": "Deshacer (vuelve a Completo)",
-    "legitimacion.sent_short": "Presentado"
+    "legitimacion.sent_short": "Presentado",
+    "legitimacion.cnp_foreign_hint": "Es el que figura en tu permiso de residencia (permis de ședere / certificat de înregistrare).",
+    "legitimacion.id_doc_hint": "Rumanos: el buletin. Extranjeros: el permiso de residencia, donde figura tu CNP.",
+    "legitimacion.thanks_title": "¡Listo! Gracias por tus datos",
+    "legitimacion.thanks_text": "Tu ficha está completa. El delegado presenta tu documentación en la Federación y quedás legitimado para la 2026-27. Los documentos se borran a los 90 días.",
+    "legitimacion.edit": "Revisar o corregir mis datos"
 }

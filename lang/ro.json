@@ -424,5 +424,10 @@
     "legitimacion.photo_hint": "Fă-ți o poză din față, pe fundal alb, cu lumină bună, fără șapcă sau ochelari. De imprimat ne ocupăm noi.",
     "legitimacion.mark_sent": "Marchează depus",
     "legitimacion.unmark_sent": "Anulează (înapoi la Complet)",
-    "legitimacion.sent_short": "Depus"
+    "legitimacion.sent_short": "Depus",
+    "legitimacion.cnp_foreign_hint": "E cel de pe permisul tău de ședere / certificatul de înregistrare.",
+    "legitimacion.id_doc_hint": "Români: buletinul. Străini: permisul de ședere, cel pe care apare CNP-ul.",
+    "legitimacion.thanks_title": "Gata! Mulțumim pentru date",
+    "legitimacion.thanks_text": "Fișa ta e completă. Delegatul depune documentele la Federație și ești legitimat pentru 2026-27. Documentele se șterg după 90 de zile.",
+    "legitimacion.edit": "Verifică sau corectează datele"
 }

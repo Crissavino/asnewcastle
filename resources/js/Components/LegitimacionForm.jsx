@@ -107,6 +107,9 @@ export default function LegitimacionForm({ registration, missing, config, action
     const [files, setFiles] = useState({ photo: null, id_doc: null, passport: null, payment_proof: null });
     const [saving, setSaving] = useState(false);
     const [copied, setCopied] = useState(false);
+    // Ficha completa: pantalla de gracias en vez del formulario (se puede
+    // volver a editar si algo salió mal)
+    const [editing, setEditing] = useState(false);
 
     const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
     const isRO = form.nationality === 'RO';
@@ -143,9 +146,33 @@ export default function LegitimacionForm({ registration, missing, config, action
             forceFormData: true,
             preserveScroll: true,
             onFinish: () => setSaving(false),
-            onSuccess: () => setFiles({ photo: null, id_doc: null, passport: null, payment_proof: null }),
+            onSuccess: () => {
+                setFiles({ photo: null, id_doc: null, passport: null, payment_proof: null });
+                setEditing(false); // si quedó completa, pasa a la pantalla de gracias
+            },
         });
     };
+
+    if (complete && !editing) {
+        return (
+            <div className="nc-card" style={{ textAlign: 'center', padding: '34px 20px' }}>
+                <div style={{
+                    width: 56, height: 56, margin: '0 auto', borderRadius: '50%',
+                    background: 'var(--aqua, #8AD4D8)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                    <Check size={30} strokeWidth={3} />
+                </div>
+                <h2 className="nc-display" style={{ fontSize: 22, marginTop: 16 }}>{t('legitimacion.thanks_title')}</h2>
+                <p className="nc-meta" style={{ fontSize: 13, marginTop: 10, lineHeight: 1.5 }}>
+                    {t('legitimacion.thanks_text')}
+                </p>
+                <button type="button" className="nc-btn ghost" style={{ width: 'auto', padding: '0 18px', marginTop: 18 }}
+                    onClick={() => setEditing(true)}>
+                    {t('legitimacion.edit')}
+                </button>
+            </div>
+        );
+    }
 
     return (
         <form onSubmit={submit}>
@@ -197,11 +224,16 @@ export default function LegitimacionForm({ registration, missing, config, action
                     </select>
                 </Field>
 
-                {isRO && (
+                {/* El CNP lo tienen todos: buletin (rumanos) o permiso de
+                    residencia (extranjeros). Los extranjeros suman pasaporte. */}
+                {form.nationality && (
                     <Field label={t('legitimacion.cnp')} error={errors.cnp}>
                         <input className="nc-input nc-num" inputMode="numeric" maxLength={13}
                             placeholder="1234567890123" value={form.cnp}
                             onChange={(e) => set('cnp', e.target.value.replace(/\D/g, ''))} />
+                        {!isRO && (
+                            <p className="nc-meta" style={{ fontSize: 12, marginTop: 6 }}>{t('legitimacion.cnp_foreign_hint')}</p>
+                        )}
                     </Field>
                 )}
 
@@ -228,6 +260,7 @@ export default function LegitimacionForm({ registration, missing, config, action
                 <FileField label={t('legitimacion.id_doc')} uploaded={registration.files.id_doc}
                     file={files.id_doc} error={errors.id_doc}
                     onChange={(f) => setFiles((x) => ({ ...x, id_doc: f }))} />
+                <p className="nc-meta" style={{ fontSize: 12, marginTop: 6 }}>{t('legitimacion.id_doc_hint')}</p>
                 <p className="nc-meta" style={{ fontSize: 12, marginTop: 10 }}>{t('legitimacion.file_hint')}</p>
             </div>
 

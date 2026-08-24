@@ -424,5 +424,10 @@
     "legitimacion.photo_hint": "Take a front-facing photo against a white background, in good light, no cap or sunglasses. We'll take care of printing it.",
     "legitimacion.mark_sent": "Mark as filed",
     "legitimacion.unmark_sent": "Undo (back to Complete)",
-    "legitimacion.sent_short": "Filed"
+    "legitimacion.sent_short": "Filed",
+    "legitimacion.cnp_foreign_hint": "It's on your Romanian residence permit (permis de ședere / certificat de înregistrare).",
+    "legitimacion.id_doc_hint": "Romanians: your buletin. Foreigners: your residence permit, the one showing your CNP.",
+    "legitimacion.thanks_title": "Done! Thanks for your details",
+    "legitimacion.thanks_text": "Your form is complete. The delegate will file your documents with the Federation and you'll be registered for 2026-27. Documents are deleted after 90 days.",
+    "legitimacion.edit": "Review or fix my details"
 }
