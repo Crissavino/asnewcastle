@@ -135,6 +135,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/legitimacion', [RegistrationController::class, 'show'])->name('legitimacion');
             Route::post('/legitimacion', [RegistrationController::class, 'store'])->name('legitimacion.guardar');
             Route::post('/legitimacion/recordar', [RegistrationController::class, 'remind'])->name('legitimacion.recordar');
+            Route::post('/legitimacion/{registration}/enviado', [RegistrationController::class, 'markSent'])->name('legitimacion.enviado');
             Route::get('/legitimacion/{registration}/doc/{field}', [RegistrationController::class, 'doc'])->name('legitimacion.doc');
             Route::get('/legitimacion/{registration}/zip', [RegistrationController::class, 'zip'])->name('legitimacion.zip');
 

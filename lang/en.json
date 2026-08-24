@@ -421,5 +421,8 @@
     "legitimacion.guest": "no app account",
     "legitimacion.guest_unnamed": "(no name yet)",
     "legitimacion.public_intro": "With this, :club registers you with the Federation to play the 2026-27 season. You can save halfway and come back later from this same phone.",
-    "legitimacion.photo_hint": "Take a front-facing photo against a white background, in good light, no cap or sunglasses. We'll take care of printing it."
+    "legitimacion.photo_hint": "Take a front-facing photo against a white background, in good light, no cap or sunglasses. We'll take care of printing it.",
+    "legitimacion.mark_sent": "Mark as filed",
+    "legitimacion.unmark_sent": "Undo (back to Complete)",
+    "legitimacion.sent_short": "Filed"
 }

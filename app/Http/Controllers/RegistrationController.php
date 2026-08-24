@@ -105,6 +105,27 @@ class RegistrationController extends Controller
         return response()->download($path, "legitimacion-{$name}.zip")->deleteFileAfterSend();
     }
 
+    /**
+     * El manager marca una ficha completa como presentada en la Federación
+     * (o lo deshace si se equivocó). No toca submitted_at ni purge_after:
+     * la purga corre desde la entrega del jugador igual.
+     */
+    public function markSent(Registration $registration): RedirectResponse
+    {
+        app(CurrentClub::class)->assertOwns($registration);
+        Gate::authorize('create', Event::class);
+
+        if ($registration->status === Registration::STATUS_COMPLETO) {
+            $registration->update(['status' => Registration::STATUS_ENVIADO]);
+        } elseif ($registration->status === Registration::STATUS_ENVIADO) {
+            $registration->update(['status' => Registration::STATUS_COMPLETO]);
+        } else {
+            abort(400); // una ficha incompleta no se puede presentar
+        }
+
+        return back();
+    }
+
     /** Recordatorio por WhatsApp + campanita a los que no completaron. */
     public function remind(WhatsAppChannel $whatsapp): RedirectResponse
     {

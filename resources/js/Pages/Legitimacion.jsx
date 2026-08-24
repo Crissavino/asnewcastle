@@ -75,9 +75,19 @@ function ManagerBoard({ roster, publicUrl }) {
                                 </span>
                             )}
                             {r.registration_id && r.status !== 'pendiente' && (
-                                <a href={route('legitimacion.zip', r.registration_id)} className="nc-mini" style={{ textDecoration: 'none' }}>
-                                    <Download size={13} /> ZIP
-                                </a>
+                                <>
+                                    <a href={route('legitimacion.zip', r.registration_id)} className="nc-mini" style={{ textDecoration: 'none' }}>
+                                        <Download size={13} /> ZIP
+                                    </a>
+                                    <button type="button"
+                                        className={`nc-mini ${r.status === 'enviado_federacion' ? 'solid' : ''}`}
+                                        title={r.status === 'enviado_federacion' ? t('legitimacion.unmark_sent') : t('legitimacion.mark_sent')}
+                                        onClick={() => router.post(route('legitimacion.enviado', r.registration_id), {}, { preserveScroll: true })}>
+                                        {r.status === 'enviado_federacion'
+                                            ? <><Check size={13} /> {t('legitimacion.sent_short')}</>
+                                            : t('legitimacion.mark_sent')}
+                                    </button>
+                                </>
                             )}
                         </div>
                     </div>

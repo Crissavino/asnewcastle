@@ -215,6 +215,30 @@ it('un player no puede mandar el recordatorio', function () {
     $this->actingAs($player->user)->post('/legitimacion/recordar')->assertForbidden();
 });
 
+// ── Presentado en la Federación ───────────────────────────────────────
+
+it('el manager marca una ficha completa como presentada, y lo deshace', function () {
+    $manager = Member::factory()->manager()->create();
+    $player = Member::factory()->for($manager->club)->create();
+    $reg = Registration::factory()->complete()->create(['member_id' => $player->id, 'club_id' => $player->club_id]);
+
+    $this->actingAs($manager->user)->post("/legitimacion/{$reg->id}/enviado")->assertRedirect();
+    expect($reg->fresh()->status)->toBe('enviado_federacion');
+
+    $this->actingAs($manager->user)->post("/legitimacion/{$reg->id}/enviado")->assertRedirect();
+    expect($reg->fresh()->status)->toBe('completo');
+});
+
+it('una ficha incompleta no se puede marcar presentada, y un player tampoco puede', function () {
+    $manager = Member::factory()->manager()->create();
+    $player = Member::factory()->for($manager->club)->create();
+    $pendiente = Registration::factory()->create(['member_id' => $player->id, 'club_id' => $player->club_id]);
+    $completa = Registration::factory()->complete()->create(['member_id' => $manager->id, 'club_id' => $manager->club_id]);
+
+    $this->actingAs($manager->user)->post("/legitimacion/{$pendiente->id}/enviado")->assertStatus(400);
+    $this->actingAs($player->user)->post("/legitimacion/{$completa->id}/enviado")->assertForbidden();
+});
+
 // ── Formulario público (link firmado, sin login) ──────────────────────
 
 function linkPublico(App\Models\Club $club): string

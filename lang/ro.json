@@ -421,5 +421,8 @@
     "legitimacion.guest": "fără cont în aplicație",
     "legitimacion.guest_unnamed": "(încă fără nume)",
     "legitimacion.public_intro": "Cu asta, :club te înscrie la Federație pentru sezonul 2026-27. Poți salva pe jumătate și reveni mai târziu de pe același telefon.",
-    "legitimacion.photo_hint": "Fă-ți o poză din față, pe fundal alb, cu lumină bună, fără șapcă sau ochelari. De imprimat ne ocupăm noi."
+    "legitimacion.photo_hint": "Fă-ți o poză din față, pe fundal alb, cu lumină bună, fără șapcă sau ochelari. De imprimat ne ocupăm noi.",
+    "legitimacion.mark_sent": "Marchează depus",
+    "legitimacion.unmark_sent": "Anulează (înapoi la Complet)",
+    "legitimacion.sent_short": "Depus"
 }
