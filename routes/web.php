@@ -15,6 +15,7 @@ use App\Http\Controllers\PresenceController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PushTokenController;
+use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\TablaController;
 use App\Http\Controllers\VestuarioController;
@@ -119,6 +120,13 @@ Route::middleware('auth')->group(function () {
             Route::delete('/gastos/{expense}', [ExpenseController::class, 'destroy'])->name('gastos.borrar');
 
             Route::post('/invitaciones', [InviteController::class, 'create'])->name('invitacion.crear');
+
+            // Legitimación en la Federación (temporada 2026-27)
+            Route::get('/legitimacion', [RegistrationController::class, 'show'])->name('legitimacion');
+            Route::post('/legitimacion', [RegistrationController::class, 'store'])->name('legitimacion.guardar');
+            Route::post('/legitimacion/recordar', [RegistrationController::class, 'remind'])->name('legitimacion.recordar');
+            Route::get('/legitimacion/{registration}/doc/{field}', [RegistrationController::class, 'doc'])->name('legitimacion.doc');
+            Route::get('/legitimacion/{registration}/zip', [RegistrationController::class, 'zip'])->name('legitimacion.zip');
 
             // Toggle admin/jugador (solo el dueño; el controlador lo valida)
             Route::post('/ver-como', [ViewModeController::class, 'toggle'])->name('ver-como');
