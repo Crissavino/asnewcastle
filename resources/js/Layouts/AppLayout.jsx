@@ -46,7 +46,11 @@ export default function AppLayout({ tab, eyebrow, hideNav = false, children }) {
                             <div className="nc-side-league">{club?.league}</div>
                         </div>
                     </div>
-                    {!hideNav && (
+                    {hideNav ? (
+                        // Sin menú (legitimación): el espaciador mantiene al
+                        // usuario abajo, donde lo empujaba el nav
+                        <div style={{ flex: 1 }} />
+                    ) : (
                         <nav>
                             <NavLinks iconSize={19} />
                         </nav>
