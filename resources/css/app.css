@@ -443,3 +443,9 @@ button.nc-day { width: 100%; background: none; border: none; border-top: 1px sol
 }
 
 @media (prefers-reduced-motion: reduce) { .nc-root *, .nc-root *::before { animation: none !important; transition: none !important; } }
+
+/* El formulario público de legitimación no tiene sidebar: el escudo del
+   header se queda también en desktop (anula el display:none de arriba). */
+@media (min-width: 768px) {
+  .nc-top.nc-public > img { display: block !important; }
+}

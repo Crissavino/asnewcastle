@@ -28,7 +28,7 @@ export default function LegitimacionPublica({ club, registration, missing, confi
             <Head title={`${t('tabs.legitimacion')} — ${club.name}`} />
             <div className="nc-shell">
                 <div className="nc-main">
-                    <header className="nc-top nc-pinstripe">
+                    <header className="nc-top nc-pinstripe nc-public">
                         <Crest size={38} white />
                         <div style={{ minWidth: 0 }}>
                             <div className="nc-eyebrow">{club.name}</div>
