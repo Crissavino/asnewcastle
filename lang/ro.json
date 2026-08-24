@@ -415,5 +415,10 @@
     "legitimacion.f_payment": "Transfer",
     "legitimacion.f_consent": "Consimțământ",
     "legitimacion.banner_one": "Legitimare: mai e o zi!",
-    "legitimacion.deadline_one": "Mai e o zi! · termen 25.08"
+    "legitimacion.deadline_one": "Mai e o zi! · termen 25.08",
+    "legitimacion.public_link": "Link public pentru jucători noi",
+    "legitimacion.public_link_hint": "Fără cont în aplicație: deschide doar acest formular. Expiră în 30 de zile.",
+    "legitimacion.guest": "fără cont în aplicație",
+    "legitimacion.guest_unnamed": "(încă fără nume)",
+    "legitimacion.public_intro": "Cu asta, :club te înscrie la Federație pentru sezonul 2026-27. Poți salva pe jumătate și reveni mai târziu de pe același telefon."
 }

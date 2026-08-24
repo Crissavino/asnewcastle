@@ -14,6 +14,7 @@ use App\Http\Controllers\PlayerRatingController;
 use App\Http\Controllers\PresenceController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\PublicRegistrationController;
 use App\Http\Controllers\PushTokenController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\StripeConnectController;
@@ -61,6 +62,15 @@ Route::post('/webhooks/twilio', TwilioWebhookController::class)
 
 // Webhook de Stripe: pagos de cuotas en las cuentas conectadas
 Route::post('/webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
+
+// Formulario público de legitimación: solo por link firmado del manager.
+// Sin login y sin acceso a nada más; la sesión ata la ficha al navegador.
+Route::get('/legitimacion/publica/{club:slug}', [PublicRegistrationController::class, 'show'])
+    ->middleware('signed')
+    ->name('legitimacion.publica');
+Route::post('/legitimacion/publica', [PublicRegistrationController::class, 'store'])
+    ->middleware('throttle:30,1')
+    ->name('legitimacion.publica.guardar');
 
 // Link de invitación firmado: funciona logueado o no
 Route::get('/invitacion/{club:slug}', [InviteController::class, 'accept'])

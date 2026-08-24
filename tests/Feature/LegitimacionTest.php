@@ -215,6 +215,63 @@ it('un player no puede mandar el recordatorio', function () {
     $this->actingAs($player->user)->post('/legitimacion/recordar')->assertForbidden();
 });
 
+// ── Formulario público (link firmado, sin login) ──────────────────────
+
+function linkPublico(App\Models\Club $club): string
+{
+    return Illuminate\Support\Facades\URL::temporarySignedRoute(
+        'legitimacion.publica', now()->addDays(30), ['club' => $club->slug],
+    );
+}
+
+it('el link público firmado abre el formulario sin login', function () {
+    $club = App\Models\Club::factory()->create();
+
+    $this->get(linkPublico($club))->assertOk()
+        ->assertInertia(fn ($page) => $page->component('LegitimacionPublica')
+            ->where('club.name', $club->name));
+});
+
+it('sin firma válida no hay formulario público', function () {
+    $club = App\Models\Club::factory()->create();
+
+    $this->get("/legitimacion/publica/{$club->slug}")->assertForbidden();
+});
+
+it('el invitado guarda parcial y su ficha queda atada a la sesión', function () {
+    $club = App\Models\Club::factory()->create();
+
+    $this->get(linkPublico($club));
+    $this->post('/legitimacion/publica', ['full_name' => 'Ahmed Hassan', 'nationality' => 'EG'])
+        ->assertRedirect();
+
+    $reg = Registration::withoutGlobalScopes()->whereNull('member_id')->sole();
+    expect($reg->full_name)->toBe('Ahmed Hassan')
+        ->and($reg->club_id)->toBe($club->id)
+        ->and($reg->missingFields())->toContain('passport_number');
+
+    // el segundo guardado actualiza la MISMA fila, no crea otra
+    $this->post('/legitimacion/publica', ['birth_date' => '2000-01-15'])->assertRedirect();
+    expect(Registration::withoutGlobalScopes()->whereNull('member_id')->count())->toBe(1)
+        ->and($reg->fresh()->birth_date->format('Y-m-d'))->toBe('2000-01-15');
+});
+
+it('el POST público sin haber abierto el link firmado se rechaza', function () {
+    $this->post('/legitimacion/publica', ['full_name' => 'Bot'])->assertForbidden();
+});
+
+it('las fichas del link público aparecen en el roster del manager', function () {
+    $manager = Member::factory()->manager()->create();
+    Registration::factory()->create([
+        'member_id' => null, 'club_id' => $manager->club_id, 'full_name' => 'Karim Ben Ali',
+    ]);
+
+    $this->actingAs($manager->user)->get('/legitimacion')
+        ->assertInertia(fn ($page) => $page->has('roster', 2)
+            ->where('roster.1.name', 'Karim Ben Ali')
+            ->where('roster.1.guest', true));
+});
+
 // ── Purga ─────────────────────────────────────────────────────────────
 
 it('purga archivos y datos sensibles a los 90 días, conservando el histórico', function () {

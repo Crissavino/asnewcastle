@@ -4,14 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Registration;
-use App\Rules\ValidCnp;
 use App\Services\Notifications;
+use App\Services\RegistrationSaver;
 use App\Services\WhatsApp\WhatsAppChannel;
 use App\Support\CurrentClub;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -26,79 +27,32 @@ use ZipArchive;
  */
 class RegistrationController extends Controller
 {
+    public function __construct(protected RegistrationSaver $saver)
+    {
+    }
+
     public function show(): Response
     {
         $current = app(CurrentClub::class);
         $own = $this->registrationFor($current);
 
         return Inertia::render('Legitimacion', [
-            'registration' => $this->serializeOwn($own),
+            'registration' => $this->saver->serialize($own),
             'missing' => $own->missingFields(),
-            'config' => [
-                'deadline' => config('legitimacion.deadline'),
-                'daysLeft' => (int) now()->startOfDay()->diffInDays(config('legitimacion.deadline'), false),
-                'fee' => config('legitimacion.fee'),
-                'iban' => config('legitimacion.iban'),
-                'season' => config('legitimacion.season'),
-            ],
+            'config' => $this->saver->config(),
             'roster' => $current->actsAsManager() ? $this->roster($current) : null,
+            // Link público firmado para los que todavía no tienen cuenta
+            // (sin WhatsApp activo no pueden pasar el OTP). Vence en 30 días.
+            'public_url' => $current->actsAsManager()
+                ? URL::temporarySignedRoute('legitimacion.publica', now()->addDays(30), ['club' => $current->club()->slug])
+                : null,
         ]);
     }
 
     /** Guardado parcial: solo pisa lo que vino en el request. */
     public function store(Request $request): RedirectResponse
     {
-        $current = app(CurrentClub::class);
-        $reg = $this->registrationFor($current);
-
-        $validated = $request->validate([
-            'full_name' => ['nullable', 'string', 'max:120'],
-            'birth_date' => ['nullable', 'date', 'before:today'],
-            'nationality' => ['nullable', 'string', 'size:2'],
-            'cnp' => ['nullable', new ValidCnp],
-            'passport_number' => ['nullable', 'string', 'max:30'],
-            'previous_clubs' => ['nullable', 'string', 'max:500'],
-            'played_federated' => ['nullable', 'boolean'],
-            'federated_details' => ['nullable', 'string', 'max:500'],
-            'payment_marked' => ['nullable', 'boolean'],
-            'consent' => ['nullable', 'boolean'],
-            'photo' => ['nullable', 'image', 'max:5120'],
-            'id_doc' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
-            'passport' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
-            'payment_proof' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
-        ]);
-
-        foreach (['full_name', 'birth_date', 'nationality', 'cnp', 'passport_number', 'previous_clubs', 'federated_details', 'played_federated', 'payment_marked'] as $field) {
-            if ($request->has($field)) {
-                $reg->$field = $validated[$field];
-            }
-        }
-
-        if ($request->has('consent')) {
-            $reg->consent_at = $request->boolean('consent') ? ($reg->consent_at ?? now()) : null;
-        }
-
-        foreach (Registration::fileFields() as $input => $column) {
-            if ($file = $request->file($input)) {
-                if ($reg->$column) {
-                    Storage::delete($reg->$column);
-                }
-                $reg->$column = $file->storeAs(
-                    "legitimacion/{$reg->club_id}/{$reg->member_id}",
-                    $input.'-'.now()->timestamp.'.'.strtolower($file->extension())
-                );
-            }
-        }
-
-        // Coherencia: un rumano no carga pasaporte y un extranjero no carga CNP
-        if ($reg->nationality === 'RO') {
-            $reg->passport_number = null;
-        } elseif ($reg->nationality) {
-            $reg->cnp = null;
-        }
-
-        $reg->save();
-        $reg->refreshStatus();
+        $this->saver->save($this->registrationFor(app(CurrentClub::class)), $request);
 
         return back();
     }
@@ -122,7 +76,7 @@ class RegistrationController extends Controller
         Gate::authorize('create', Event::class);
 
         $registration->loadMissing('member.user');
-        $name = str($registration->member->user->name)->slug();
+        $name = str($registration->full_name ?? $registration->member?->user?->name ?? "ficha-{$registration->id}")->slug();
         $path = storage_path("app/legitimacion-{$registration->id}.zip");
 
         $zip = new ZipArchive;
@@ -159,6 +113,7 @@ class RegistrationController extends Controller
 
         $registrations = Registration::query()
             ->where('season', config('legitimacion.season'))
+            ->whereNotNull('member_id')
             ->get()
             ->keyBy('member_id');
 
@@ -198,49 +153,46 @@ class RegistrationController extends Controller
         ]);
     }
 
-    /** La ficha propia para el form. Nunca manda paths: solo si hay archivo. */
-    protected function serializeOwn(Registration $reg): array
-    {
-        return [
-            'full_name' => $reg->full_name ?? $reg->member->user->name,
-            'birth_date' => $reg->birth_date?->format('Y-m-d'),
-            'nationality' => $reg->nationality,
-            'cnp' => $reg->cnp,
-            'passport_number' => $reg->passport_number,
-            'previous_clubs' => $reg->previous_clubs,
-            'played_federated' => $reg->played_federated,
-            'federated_details' => $reg->federated_details,
-            'payment_marked' => (bool) $reg->payment_marked,
-            'consented' => $reg->consent_at !== null,
-            'status' => $reg->status,
-            'files' => collect(Registration::fileFields())->map(fn ($column) => (bool) $reg->$column),
-        ];
-    }
-
-    /** Vista delegado: una fila por miembro activo, con qué le falta. */
+    /**
+     * Vista delegado: una fila por miembro activo, con qué le falta, más
+     * las fichas del formulario público (gente que aún no tiene cuenta).
+     */
     protected function roster(CurrentClub $current): array
     {
         $registrations = Registration::query()
             ->where('season', config('legitimacion.season'))
-            ->get()
-            ->keyBy('member_id');
+            ->get();
 
-        return $current->club()->activeMembers()->with('user:id,name')->orderBy('shirt_number')->get()
-            ->map(function ($member) use ($registrations) {
-                $reg = $registrations->get($member->id);
+        $byMember = $registrations->whereNotNull('member_id')->keyBy('member_id');
+
+        $rows = $current->club()->activeMembers()->with('user:id,name')->orderBy('shirt_number')->get()
+            ->map(function ($member) use ($byMember) {
+                $reg = $byMember->get($member->id);
 
                 return [
                     'member_id' => $member->id,
                     'registration_id' => $reg?->id,
                     'name' => $member->user->name,
                     'shirt_number' => $member->shirt_number,
+                    'guest' => false,
                     'status' => $reg?->status ?? Registration::STATUS_PENDIENTE,
                     'missing' => $reg?->missingFields(), // null = ni empezó
                     'payment_marked' => (bool) ($reg?->payment_marked),
-                    'files' => $reg
-                        ? collect(Registration::fileFields())->map(fn ($column) => (bool) $reg->$column)
-                        : null,
                 ];
-            })->values()->all();
+            });
+
+        $guests = $registrations->whereNull('member_id')->sortBy('created_at')
+            ->map(fn (Registration $reg) => [
+                'member_id' => null,
+                'registration_id' => $reg->id,
+                'name' => $reg->full_name,
+                'shirt_number' => null,
+                'guest' => true,
+                'status' => $reg->status,
+                'missing' => $reg->missingFields(),
+                'payment_marked' => (bool) $reg->payment_marked,
+            ]);
+
+        return $rows->concat($guests)->values()->all();
     }
 }
