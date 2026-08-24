@@ -1,4 +1,4 @@
-import { router, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { Bell, Check, ChevronDown, ChevronUp, Copy, HelpCircle, MapPin, Pencil, Plus, X } from 'lucide-react';
 import { useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
@@ -466,7 +466,7 @@ function RecentResults({ recent, onLoadResult, onLoadPresence }) {
     );
 }
 
-export default function Agenda({ events, recent, roster_count }) {
+export default function Agenda({ events, recent, roster_count, legitimacion }) {
     const { t } = useTranslations();
     const { member } = usePage().props;
     const [formEvent, setFormEvent] = useState(null); // null cerrado · false alta · {ev} edición
@@ -476,6 +476,23 @@ export default function Agenda({ events, recent, roster_count }) {
 
     return (
         <AppLayout tab="agenda">
+            {/* Legitimación en la Federación: urgente hasta completar la ficha */}
+            {legitimacion && !legitimacion.complete && (
+                <Link href={route('legitimacion')} className="nc-card" style={{
+                    display: 'block', textDecoration: 'none', color: '#fff', marginBottom: 14,
+                    background: 'var(--red, #D22233)', borderColor: 'var(--red-dk, #9C1523)',
+                }}>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>
+                        {legitimacion.daysLeft > 0
+                            ? t('legitimacion.banner', { days: legitimacion.daysLeft })
+                            : legitimacion.daysLeft === 0
+                                ? t('legitimacion.banner_today')
+                                : t('legitimacion.banner_overdue')}
+                    </div>
+                    <div style={{ fontSize: 12, opacity: 0.85, marginTop: 3 }}>{t('legitimacion.banner_cta')}</div>
+                </Link>
+            )}
+
             {isManager && (
                 <button
                     className="nc-btn dark"

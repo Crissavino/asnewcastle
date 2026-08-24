@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SendEventConvocation;
 use App\Models\Event;
+use App\Models\Registration;
 use App\Services\SystemMessages;
 use App\Support\CurrentClub;
 use Illuminate\Http\RedirectResponse;
@@ -83,6 +84,15 @@ class AgendaController extends Controller
             'events' => $events,
             'recent' => $this->recentMatches(),
             'roster_count' => $rosterCount,
+            // Banner de legitimación: visible hasta que la ficha esté completa
+            'legitimacion' => [
+                'complete' => Registration::query()
+                    ->where('member_id', $member->id)
+                    ->where('season', config('legitimacion.season'))
+                    ->whereIn('status', [Registration::STATUS_COMPLETO, Registration::STATUS_ENVIADO])
+                    ->exists(),
+                'daysLeft' => (int) now()->startOfDay()->diffInDays(config('legitimacion.deadline'), false),
+            ],
         ]);
     }
 
