@@ -359,7 +359,7 @@
     "legitimacion.federated_details": "¿Dónde y cuándo?",
     "legitimacion.federated_details_hint": "Club, país y años",
     "legitimacion.payment_title": "Tasa de legitimación",
-    "legitimacion.payment_info": "Son :fee por transferencia a la cuenta del club. Poné tu nombre en el concepto.",
+    "legitimacion.payment_info": "Son :fee por transferencia a la cuenta del club (incluye legitimación, inscripción y visa médica). Poné tu nombre en el concepto.",
     "legitimacion.copy_iban": "Copiar",
     "legitimacion.iban_copied": "Copiado",
     "legitimacion.payment_marked": "Ya hice la transferencia",

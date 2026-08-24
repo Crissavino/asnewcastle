@@ -359,7 +359,7 @@
     "legitimacion.federated_details": "Unde și când?",
     "legitimacion.federated_details_hint": "Club, țară și ani",
     "legitimacion.payment_title": "Taxa de legitimare",
-    "legitimacion.payment_info": "Sunt :fee prin transfer bancar în contul clubului. Trece-ți numele la detalii.",
+    "legitimacion.payment_info": "Sunt :fee prin transfer bancar în contul clubului (include legitimarea, înscrierea și viza medicală). Trece-ți numele la detalii.",
     "legitimacion.copy_iban": "Copiază",
     "legitimacion.iban_copied": "Copiat",
     "legitimacion.payment_marked": "Am făcut transferul",

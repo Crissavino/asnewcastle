@@ -359,7 +359,7 @@
     "legitimacion.federated_details": "Where and when?",
     "legitimacion.federated_details_hint": "Club, country and years",
     "legitimacion.payment_title": "Registration fee",
-    "legitimacion.payment_info": "It's :fee by bank transfer to the club's account. Put your name in the reference.",
+    "legitimacion.payment_info": "It's :fee by bank transfer to the club's account (covers legitimation, registration and the medical visa). Put your name in the reference.",
     "legitimacion.copy_iban": "Copy",
     "legitimacion.iban_copied": "Copied",
     "legitimacion.payment_marked": "I've made the transfer",
