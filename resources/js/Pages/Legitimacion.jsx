@@ -122,7 +122,7 @@ export default function Legitimacion({ registration, missing, config, roster, pu
                 : t('legitimacion.deadline_overdue');
 
     return (
-        <AppLayout tab="legitimacion" eyebrow={t('legitimacion.eyebrow', { season: config.season })}>
+        <AppLayout tab="legitimacion" hideNav eyebrow={t('legitimacion.eyebrow', { season: config.season })}>
             <div className="nc-card" style={{ background: 'var(--ink, #121212)', color: '#fff' }}>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>{deadline}</div>
                 <p style={{ fontSize: 12, opacity: 0.75, marginTop: 4 }}>{t('legitimacion.intro')}</p>

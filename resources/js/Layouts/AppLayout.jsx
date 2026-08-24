@@ -25,7 +25,7 @@ function NavLinks({ iconSize }) {
     ));
 }
 
-export default function AppLayout({ tab, eyebrow, children }) {
+export default function AppLayout({ tab, eyebrow, hideNav = false, children }) {
     const { t } = useTranslations();
     const { auth, club, member, is_owner, viewing_as_player } = usePage().props;
 
@@ -46,9 +46,11 @@ export default function AppLayout({ tab, eyebrow, children }) {
                             <div className="nc-side-league">{club?.league}</div>
                         </div>
                     </div>
-                    <nav>
-                        <NavLinks iconSize={19} />
-                    </nav>
+                    {!hideNav && (
+                        <nav>
+                            <NavLinks iconSize={19} />
+                        </nav>
+                    )}
                     <div className="nc-side-user">
                         {member?.shirt_number != null && <Kit n={member.shirt_number} size="sm" />}
                         <span>{auth.user?.name}</span>
