@@ -277,6 +277,22 @@ body { overscroll-behavior-y: none; }
   font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
   cursor: pointer; text-decoration: underline; text-underline-offset: 4px; padding: 14px; width: 100%; }
 
+/* guía de invitación (Auth/Sumate) */
+a.nc-btn { text-decoration: none; }
+.nc-strong { font-weight: 700; font-size: 15px; color: var(--ink); }
+.nc-os-switch { display: flex; gap: 8px; margin-bottom: 18px; }
+.nc-os-switch button { flex: 1; padding: 12px; border: 1px solid var(--line); background: #fff;
+  border-radius: 2px; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 14px;
+  color: var(--stone); cursor: pointer; }
+.nc-os-switch button.on { border-color: var(--ink); color: var(--ink); box-shadow: 3px 3px 0 var(--red); }
+.nc-guide { display: flex; flex-direction: column; gap: 20px; }
+.nc-code { width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border: 2px dashed var(--line); border-radius: 4px; background: var(--paper);
+  cursor: pointer; font-family: 'Rubik', sans-serif; }
+.nc-code > span:first-child { font-size: 26px; font-weight: 600; letter-spacing: .12em; color: var(--ink); }
+.nc-code-tag { font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--stone); }
+
 /* sheets */
 .nc-sheet { position: fixed; inset: 0; background: rgba(18,18,18,.55); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
 /* max-height sobre el viewport REAL (--app-vh): con 92vh de iOS el sheet quedaba

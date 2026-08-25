@@ -73,9 +73,12 @@ it('un invitado nuevo queda asociado al club después de verificar el OTP', func
     $this->actingAs($manager->user)->post('/invitaciones');
     $url = session('invite_url');
 
-    // El invitado abre el link sin estar logueado y pasa por el OTP
+    // El invitado abre el link sin estar logueado: ve la guía de descarga y
+    // el club queda recordado en la sesión para asociarlo al loguear.
     $this->post('/salir');
-    $this->get($url)->assertRedirect(route('entrar'));
+    $this->get($url)
+        ->assertInertia(fn ($page) => $page->component('Auth/Sumate'))
+        ->assertSessionHas('invite_club_id', $manager->club_id);
 
     $this->post('/otp', ['phone' => '+40787654321']);
     $code = $this->channel->lastCodeFor('+40787654321');

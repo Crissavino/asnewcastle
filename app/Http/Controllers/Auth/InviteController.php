@@ -8,6 +8,8 @@ use App\Support\CurrentClub;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class InviteController extends Controller
 {
@@ -30,8 +32,13 @@ class InviteController extends Controller
         return back()->with('invite_url', $url);
     }
 
-    /** El invitado abre el link: se recuerda el club y pasa por el OTP. */
-    public function accept(Request $request, Club $club): RedirectResponse
+    /**
+     * El invitado abre el link. Si ya está logueado, entra directo al club. Si no,
+     * se recuerda el club en la sesión y se le muestra una guía de descarga (según
+     * Android/iPhone) con el paso final de login; el botón "entrar" lo manda al OTP,
+     * donde queda asociado al club.
+     */
+    public function accept(Request $request, Club $club): RedirectResponse|Response
     {
         if ($user = $request->user()) {
             $this->joinOrRejoin($user, $club->id);
@@ -41,7 +48,15 @@ class InviteController extends Controller
 
         $request->session()->put('invite_club_id', $club->id);
 
-        return redirect()->route('entrar');
+        return Inertia::render('Auth/Sumate', [
+            'clubName' => $club->name,
+            // Interino sin WhatsApp: se muestra el código maestro. Cuando Twilio
+            // esté vivo, OTP_MASTER_CODE se borra y la guía dice "te llega por WhatsApp".
+            'masterCode' => config('services.otp.master_code') ?: null,
+            'apkUrl' => config('onboarding.apk_url'),
+            'testflightUrl' => config('onboarding.testflight_url'),
+            'testflightAppStoreUrl' => config('onboarding.testflight_appstore_url'),
+        ]);
     }
 
     /** Si es un ex-member que vuelve, se le levanta la baja; si no, se crea. */
