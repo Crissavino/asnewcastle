@@ -223,7 +223,10 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
 
     // El checkout se abre según plataforma: navegador del sistema en la app
     // (para Apple/Google Pay), redirección normal en la web.
-    const checkoutErr = (e) => window.alert('No se pudo abrir el pago: ' + (e?.response?.status ?? e?.message ?? 'error'));
+    const checkoutErr = (e) => {
+        console.error('checkout error', e?.response?.status ?? e?.message ?? e);
+        window.alert(t('cuota.checkout_error'));
+    };
     const pay = () => window.axios.post(route('cuota.pagar', my_due.id), { native: isNative() })
         .then((r) => openCheckout(r.data.url)).catch(checkoutErr);
     const subscribe = () => window.axios.post(route('cuota.suscribir'), { native: isNative() })

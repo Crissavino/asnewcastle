@@ -118,6 +118,7 @@
     "cuota.autopay_retry": "Reîncearcă plata automată",
     "cuota.manual_surcharge": "Plătind lună de lună sunt :base :currency/lună — :annual :currency mai mult pe an.",
     "cuota.manual_title": "Preferi să plătești doar luna asta?",
+    "cuota.checkout_error": "Nu am putut deschide plata. Încearcă din nou într-un moment.",
     "cuota.autopay_on": "Plată automată activă",
     "cuota.autopay_active_note": "Cotizația se încasează automat în fiecare lună. Nu trebuie să faci nimic.",
     "cuota.autopay_failed": "Ultima plată a eșuat",

@@ -118,6 +118,7 @@
     "cuota.autopay_retry": "Retry auto-pay",
     "cuota.manual_surcharge": "Paying month by month is :base :currency/month — :annual :currency more per year.",
     "cuota.manual_title": "Rather pay just this month?",
+    "cuota.checkout_error": "Couldn't open the payment. Please try again in a moment.",
     "cuota.autopay_on": "Auto-pay active",
     "cuota.autopay_active_note": "Your dues are charged automatically every month. Nothing to do.",
     "cuota.autopay_failed": "Last charge failed",

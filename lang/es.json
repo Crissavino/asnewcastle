@@ -118,6 +118,7 @@
     "cuota.autopay_retry": "Reintentar el débito",
     "cuota.manual_surcharge": "Pagando mes a mes son :base :currency/mes — :annual :currency más por año.",
     "cuota.manual_title": "¿Preferís pagar solo este mes?",
+    "cuota.checkout_error": "No se pudo abrir el pago. Probá de nuevo en un momento.",
     "cuota.autopay_on": "Débito automático activo",
     "cuota.autopay_active_note": "Todos los meses se te cobra la cuota solo. No tenés que hacer nada.",
     "cuota.autopay_failed": "Falló el último cobro",
