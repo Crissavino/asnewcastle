@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Auth\InviteController;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\SetLocale;
+use App\Models\Club;
 use App\Models\User;
 use App\Services\Otp\OtpManager;
 use Illuminate\Http\RedirectResponse;
@@ -128,6 +129,13 @@ class OtpController extends Controller
         // (o se le levanta la baja si es un ex-member que vuelve).
         if ($clubId = $request->session()->pull('invite_club_id')) {
             InviteController::joinOrRejoin($user, $clubId);
+        } elseif (! $user->members()->whereNull('left_at')->exists() && Club::count() === 1) {
+            // Lanzamiento de un solo club: un usuario verificado que no está en
+            // ningún club activo se suma al único club. Así el flujo de la guía
+            // funciona en un solo login (bajar app → entrar), sin la vuelta por
+            // el navegador. El código maestro es el candado interino; cuando haya
+            // más de un club o WhatsApp OTP, esta rama deja de aplicar.
+            InviteController::joinOrRejoin($user, Club::value('id'));
         }
 
         return redirect()->intended(route('agenda'));

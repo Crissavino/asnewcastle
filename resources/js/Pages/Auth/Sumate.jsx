@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Crest from '../../Components/Crest';
 import { LOCALES, useTranslations } from '../../i18n';
@@ -122,11 +122,7 @@ export default function Sumate({ clubName, masterCode, apkUrl, testflightUrl, te
                         )}
                     </div>
 
-                    <Link href={route('entrar')} className="nc-skip" style={{ marginTop: 22, textAlign: 'center', display: 'block' }}>
-                        {t('sumate.already_installed')}
-                    </Link>
-
-                    <div style={{ flex: 1, minHeight: 16 }} />
+                    <div style={{ flex: 1, minHeight: 22 }} />
 
                     <div style={{ display: 'flex', justifyContent: 'center', gap: 14, paddingBottom: 8 }}>
                         {LOCALES.map(({ code, label }) => (

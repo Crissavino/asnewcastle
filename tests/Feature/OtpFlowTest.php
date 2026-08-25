@@ -155,3 +155,31 @@ it('un usuario con club entra a la agenda', function () {
 
     $this->actingAs($member->user)->get('/agenda')->assertOk();
 });
+
+it('con un solo club, un usuario nuevo que loguea se suma solo a ese club', function () {
+    $club = Club::factory()->create(['slug' => 'as-new-castle']);
+
+    $this->post('/otp', ['phone' => '+40712345678']);
+    $this->post('/codigo', ['code' => $this->channel->lastCodeFor('+40712345678')]);
+
+    $user = User::where('phone', '+40712345678')->first();
+    expect(
+        Member::where('user_id', $user->id)
+            ->where('club_id', $club->id)
+            ->where('role', 'player')
+            ->whereNull('left_at')
+            ->exists()
+    )->toBeTrue();
+    // Ya es miembro: no cae en "sin-club". Como es nuevo, pasa por el wizard de alta.
+    $this->actingAs($user)->get('/agenda')->assertRedirect(route('alta'));
+});
+
+it('con más de un club, un usuario nuevo sin invitación no se auto-suma', function () {
+    Club::factory()->count(2)->create();
+
+    $this->post('/otp', ['phone' => '+40712345678']);
+    $this->post('/codigo', ['code' => $this->channel->lastCodeFor('+40712345678')]);
+
+    $user = User::where('phone', '+40712345678')->first();
+    expect($user->members()->exists())->toBeFalse();
+});
