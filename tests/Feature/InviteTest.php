@@ -44,7 +44,7 @@ it('un link vencido no sirve', function () {
     $this->actingAs($manager->user)->post('/invitaciones');
     $url = session('invite_url');
 
-    $this->travel(8)->days();
+    $this->travel(31)->days();
 
     $invited = User::factory()->create();
     $this->actingAs($invited)->get($url)->assertForbidden();
