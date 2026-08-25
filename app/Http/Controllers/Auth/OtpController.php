@@ -108,9 +108,9 @@ class OtpController extends Controller
         // La VERDAD es el idioma elegido en la app (users.locale, editable en el
         // perfil). El del teléfono es solo el default INICIAL: se aplica si el
         // usuario todavía no eligió uno de verdad, y nunca pisa una preferencia
-        // ya elegida — un +40 que habla español manda. Como el club es es/ro,
-        // 'en' (el fallback) cuenta como "sin elegir" y toma el default.
-        $chosen = in_array($user->locale, ['es', 'ro'], true)
+        // ya elegida — un +40 que habla español (o árabe) manda. Como el club es
+        // es/ro/ar, 'en' (el fallback) cuenta como "sin elegir" y toma el default.
+        $chosen = in_array($user->locale, ['es', 'ro', 'ar'], true)
             ? $user->locale
             : $this->localeForPhone($phone);
 
