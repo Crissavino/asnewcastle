@@ -5,7 +5,7 @@ import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
 import { useTranslations } from '../i18n';
 
-const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB' };
+const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB', ar: 'ar-u-nu-latn' };
 
 function useDates() {
     const { locale } = useTranslations();
@@ -313,14 +313,14 @@ function EventCard({ ev, onEdit }) {
                 <div>
                     <div className="nc-label" style={{ color: isMatch ? (ev.is_home ? 'var(--red)' : 'var(--aqua-dk)') : 'var(--stone)' }}>
                         {isMatch ? (ev.is_home ? t('agenda.match_home') : t('agenda.match_away')) : t('agenda.training')}
-                        {ev.cancelled && <span className="nc-pill no" style={{ marginLeft: 8 }}>{t('agenda.cancelled')}</span>}
+                        {ev.cancelled && <span className="nc-pill no" style={{ marginInlineStart: 8 }}>{t('agenda.cancelled')}</span>}
                     </div>
                     <h3 className="nc-display" style={{ fontSize: 19, margin: '5px 0 2px', textDecoration: ev.cancelled ? 'line-through' : 'none' }}>
                         {ev.opponent ? `vs ${ev.opponent}` : day(ev.starts_at)}
                     </h3>
                     {ev.opponent && <div className="nc-meta">{day(ev.starts_at)}</div>}
                 </div>
-                <div style={{ textAlign: 'right' }}>
+                <div style={{ textAlign: 'end' }}>
                     <div className="nc-num" style={{ fontSize: 19, fontWeight: 700 }}>{time(ev.starts_at)}</div>
                     {isMatch && !ev.cancelled && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 5, marginTop: 6 }}>

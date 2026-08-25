@@ -4,7 +4,7 @@ import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
 import { useTranslations } from '../i18n';
 
-const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB' };
+const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB', ar: 'ar-u-nu-latn' };
 const RATE_COLORS = ['var(--stone, #767B77)', 'var(--aqua-dk, #2E8288)', 'var(--red-dk, #B01C2B)'];
 
 /* Calificación dominante de un partido: la más votada; empate gana la más alta. */
@@ -100,7 +100,7 @@ export default function Estadisticas({ stats }) {
                                     <div className="nc-poll-bar" style={{ flex: 1, margin: 0 }}>
                                         <i style={{ width: `${(stats.ratings[r - 1] / maxRating) * 100}%`, background: RATE_COLORS[r - 1], opacity: 0.75 }} />
                                     </div>
-                                    <b className="nc-num" style={{ fontSize: 12, width: 22, textAlign: 'right' }}>{stats.ratings[r - 1]}</b>
+                                    <b className="nc-num" style={{ fontSize: 12, width: 22, textAlign: 'end' }}>{stats.ratings[r - 1]}</b>
                                 </div>
                             ))}
                         </div>

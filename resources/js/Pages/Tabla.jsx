@@ -3,7 +3,7 @@ import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
 import { useTranslations } from '../i18n';
 
-const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB' };
+const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB', ar: 'ar-u-nu-latn' };
 const OUTCOME = { 1: 'w', 0: 'd', '-1': 'l' };
 
 export default function Tabla({ standings, fixture, us, form, next }) {
@@ -88,7 +88,7 @@ export default function Tabla({ standings, fixture, us, form, next }) {
                                         </div>
                                     </div>
                                 </div>
-                                <span className="nc-meta nc-num" style={{ fontSize: 13, flexShrink: 0, paddingLeft: 8 }}>{matchDate(m.date)}</span>
+                                <span className="nc-meta nc-num" style={{ fontSize: 13, flexShrink: 0, paddingInlineStart: 8 }}>{matchDate(m.date)}</span>
                             </div>
                         ))}
                     </div>
@@ -113,7 +113,7 @@ export default function Tabla({ standings, fixture, us, form, next }) {
                         <tbody>
                             {rows.map((r) => (
                                 <tr key={r.pos} className={r.us ? 'us' : ''}>
-                                    <td className="nc-num" style={{ paddingLeft: 9 }}>{r.pos}</td>
+                                    <td className="nc-num" style={{ paddingInlineStart: 9 }}>{r.pos}</td>
                                     <td>{r.team}</td>
                                     <td className="nc-num">{r.pj}</td>
                                     <td className="nc-num">{r.dg > 0 ? `+${r.dg}` : r.dg}</td>

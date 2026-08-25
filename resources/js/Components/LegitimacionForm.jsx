@@ -3,7 +3,7 @@ import { router, usePage } from '@inertiajs/react';
 import { Check, Copy, FileText } from 'lucide-react';
 import { useTranslations } from '../i18n';
 
-const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB' };
+const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB', ar: 'ar-u-nu-latn' };
 
 // Los del plantel primero; abajo, todos los países (ISO 3166-1 alfa-2)
 const FREQUENT = ['RO', 'AR', 'CO', 'TN', 'EG', 'IT', 'ES'];
@@ -55,7 +55,7 @@ function FileField({ label, uploaded, file, onChange, accept = FILE_ACCEPT, erro
             <div className="nc-label">{label}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
                 <label htmlFor={id} className="nc-btn ghost" style={{ width: 'auto', padding: '0 14px', minHeight: 44, display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
-                    <FileText size={15} style={{ marginRight: 6 }} />
+                    <FileText size={15} style={{ marginInlineEnd: 6 }} />
                     {uploaded || file ? t('legitimacion.replace') : t('legitimacion.choose_file')}
                 </label>
                 <input id={id} type="file" accept={accept} style={{ display: 'none' }}

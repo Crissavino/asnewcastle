@@ -36,7 +36,7 @@ export default function LegitimacionPublica({ club, registration, missing, confi
                         </div>
                         {/* Selector de idioma: el link se comparte con jugadores
                             nuevos, que hablan inglés o rumano */}
-                        <div className="nc-role" role="group" aria-label="Language" style={{ marginLeft: 'auto' }}>
+                        <div className="nc-role" role="group" aria-label="Language" style={{ marginInlineStart: 'auto' }}>
                             <button type="button" className={locale === 'en' ? 'on' : ''} onClick={() => setLocale('en')}>
                                 EN
                             </button>

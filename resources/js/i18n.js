@@ -25,4 +25,5 @@ export const LOCALES = [
     { code: 'en', label: 'English' },
     { code: 'ro', label: 'Română' },
     { code: 'es', label: 'Español' },
+    { code: 'ar', label: 'العربية' },
 ];

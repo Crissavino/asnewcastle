@@ -5,7 +5,7 @@ import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
 import { useTranslations } from '../i18n';
 
-const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB' };
+const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB', ar: 'ar-u-nu-latn' };
 const POLL_MS = 8000;
 
 function MvpPoll({ mvp, onClose }) {

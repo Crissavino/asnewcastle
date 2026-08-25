@@ -62,10 +62,10 @@ function ManagerBoard({ roster, publicUrl }) {
                 <div key={r.registration_id ?? `m-${r.member_id}`} style={{ borderTop: '1px solid var(--line, #DBDDD8)', marginTop: 12, paddingTop: 12 }}>
                     <div className="nc-row" style={{ alignItems: 'center' }}>
                         <div style={{ fontWeight: 700, fontSize: 14, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {r.shirt_number != null && <span className="nc-num" style={{ marginRight: 6 }}>{r.shirt_number}</span>}
+                            {r.shirt_number != null && <span className="nc-num" style={{ marginInlineEnd: 6 }}>{r.shirt_number}</span>}
                             {r.name ?? t('legitimacion.guest_unnamed')}
                             {r.guest && (
-                                <span className="nc-meta" style={{ fontSize: 11, marginLeft: 6 }}>· {t('legitimacion.guest')}</span>
+                                <span className="nc-meta" style={{ fontSize: 11, marginInlineStart: 6 }}>· {t('legitimacion.guest')}</span>
                             )}
                         </div>
                         <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>

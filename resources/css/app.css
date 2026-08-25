@@ -44,25 +44,25 @@ body { overscroll-behavior-y: none; }
 .nc-top img { filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
 .nc-eyebrow { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; font-weight: 700; opacity: .85; }
 .nc-h1 { font-size: 24px; line-height: .95; margin: 2px 0 0; text-shadow: 2px 2px 0 rgba(0,0,0,.28); }
-.nc-role { margin-left: auto; display: flex; background: rgba(0,0,0,.28); border-radius: 2px; padding: 2px; }
+.nc-role { margin-inline-start: auto; display: flex; background: rgba(0,0,0,.28); border-radius: 2px; padding: 2px; }
 .nc-role button { border: none; background: transparent; color: rgba(255,255,255,.75); cursor: pointer;
   font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .08em;
   text-transform: uppercase; padding: 6px 8px; border-radius: 2px; }
 .nc-role button.on { background: #fff; color: var(--red-dk); }
 
 /* campanita de notificaciones: vive en el header, panel flotante blanco */
-.nc-bell { margin-left: auto; }
-.nc-bell + .nc-role { margin-left: 8px; }
+.nc-bell { margin-inline-start: auto; }
+.nc-bell + .nc-role { margin-inline-start: 8px; }
 .nc-bell-btn { position: relative; border: none; cursor: pointer; color: #fff;
   background: rgba(0,0,0,.28); width: 38px; height: 38px; border-radius: 2px;
   display: flex; align-items: center; justify-content: center; }
 .nc-bell-btn:active { background: rgba(0,0,0,.42); }
-.nc-bell-badge { position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px;
+.nc-bell-badge { position: absolute; top: -5px; inset-inline-end: -5px; min-width: 17px; height: 17px;
   padding: 0 4px; background: var(--ink); color: #fff; border: 1.5px solid #fff;
   border-radius: 9px; font-size: 10px; font-weight: 700; line-height: 14px; text-align: center; }
 /* Anclado al header (.nc-top es position:relative), no a la campanita, para
    que en mobile no se salga por la izquierda de la pantalla. */
-.nc-notif-panel { position: absolute; top: calc(100% + 9px); right: 14px; z-index: 50;
+.nc-notif-panel { position: absolute; top: calc(100% + 9px); inset-inline-end: 14px; z-index: 50;
   width: min(320px, calc(100vw - 28px)); background: var(--card); color: var(--ink);
   border: 2px solid var(--ink); border-radius: 3px; box-shadow: 6px 6px 0 rgba(0,0,0,.22);
   overflow: hidden; }
@@ -91,7 +91,7 @@ body { overscroll-behavior-y: none; }
 .nc-label { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--stone); font-weight: 700; }
 /* banderín de córner en los títulos de sección de cada tarjeta */
 .nc-card > .nc-label::before, .nc-admin > .nc-label::before { content: ''; display: inline-block;
-  width: 6px; height: 6px; background: var(--red); margin-right: 7px; transform: skewX(-14deg); vertical-align: 1px; }
+  width: 6px; height: 6px; background: var(--red); margin-inline-end: 7px; transform: skewX(-14deg); vertical-align: 1px; }
 .nc-meta { font-size: 13px; color: var(--stone); line-height: 1.45; }
 
 .nc-rsvp { display: flex; gap: 7px; margin-top: 14px; }
@@ -132,10 +132,10 @@ body { overscroll-behavior-y: none; }
 
 /* tabla */
 .nc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.nc-table th { font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--stone); text-align: right; padding: 0 0 8px; font-weight: 700; }
-.nc-table th:nth-child(2) { text-align: left; }
-.nc-table td { padding: 9px 0; border-top: 1px solid var(--line); text-align: right; }
-.nc-table td:nth-child(2), .nc-table th:nth-child(2) { text-align: left; padding-left: 12px; }
+.nc-table th { font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--stone); text-align: end; padding: 0 0 8px; font-weight: 700; }
+.nc-table th:nth-child(2) { text-align: start; }
+.nc-table td { padding: 9px 0; border-top: 1px solid var(--line); text-align: end; }
+.nc-table td:nth-child(2), .nc-table th:nth-child(2) { text-align: start; padding-inline-start: 12px; }
 .nc-table tr.us td { background: rgba(210,34,51,.07); color: var(--red-dk); font-weight: 700; }
 .nc-table tr.us td:first-child { box-shadow: inset 4px 0 0 var(--red); }
 
@@ -196,7 +196,7 @@ body { overscroll-behavior-y: none; }
 .nc-bubble .nc-photo:only-child { margin-bottom: 0; }
 .nc-preview { display: flex; align-items: center; gap: 10px; padding: 8px 0 0; }
 .nc-preview img { width: 42px; height: 42px; object-fit: cover; border-radius: 2px; border: 1px solid var(--line); }
-.nc-preview button { margin-left: auto; background: none; border: 1px solid var(--line); border-radius: 2px;
+.nc-preview button { margin-inline-start: auto; background: none; border: 1px solid var(--line); border-radius: 2px;
   width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--stone); }
 .nc-lightbox { position: fixed; inset: 0; z-index: 80; background: rgba(18,18,18,.92);
   display: flex; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; }
@@ -212,7 +212,7 @@ body { overscroll-behavior-y: none; }
 .nc-fab::after { content: ''; position: absolute; inset: -5px; border-radius: 50%;
   border: 2px solid rgba(210,34,51,.55); animation: nc-ping 2s ease-out infinite; pointer-events: none; }
 @keyframes nc-ping { 0% { transform: scale(.92); opacity: .9 } 70%, 100% { transform: scale(1.32); opacity: 0 } }
-.nc-fab > b { position: absolute; top: -4px; right: -6px; background: var(--aqua); color: var(--ink);
+.nc-fab > b { position: absolute; top: -4px; inset-inline-end: -6px; background: var(--aqua); color: var(--ink);
   font-size: 11px; font-weight: 700; border-radius: 2px; padding: 1px 6px; }
 @media (min-width: 768px) { .nc-fab { bottom: 110px; } }
 
@@ -261,7 +261,7 @@ body { overscroll-behavior-y: none; }
 .nc-progress i { flex: 1; height: 3px; background: var(--line); }
 .nc-progress i.on { background: var(--red); }
 .nc-q { font-size: 25px; line-height: 1.03; margin: 6px 0 20px; }
-.nc-opt { width: 100%; text-align: left; padding: 15px 16px; margin-bottom: 8px; cursor: pointer;
+.nc-opt { width: 100%; text-align: start; padding: 15px 16px; margin-bottom: 8px; cursor: pointer;
   background: #fff; border: 1px solid var(--line); border-radius: 2px; color: var(--ink);
   font-family: 'Archivo', sans-serif; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
 .nc-opt.on { border-color: var(--red); background: rgba(210,34,51,.06); color: var(--red-dk); font-weight: 600; }
@@ -320,7 +320,7 @@ a.nc-btn { text-decoration: none; }
 
 /* fila-botón de disponibilidad en el perfil */
 button.nc-day { width: 100%; background: none; border: none; border-top: 1px solid var(--line);
-  cursor: pointer; font-family: 'Archivo', sans-serif; color: var(--ink); text-align: left;
+  cursor: pointer; font-family: 'Archivo', sans-serif; color: var(--ink); text-align: start;
   transition: opacity .12s; min-height: 44px; }
 
 /* error de validación */
@@ -417,7 +417,7 @@ button.nc-day { width: 100%; background: none; border: none; border-top: 1px sol
   .nc-side-league { display: block; font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase;
     color: rgba(255,255,255,.5); font-weight: 700; margin-top: 4px; }
   .nc-side nav a { flex-direction: row; gap: 12px; padding: 12px 18px; font-size: 11px; }
-  .nc-side-user { justify-content: flex-start; padding-left: 18px; }
+  .nc-side-user { justify-content: flex-start; padding-inline-start: 18px; }
   .nc-side-user span { display: block; font-size: 12px; font-weight: 600; }
 
   .nc-h1 { font-size: 30px; }

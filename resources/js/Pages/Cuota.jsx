@@ -6,7 +6,7 @@ import Kit from '../Components/Kit';
 import { useTranslations } from '../i18n';
 import { isNative, openCheckout } from '../native';
 
-const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB' };
+const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB', ar: 'ar-u-nu-latn' };
 
 function money(cents) {
     return cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2);
@@ -192,7 +192,7 @@ function FeeSettings({ config, currency }) {
                         </div>
                     </div>
                     {(m.subscription_status === 'active' || m.subscription_status === 'past_due') && (
-                        <div className="nc-row" style={{ paddingLeft: 34, marginTop: -2, marginBottom: 6 }}>
+                        <div className="nc-row" style={{ paddingInlineStart: 34, marginTop: -2, marginBottom: 6 }}>
                             <span className="nc-meta" style={{ fontSize: 11, color: m.subscription_status === 'active' ? 'var(--aqua-dk)' : 'var(--red-dk)' }}>
                                 {m.subscription_status === 'active' ? t('cuota.autopay_on') : t('cuota.autopay_failed')}
                             </span>
@@ -354,7 +354,7 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
                         </span>
                     </div>
                     {Object.entries(resumen.by_category).map(([cat, cents]) => (
-                        <div key={cat} className="nc-row" style={{ paddingLeft: 12 }}>
+                        <div key={cat} className="nc-row" style={{ paddingInlineStart: 12 }}>
                             <span className="nc-meta" style={{ fontSize: 12 }}>{t(`exp.${cat}`)}</span>
                             <span className="nc-num nc-meta" style={{ fontSize: 12 }}>{money(cents)} {currency}</span>
                         </div>
@@ -376,7 +376,7 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
                                 </span>
                                 <div className="nc-kits" style={{ marginTop: 9 }}>
                                     {group.map((p) => (
-                                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 6, marginRight: 10 }}>
+                                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 6, marginInlineEnd: 10 }}>
                                             <Kit n={p.shirt_number} size="sm" ghost={status === 'pending'} />
                                             <span style={{ fontSize: 12 }}>{(p.name ?? '').split(' ')[0]}</span>
                                         </div>
@@ -400,7 +400,7 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
                                 <div key={g.id} className="nc-row">
                                     <div style={{ minWidth: 0 }}>
                                         <span style={{ fontSize: 14 }}>{t(`exp.${g.category}`)}</span>
-                                        <span className="nc-meta" style={{ fontSize: 12, marginLeft: 6 }}>
+                                        <span className="nc-meta" style={{ fontSize: 12, marginInlineStart: 6 }}>
                                             {g.event ? `vs ${g.event}` : g.description ?? ''}
                                         </span>
                                     </div>

@@ -11,12 +11,26 @@ createInertiaApp({
         return pages[`./Pages/${name}.jsx`];
     },
     setup({ el, App, props }) {
+        syncDir(props.initialPage);
         createRoot(el).render(<App {...props} />);
     },
     progress: {
         color: '#D22233',
     },
 });
+
+// Dirección del documento según el idioma. El árabe es RTL; el resto LTR. Como
+// el cambio de idioma es una navegación de Inertia (sin recarga entera), el dir
+// del <html> que puso Blade quedaría viejo: lo re-sincronizamos en cada visita.
+function syncDir(page) {
+    const locale = page?.props?.locale;
+    if (!locale) {
+        return;
+    }
+    document.documentElement.lang = locale;
+    document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
+}
+router.on('navigate', (event) => syncDir(event.detail.page));
 
 // Altura REAL del viewport: Safari iOS mueve la barra de abajo y el teclado,
 // y 100vh/100dvh no siempre la siguen. visualViewport no miente nunca.
