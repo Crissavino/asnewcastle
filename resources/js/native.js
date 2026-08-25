@@ -21,3 +21,22 @@ export async function openCheckout(url) {
     }
     window.location.href = url;
 }
+
+/**
+ * Abre una URL externa (p. ej. la descarga del APK nuevo) en el navegador del
+ * sistema. Resuelve rutas relativas contra el origen actual para que funcione
+ * dentro del webview de Capacitor.
+ */
+export async function openExternal(url) {
+    const abs = /^https?:\/\//i.test(url) ? url : window.location.origin + url;
+    if (Capacitor.isNativePlatform()) {
+        try {
+            const { Browser } = await import('@capacitor/browser');
+            await Browser.open({ url: abs });
+            return;
+        } catch (e) {
+            // sin el plugin Browser, caemos a la navegación normal
+        }
+    }
+    window.location.href = abs;
+}

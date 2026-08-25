@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { CalendarDays, ListOrdered, MessageSquare, Wallet, User } from 'lucide-react';
+import AndroidUpdate from '../Components/AndroidUpdate';
 import Crest from '../Components/Crest';
 import Kit from '../Components/Kit';
 import NotificationBell from '../Components/NotificationBell';
@@ -36,6 +37,7 @@ export default function AppLayout({ tab, eyebrow, hideNav = false, children }) {
     return (
         <div className="nc-root">
             <Head title={title} />
+            <AndroidUpdate />
             <div className="nc-shell">
                 {/* Riel / sidebar: solo tablet y desktop */}
                 <aside className="nc-side">

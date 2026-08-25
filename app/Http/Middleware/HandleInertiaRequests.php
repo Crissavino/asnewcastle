@@ -64,6 +64,14 @@ class HandleInertiaRequests extends Middleware
                 'status' => fn () => $request->session()->get('status'),
                 'invite_url' => fn () => $request->session()->get('invite_url'),
             ],
+
+            // Control de versión del APK: la app nativa Android compara su
+            // versionCode con éste y, si quedó atrás, propone bajar el APK nuevo
+            // (el sideload no se auto-actualiza como Play/TestFlight).
+            'android_update' => [
+                'latest_code' => (int) config('onboarding.apk_version_code'),
+                'apk_url' => config('onboarding.apk_url'),
+            ],
         ];
     }
 
