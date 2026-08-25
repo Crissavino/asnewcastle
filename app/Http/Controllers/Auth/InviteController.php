@@ -14,7 +14,7 @@ use Inertia\Response;
 class InviteController extends Controller
 {
     /**
-     * El manager genera un link firmado que vence a los 30 días. Es un link del
+     * El manager genera un link firmado que vence a los 7 días. Es un link del
      * club (no atado a un número): sirve para todo el plantel, se pega una vez en
      * el grupo y cada jugador entra con su número. Es la única puerta de entrada
      * al club: no hay registro abierto.
@@ -25,7 +25,7 @@ class InviteController extends Controller
 
         abort_unless($current->member()?->isManager(), 403);
 
-        $url = URL::temporarySignedRoute('invitacion', now()->addDays(30), [
+        $url = URL::temporarySignedRoute('invitacion', now()->addDays(7), [
             'club' => $current->club()->slug,
         ]);
 
