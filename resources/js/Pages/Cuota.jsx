@@ -1,5 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
-import { Bell, Shield } from 'lucide-react';
+import { Bell, Check, Copy, Shield } from 'lucide-react';
 import { useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
@@ -10,6 +10,60 @@ const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB', ar: 'ar-u-nu-latn'
 
 function money(cents) {
     return cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2);
+}
+
+// Pago de la cuota por transferencia: se muestra cuando el club no tiene pago
+// online (Stripe). El jugador transfiere al IBAN del club poniendo su nombre y
+// el mes en el concepto; el manager marca la cuota pagada al recibirla.
+function BankTransfer({ bank, amount, currency, reference }) {
+    const { t } = useTranslations();
+    const [copied, setCopied] = useState('');
+
+    const copy = async (value, which) => {
+        try {
+            await navigator.clipboard.writeText(value);
+            setCopied(which);
+            setTimeout(() => setCopied(''), 1500);
+        } catch { /* sin permiso de clipboard: el dato queda visible para copiar a mano */ }
+    };
+
+    return (
+        <div className="nc-transfer" style={{ marginTop: 16 }}>
+            <div className="nc-strong">{t('cuota.transfer_title')}</div>
+            <p className="nc-meta" style={{ margin: '4px 0 12px' }}>
+                {t('cuota.transfer_hint', { amount, currency })}
+            </p>
+
+            <div className="nc-transfer-row">
+                <div>
+                    <div className="nc-label">{t('cuota.transfer_iban')}</div>
+                    <span className="nc-num" style={{ fontSize: 13, letterSpacing: 0.5 }}>{bank.iban}</span>
+                </div>
+                <button type="button" className="nc-mini" onClick={() => copy(bank.iban.replaceAll(' ', ''), 'iban')}>
+                    {copied === 'iban' ? <Check size={13} /> : <Copy size={13} />} {copied === 'iban' ? t('cuota.copied') : t('cuota.copy')}
+                </button>
+            </div>
+
+            <div className="nc-transfer-row">
+                <div>
+                    <div className="nc-label">{t('cuota.transfer_holder')}</div>
+                    <span style={{ fontSize: 13 }}>{bank.holder}</span>
+                </div>
+            </div>
+
+            <div className="nc-transfer-row">
+                <div>
+                    <div className="nc-label">{t('cuota.transfer_reference')}</div>
+                    <span style={{ fontSize: 13 }}>{reference}</span>
+                </div>
+                <button type="button" className="nc-mini" onClick={() => copy(reference, 'ref')}>
+                    {copied === 'ref' ? <Check size={13} /> : <Copy size={13} />} {copied === 'ref' ? t('cuota.copied') : t('cuota.copy')}
+                </button>
+            </div>
+
+            <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.transfer_note')}</p>
+        </div>
+    );
 }
 
 function ExpenseSheet({ categorias, eventos, currency, onClose }) {
@@ -206,9 +260,9 @@ function FeeSettings({ config, currency }) {
     );
 }
 
-export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, resumen, subscription, gastos, categorias, eventos, config }) {
+export default function Cuota({ currency, stripe_ready, bank, my_due, caja, plantel, resumen, subscription, gastos, categorias, eventos, config }) {
     const { t, locale } = useTranslations();
-    const { member, flash, errors } = usePage().props;
+    const { auth, member, flash, errors } = usePage().props;
     const [claimed, setClaimed] = useState(false);
     const [addingExpense, setAddingExpense] = useState(false);
     const isManager = member?.role === 'manager';
@@ -319,6 +373,13 @@ export default function Cuota({ currency, stripe_ready, my_due, caja, plantel, r
                             <button className={`nc-btn${canSubscribe ? ' dark' : ''}`} style={{ marginTop: 16 }} onClick={pay}>
                                 {t('cuota.pay', { amount: money(my_due.amount_cents), currency })}
                             </button>
+                        ) : bank?.iban ? (
+                            <BankTransfer
+                                bank={bank}
+                                amount={money(my_due.amount_cents)}
+                                currency={currency}
+                                reference={`${auth?.user?.name ?? ''} · ${periodLabel}`.trim()}
+                            />
                         ) : (
                             <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.not_ready')}</p>
                         )

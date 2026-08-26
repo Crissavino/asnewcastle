@@ -293,6 +293,12 @@ a.nc-btn { text-decoration: none; }
 .nc-code-tag { font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 700;
   letter-spacing: .1em; text-transform: uppercase; color: var(--stone); }
 
+/* cuota por transferencia */
+.nc-transfer { background: var(--paper); border: 1px solid var(--line); border-radius: 4px; padding: 14px; }
+.nc-transfer-row { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 9px 0; border-top: 1px solid var(--line); }
+.nc-transfer-row .nc-label { margin-bottom: 2px; }
+
 /* sheets */
 .nc-sheet { position: fixed; inset: 0; background: rgba(18,18,18,.55); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
 /* max-height sobre el viewport REAL (--app-vh): con 92vh de iOS el sheet quedaba

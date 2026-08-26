@@ -34,7 +34,13 @@ class CuotaController extends Controller
 
         $props = [
             'currency' => $club->currency,
-            'stripe_ready' => $club->stripe_onboarded_at !== null,
+            'stripe_ready' => $club->stripe_onboarded_at !== null && config('services.stripe.enabled'),
+            // Datos del club para pagar la cuota por transferencia cuando no hay
+            // pago online (Stripe). El manager marca la cuota pagada al recibirla.
+            'bank' => [
+                'iban' => config('legitimacion.iban'),
+                'holder' => config('legitimacion.iban_holder'),
+            ],
             'my_due' => $myDue ? [
                 'id' => $myDue->id,
                 'amount_cents' => $myDue->amount_cents,

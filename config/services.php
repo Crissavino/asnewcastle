@@ -49,6 +49,10 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
         // Comisión de la plataforma en basis points (100 = 1%)
         'application_fee_bps' => (int) env('STRIPE_APPLICATION_FEE_BPS', 0),
+        // Interruptor para apagar los pagos con Stripe en la app sin borrar datos
+        // ni secretos (p. ej. si la cuenta se cierra): STRIPE_ENABLED=false hace
+        // que la Cuota ofrezca transferencia bancaria en vez del checkout.
+        'enabled' => filter_var(env('STRIPE_ENABLED', true), FILTER_VALIDATE_BOOL),
     ],
 
     'whatsapp' => [
