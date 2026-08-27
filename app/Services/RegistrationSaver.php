@@ -26,10 +26,10 @@ class RegistrationSaver
             'federated_details' => ['nullable', 'string', 'max:500'],
             'payment_marked' => ['nullable', 'boolean'],
             'consent' => ['nullable', 'boolean'],
-            'photo' => ['nullable', 'image', 'max:5120'],
-            'id_doc' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
-            'passport' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
-            'payment_proof' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
+            'photo' => ['nullable', 'image', 'max:30720'],
+            'id_doc' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:30720'],
+            'passport' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:30720'],
+            'payment_proof' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:30720'],
         ]);
 
         // Guardado parcial: solo pisa lo que vino en el request
