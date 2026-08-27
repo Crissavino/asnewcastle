@@ -99,6 +99,7 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
     const { member, flash } = usePage().props;
     const [copied, setCopied] = useState(false);
     const [editing, setEditing] = useState(false);
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
     const isManager = member?.role === 'manager';
 
     const generateInvite = () => {
@@ -285,6 +286,22 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
             <button className="nc-btn ghost" onClick={() => router.post(route('salir'))}>
                 {t('auth.logout')}
             </button>
+
+            {/* Eliminar cuenta y datos (requisito de Google Play). Doble confirmación. */}
+            {confirmingDelete ? (
+                <div className="nc-card" style={{ borderColor: 'var(--red)', marginTop: 14 }}>
+                    <div className="nc-strong" style={{ color: 'var(--red-dk)' }}>{t('account.delete_title')}</div>
+                    <p className="nc-meta" style={{ margin: '6px 0 12px' }}>{t('account.delete_confirm')}</p>
+                    <button className="nc-btn" onClick={() => router.delete(route('cuenta.eliminar'))}>
+                        {t('account.delete_yes')}
+                    </button>
+                    <button className="nc-skip" onClick={() => setConfirmingDelete(false)}>{t('account.delete_cancel')}</button>
+                </div>
+            ) : (
+                <button type="button" className="nc-skip" style={{ color: 'var(--red-dk)', marginTop: 4 }} onClick={() => setConfirmingDelete(true)}>
+                    {t('account.delete')}
+                </button>
+            )}
 
             {editing && (
                 <EditSheet

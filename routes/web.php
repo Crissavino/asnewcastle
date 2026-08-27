@@ -80,6 +80,9 @@ Route::get('/invitacion/{club:slug}', [InviteController::class, 'accept'])
 Route::middleware('auth')->group(function () {
     Route::post('/salir', [OtpController::class, 'logout'])->name('salir');
 
+    // Eliminar la cuenta y todos los datos (requisito de Google Play)
+    Route::delete('/cuenta', [\App\Http\Controllers\AccountController::class, 'destroy'])->name('cuenta.eliminar');
+
     // Registro del token de push del dispositivo (la app nativa lo manda al
     // arrancar). Es del usuario, no del club: va fuera de SetActiveClub.
     Route::post('/push/token', [PushTokenController::class, 'store'])->name('push.token');
