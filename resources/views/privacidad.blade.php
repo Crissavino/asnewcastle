@@ -28,7 +28,7 @@
         <p>A.S New Castle · ASOCIAȚIA SPORTIVĂ NEW CASTLE</p>
     </header>
     <main>
-        <p class="meta">Última actualización: 22 de agosto de 2026</p>
+        <p class="meta">Última actualización: 27 de agosto de 2026</p>
 
         <p>Esta política explica qué datos maneja la aplicación <strong>A.S New Castle</strong> (la «App»), operada por
         <strong>ASOCIAȚIA SPORTIVĂ NEW CASTLE</strong> (el «Club»), asociación deportiva sin fines de lucro registrada en
@@ -65,14 +65,14 @@
         </ul>
         <p>Tus datos solo son visibles para los miembros de tu propio club. Tu número de teléfono nunca se muestra a otros jugadores.</p>
 
-        <h2>Conservación</h2>
-        <p>Conservamos tus datos mientras seas miembro de un club en la App. Podés pedir que borremos tu cuenta y tus datos en cualquier momento escribiéndonos.</p>
+        <h2>Conservación y borrado de tus datos</h2>
+        <p>Conservamos tus datos mientras seas miembro de un club en la App. Podés borrar tu cuenta y todos tus datos vos mismo, en cualquier momento y de forma inmediata, desde <strong>Perfil → Eliminar mi cuenta</strong> dentro de la App. Al hacerlo se eliminan tu perfil, tus confirmaciones de asistencia, tus cuotas y pagos, tus votaciones y calificaciones, y los tokens de notificación; tus mensajes del vestuario se anonimizan. También podés pedirnos el borrado por email a <a href="mailto:avocode.srl@gmail.com">avocode.srl@gmail.com</a>.</p>
 
         <h2>Seguridad</h2>
         <p>La comunicación con la App está cifrada (HTTPS). El acceso a los datos de cada club está aislado del resto. Aun así, ningún sistema es 100% infalible.</p>
 
         <h2>Tus derechos</h2>
-        <p>Podés acceder, corregir o eliminar tus datos. Para ejercerlos, o para borrar tu cuenta, escribinos a
+        <p>Podés acceder, corregir o eliminar tus datos. El borrado de la cuenta está disponible directamente en la App (<strong>Perfil → Eliminar mi cuenta</strong>); para cualquier otro pedido escribinos a
         <a href="mailto:avocode.srl@gmail.com">avocode.srl@gmail.com</a>.</p>
 
         <h2>Menores</h2>
