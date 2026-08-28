@@ -43,6 +43,17 @@ class EstadoLanzamiento extends Command
         }
 
         $this->newLine();
+        $this->info('DISPOSITIVOS (para push · usuarios distintos con token):');
+        $devices = DB::table('device_tokens')
+            ->selectRaw('platform, count(distinct user_id) as usuarios, count(*) as tokens')
+            ->groupBy('platform')
+            ->get();
+        foreach ($devices as $d) {
+            $this->line(sprintf('  %-10s %d usuarios (%d tokens)', $d->platform, $d->usuarios, $d->tokens));
+        }
+        $this->line('  usuarios únicos con algún dispositivo: '.DB::table('device_tokens')->distinct()->count('user_id'));
+
+        $this->newLine();
         $this->info('DATA DE ACTIVIDAD (a borrar en la limpieza):');
         foreach (['events', 'attendances', 'messages', 'mvp_votes', 'player_ratings', 'expenses', 'dues', 'payments', 'registrations'] as $t) {
             $this->line(sprintf('  %-16s %d', $t, DB::table($t)->count()));
