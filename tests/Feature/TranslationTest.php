@@ -39,6 +39,16 @@ it('detecta rumano y español localmente, sin API', function () {
         ->and(LocaleGuesser::guess('Vamos que ganamos hoy'))->toBe('es');
 });
 
+it('un idioma ajeno al plantel queda como desconocido, no como español', function () {
+    // Holandés (el caso de Joeri): sin señal ro/es/en → 'und'. Así el botón
+    // de traducir aparece igual para un lector que ve la app en español.
+    expect(LocaleGuesser::guess('Jongens, goede wedstrijd vandaag'))->toBe('und');
+    // Árabe por rango unicode.
+    expect(LocaleGuesser::guess('مرحبا شباب، مباراة اليوم'))->toBe('ar');
+    // Inglés por palabras comunes.
+    expect(LocaleGuesser::guess('see you at the match tomorrow'))->toBe('en');
+});
+
 it('guarda el idioma detectado al enviar un mensaje', function () {
     $member = Member::factory()->create();
 
