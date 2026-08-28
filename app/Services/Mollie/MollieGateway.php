@@ -111,11 +111,13 @@ class MollieGateway
             return;
         }
 
-        $this->mollie->subscriptions->cancelForId(
-            $member->mollie_customer_id,
-            $member->mollie_subscription_id,
-            $this->testmode(),
-        );
+        $this->cancelSubscriptionById($member->mollie_customer_id, $member->mollie_subscription_id);
+    }
+
+    /** Cancela una suscripción por ids (para el job en segundo plano). */
+    public function cancelSubscriptionById(string $customerId, string $subscriptionId): void
+    {
+        $this->mollie->subscriptions->cancelForId($customerId, $subscriptionId, $this->testmode());
     }
 
     /** Trae un pago por id (para verificar el estado desde el webhook). */

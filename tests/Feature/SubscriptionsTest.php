@@ -1,9 +1,11 @@
 <?php
 
+use App\Jobs\CancelMollieSubscription;
 use App\Models\Club;
 use App\Models\Due;
 use App\Models\Member;
 use App\Services\Stripe\StripeGateway;
+use Illuminate\Support\Facades\Queue;
 use App\Services\WhatsApp\WhatsAppChannel;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\FakeStripeGateway;
@@ -114,4 +116,27 @@ it('la pantalla de cuota comparte el estado de suscripción del jugador', functi
             ->where('subscription.discount_cents', 3000)
             ->where('subscription.status', null)
         );
+});
+
+it('el manager corta el débito de Mollie al toque (cancelación en 2° plano)', function () {
+    Queue::fake();
+    $manager = Member::factory()->manager()->create();
+    $player = Member::factory()->for($manager->club)->create([
+        'subscription_status' => 'active',
+        'mollie_customer_id' => 'cst_1',
+        'mollie_subscription_id' => 'sub_moll_1',
+    ]);
+
+    $this->actingAs($manager->user)
+        ->post("/plantel/{$player->id}/suscripcion/cancelar")
+        ->assertRedirect();
+
+    // La app refleja el corte de inmediato, sin esperar la API de Mollie
+    expect($player->fresh()->subscription_status)->toBe('canceled');
+
+    // Y la baja real en Mollie queda encolada con el id exacto
+    Queue::assertPushed(
+        CancelMollieSubscription::class,
+        fn ($job) => $job->memberId === $player->id && $job->subscriptionId === 'sub_moll_1',
+    );
 });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Due;
 use App\Models\Event;
 use App\Models\Expense;
+use App\Jobs\CancelMollieSubscription;
 use App\Models\Member;
 use App\Services\Mollie\MollieGateway;
 use App\Services\Stripe\StripeGateway;
@@ -329,14 +330,20 @@ class CuotaController extends Controller
     }
 
     /** Solo el delegado corta el débito automático de un jugador. */
-    public function cancelSubscription(Member $member, MollieGateway $mollie, StripeGateway $stripe): BaseResponse
+    public function cancelSubscription(Member $member, StripeGateway $stripe): BaseResponse
     {
         Gate::authorize('create', Event::class);
         abort_unless($member->club_id === app(CurrentClub::class)->id(), 404);
 
         if ($member->mollie_subscription_id) {
-            $mollie->cancelSubscription($member);
-            $member->update(['subscription_status' => 'canceled', 'mollie_subscription_id' => null]);
+            // Respuesta instantánea: marcamos cancelado ya y avisamos a Mollie en
+            // segundo plano (el round-trip a su API no bloquea la pantalla).
+            CancelMollieSubscription::dispatch(
+                $member->id,
+                $member->mollie_customer_id,
+                $member->mollie_subscription_id,
+            );
+            $member->update(['subscription_status' => 'canceled']);
         } elseif ($member->stripe_subscription_id) {
             $stripe->cancelSubscription($member);
             $member->update(['subscription_status' => 'canceled', 'stripe_subscription_id' => null]);
