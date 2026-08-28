@@ -47,12 +47,17 @@ class Club extends Model
 
     /**
      * Miembros activos VISIBLES del club: excluye a los ocultos (cuenta de
-     * revisión). Todo listado del plantel pasa por acá, así el oculto no
-     * aparece en convocatorias, cuotas, estadísticas ni vestuario. El acceso
-     * del propio oculto se resuelve por User::activeMembers(), que no filtra.
+     * revisión) y a los que todavía no completaron el alta (sin dorsal → sin
+     * nombre/puesto tampoco, porque el wizard setea todo junto). Todo listado
+     * del plantel pasa por acá, así ni el oculto ni el que quedó a medias
+     * aparecen en convocatorias, cuotas, estadísticas ni vestuario. El acceso
+     * del propio member se resuelve por User::activeMembers(), que no filtra.
      */
     public function activeMembers(): HasMany
     {
-        return $this->members()->whereNull('left_at')->where('members.hidden', false);
+        return $this->members()
+            ->whereNull('left_at')
+            ->where('members.hidden', false)
+            ->whereNotNull('shirt_number');
     }
 }

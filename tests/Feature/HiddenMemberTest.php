@@ -24,6 +24,17 @@ it('un miembro oculto no aparece en el plantel pero conserva su acceso', functio
     $this->actingAs($hidden->user)->get('/agenda')->assertOk();
 });
 
+it('un miembro que se logueó pero no completó el alta no aparece en el plantel', function () {
+    $manager = Member::factory()->manager()->create();
+    Member::factory()->for($manager->club)->create(); // completo
+    Member::factory()->incomplete()->for($manager->club)->create(); // sin dorsal (a medias)
+
+    // El manager ve manager + el completo, nunca al que quedó a medias
+    $this->actingAs($manager->user)
+        ->get('/perfil')
+        ->assertInertia(fn (Assert $page) => $page->has('roster', 2));
+});
+
 it('las cuotas mensuales no incluyen al miembro oculto', function () {
     $manager = Member::factory()->manager()->create();
     Member::factory()->for($manager->club)->create();
