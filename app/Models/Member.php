@@ -27,6 +27,7 @@ class Member extends Model
         'subscription_status',
         'mollie_customer_id',
         'mollie_subscription_id',
+        'vestuario_read_at',
         'joined_at',
         'left_at',
     ];
@@ -37,6 +38,7 @@ class Member extends Model
             'availability' => 'array',
             'joined_at' => 'datetime',
             'left_at' => 'datetime',
+            'vestuario_read_at' => 'datetime',
             'shirt_number' => 'integer',
         ];
     }

@@ -464,5 +464,6 @@
     "legitimacion.id_doc_hint": "Rumanos: el buletin. Extranjeros: el permiso de residencia, donde figura tu CNP.",
     "legitimacion.thanks_title": "¡Listo! Gracias por tus datos",
     "legitimacion.thanks_text": "Tu ficha está completa. El delegado presenta tu documentación en la Federación y quedás legitimado para la 2026-27. Los documentos se borran a los 90 días.",
-    "legitimacion.edit": "Revisar o corregir mis datos"
+    "legitimacion.edit": "Revisar o corregir mis datos",
+    "push.vestuario_title": "💬 Vestuario"
 }

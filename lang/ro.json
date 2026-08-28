@@ -464,5 +464,6 @@
     "legitimacion.id_doc_hint": "Români: buletinul. Străini: permisul de ședere, cel pe care apare CNP-ul.",
     "legitimacion.thanks_title": "Gata! Mulțumim pentru date",
     "legitimacion.thanks_text": "Fișa ta e completă. Delegatul depune documentele la Federație și ești legitimat pentru 2026-27. Documentele se șterg după 90 de zile.",
-    "legitimacion.edit": "Verifică sau corectează datele"
+    "legitimacion.edit": "Verifică sau corectează datele",
+    "push.vestuario_title": "💬 Vestiar"
 }

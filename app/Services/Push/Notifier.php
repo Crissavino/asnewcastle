@@ -4,6 +4,7 @@ namespace App\Services\Push;
 
 use App\Models\DeviceToken;
 use App\Models\Event;
+use App\Models\Message;
 use Illuminate\Support\Collection;
 
 /**
@@ -50,6 +51,43 @@ class Notifier
             $invalid = $this->sender->send($tokens, $title, $body, [
                 'url' => '/agenda',
                 'event_id' => (string) $event->id,
+            ]);
+
+            if ($invalid) {
+                DeviceToken::whereIn('token', $invalid)->delete();
+            }
+        }
+    }
+
+    /**
+     * Push de un mensaje del vestuario a los destinatarios ya filtrados (los que
+     * corresponde avisar). Título por idioma; cuerpo = "Autor: texto" (o 📷).
+     */
+    public function vestuario(Message $message, Collection $recipients): void
+    {
+        $authorName = $message->member?->user?->name ?? '';
+        $author = strtok($authorName, ' ') ?: $authorName;
+
+        $text = trim((string) $message->body) !== '' ? $message->body : '📷';
+        $preview = mb_strlen($text) > 90 ? mb_substr($text, 0, 89).'…' : $text;
+        $body = trim($author.': '.$preview, ': ');
+
+        $byLocale = $recipients
+            ->filter(fn ($m) => $m->user !== null)
+            ->groupBy(fn ($m) => in_array($m->user->locale, ['es', 'ro', 'en', 'ar'], true) ? $m->user->locale : 'en');
+
+        foreach ($byLocale as $locale => $members) {
+            $title = __('push.vestuario_title', [], $locale);
+
+            $tokens = DeviceToken::whereIn('user_id', $members->pluck('user.id')->all())->pluck('token')->all();
+
+            if (empty($tokens)) {
+                continue;
+            }
+
+            $invalid = $this->sender->send($tokens, $title, $body, [
+                'url' => '/vestuario',
+                'message_id' => (string) $message->id,
             ]);
 
             if ($invalid) {

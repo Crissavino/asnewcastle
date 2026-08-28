@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\NotifyVestuarioMessage;
 use App\Models\Event;
 use App\Models\Message;
 use App\Services\Translation\LocaleGuesser;
 use App\Support\CurrentClub;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,6 +20,10 @@ class VestuarioController extends Controller
     {
         $current = app(CurrentClub::class);
         $me = $current->member();
+
+        // Entrar/pollear el vestuario = "leí hasta acá". Update directo para no
+        // tocar updated_at en cada poll (cada 8s). Habilita la push de "1er sin leer".
+        DB::table('members')->where('id', $me->id)->update(['vestuario_read_at' => now()]);
 
         $messages = Message::query()
             ->with('member.user:id,name')
@@ -66,7 +72,7 @@ class VestuarioController extends Controller
 
         $body = $validated['body'] ?? '';
 
-        Message::create([
+        $message = Message::create([
             'member_id' => app(CurrentClub::class)->member()->id,
             'body' => $body,
             // Detección local (sin API) para saber si ofrecer traducir después
@@ -74,6 +80,9 @@ class VestuarioController extends Controller
             'attachment_path' => $path,
             'is_system' => false,
         ]);
+
+        // Push al plantel, solo al que estaba al día (1 por primer mensaje sin leer).
+        NotifyVestuarioMessage::dispatch($message->id);
 
         return back();
     }
