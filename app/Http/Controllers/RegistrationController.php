@@ -90,7 +90,7 @@ class RegistrationController extends Controller
             'Pașaport: '.($registration->passport_number ?: '—'),
             'Cluburi anterioare în România: '.($registration->previous_clubs ?: '—'),
             'Legitimat anterior: '.($registration->played_federated ? 'DA — '.$registration->federated_details : 'NU'),
-            'Plată 195 RON: '.($registration->payment_marked ? 'DA' : 'NU'),
+            'Plată '.config('legitimacion.fee').': '.($registration->payment_marked ? 'DA' : 'NU'),
         ]));
 
         foreach (Registration::fileFields() as $field => $column) {

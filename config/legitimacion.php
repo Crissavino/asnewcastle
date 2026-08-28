@@ -5,7 +5,7 @@
 return [
     'season' => '2026-27',
     'deadline' => '2026-08-25',
-    'fee' => '195 RON',
+    'fee' => '220 RON',
     // Datos bancarios del club (BCR). Se usan para el pago de legitimación y
     // también para la cuota por transferencia (pantalla Cuota).
     'iban' => 'RO59 RNCB 0077 1851 2329 0001',
