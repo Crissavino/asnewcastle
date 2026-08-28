@@ -55,6 +55,16 @@ return [
         'enabled' => filter_var(env('STRIPE_ENABLED', true), FILTER_VALIDATE_BOOL),
     ],
 
+    // Mollie: cobro de cuotas en la cuenta PROPIA del club (no Connect).
+    // MOLLIE_KEY puede ser una API key clásica (test_/live_) o un access token
+    // (access_...); en este último caso hace falta el profile_id + testmode.
+    'mollie' => [
+        'key' => env('MOLLIE_KEY'),
+        'profile_id' => env('MOLLIE_PROFILE_ID'),
+        'testmode' => filter_var(env('MOLLIE_TESTMODE', false), FILTER_VALIDATE_BOOL),
+        'enabled' => filter_var(env('MOLLIE_ENABLED', false), FILTER_VALIDATE_BOOL),
+    ],
+
     'whatsapp' => [
         // Avisos del club (convocatorias, recordatorios, cuotas)
         'channel' => env('WHATSAPP_CHANNEL', env('OTP_CHANNEL', 'twilio')),

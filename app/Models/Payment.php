@@ -12,7 +12,9 @@ class Payment extends Model
 
     protected $fillable = [
         'due_id',
+        'provider',
         'stripe_payment_intent_id',
+        'mollie_payment_id',
         'amount_cents',
         'application_fee_cents',
         'status',

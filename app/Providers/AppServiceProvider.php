@@ -14,6 +14,7 @@ use App\Services\Translation\AzureTranslator;
 use App\Services\Translation\NullTranslator;
 use App\Services\Translation\Translator;
 use Stripe\StripeClient;
+use Mollie\Api\MollieApiClient;
 use App\Services\WhatsApp\LogWhatsAppChannel;
 use App\Services\WhatsApp\TwilioWhatsAppChannel;
 use App\Services\WhatsApp\WhatsAppChannel;
@@ -37,6 +38,21 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(StripeGateway::class, function () {
             return new RealStripeGateway(new StripeClient(config('services.stripe.secret')));
+        });
+
+        // Cliente Mollie: la key clásica (test_/live_) va por setApiKey; el access
+        // token (access_...) por setAccessToken (+ profile_id/testmode en cada llamada).
+        $this->app->singleton(MollieApiClient::class, function () {
+            $client = new MollieApiClient();
+            $key = (string) config('services.mollie.key');
+
+            if ($key !== '') {
+                str_starts_with($key, 'access_')
+                    ? $client->setAccessToken($key)
+                    : $client->setApiKey($key);
+            }
+
+            return $client;
         });
 
         $this->app->bind(PushSender::class, function () {

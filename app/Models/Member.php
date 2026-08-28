@@ -25,6 +25,8 @@ class Member extends Model
         'stripe_customer_id',
         'stripe_subscription_id',
         'subscription_status',
+        'mollie_customer_id',
+        'mollie_subscription_id',
         'joined_at',
         'left_at',
     ];
