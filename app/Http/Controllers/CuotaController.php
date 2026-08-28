@@ -6,6 +6,7 @@ use App\Models\Due;
 use App\Models\Event;
 use App\Models\Expense;
 use App\Models\Member;
+use App\Services\Mollie\MollieGateway;
 use App\Services\Stripe\StripeGateway;
 use App\Services\WhatsApp\WhatsAppChannel;
 use App\Support\CurrentClub;
@@ -32,9 +33,15 @@ class CuotaController extends Controller
             ->whereDate('period', $period)
             ->first();
 
+        $stripeReady = $club->stripe_onboarded_at !== null && config('services.stripe.enabled');
+        $mollieReady = app(MollieGateway::class)->ready();
+
         $props = [
             'currency' => $club->currency,
-            'stripe_ready' => $club->stripe_onboarded_at !== null && config('services.stripe.enabled'),
+            'stripe_ready' => $stripeReady,
+            'mollie_ready' => $mollieReady,
+            // ¿Hay algún pago online disponible? Si no, la Cuota ofrece transferencia.
+            'online_ready' => $stripeReady || $mollieReady,
             // Datos del club para pagar la cuota por transferencia cuando no hay
             // pago online (Stripe). El manager marca la cuota pagada al recibirla.
             'bank' => [
@@ -244,22 +251,32 @@ class CuotaController extends Controller
         ];
     }
 
-    public function pay(Request $request, Due $due, StripeGateway $stripe): BaseResponse
+    public function pay(Request $request, Due $due, MollieGateway $mollie, StripeGateway $stripe): BaseResponse
     {
         $current = app(CurrentClub::class);
         $current->assertOwns($due);
 
         abort_unless($due->member_id === $current->member()->id, 403);
         abort_unless($due->isPending(), 400);
-        abort_unless($current->club()->stripe_onboarded_at !== null, 400);
 
         $native = $request->boolean('native');
 
-        $url = $stripe->createCheckoutUrl(
-            $due,
-            $this->returnUrl('pago', 'ok', $native),
-            $this->returnUrl('pago', 'cancelado', $native),
-        );
+        // Mollie manda si está activo (cobra en la cuenta propia del club, no
+        // necesita onboarding); si no, cae a Stripe (cuenta conectada).
+        if ($mollie->ready()) {
+            $url = $mollie->createDueCheckoutUrl(
+                $due,
+                $this->returnUrl('pago', 'ok', $native),
+                route('webhooks.mollie'),
+            );
+        } else {
+            abort_unless($current->club()->stripe_onboarded_at !== null, 400);
+            $url = $stripe->createCheckoutUrl(
+                $due,
+                $this->returnUrl('pago', 'ok', $native),
+                $this->returnUrl('pago', 'cancelado', $native),
+            );
+        }
 
         return response()->json(['url' => $url]);
     }
@@ -281,12 +298,11 @@ class CuotaController extends Controller
      * El jugador activa el débito automático mensual. Se le cobra la cuota
      * con descuento todos los meses, sobre la cuenta conectada del club.
      */
-    public function subscribe(Request $request, StripeGateway $stripe): BaseResponse
+    public function subscribe(Request $request, MollieGateway $mollie, StripeGateway $stripe): BaseResponse
     {
         $current = app(CurrentClub::class);
         $member = $current->member();
 
-        abort_unless($current->club()->stripe_onboarded_at !== null, 400);
         // Becado o sin monto: no hay suscripción posible
         abort_if(($member->subscribedFeeCents() ?? 0) <= 0, 400);
         // Ya suscripto: no duplicar
@@ -294,23 +310,39 @@ class CuotaController extends Controller
 
         $native = $request->boolean('native');
 
-        $url = $stripe->createSubscriptionCheckoutUrl(
-            $member,
-            $this->returnUrl('suscripcion', 'ok', $native),
-            $this->returnUrl('suscripcion', 'cancelado', $native),
-        );
+        if ($mollie->ready()) {
+            $url = $mollie->createSubscriptionCheckoutUrl(
+                $member,
+                $this->returnUrl('suscripcion', 'ok', $native),
+                route('webhooks.mollie'),
+            );
+        } else {
+            abort_unless($current->club()->stripe_onboarded_at !== null, 400);
+            $url = $stripe->createSubscriptionCheckoutUrl(
+                $member,
+                $this->returnUrl('suscripcion', 'ok', $native),
+                $this->returnUrl('suscripcion', 'cancelado', $native),
+            );
+        }
 
         return response()->json(['url' => $url]);
     }
 
     /** Solo el delegado corta el débito automático de un jugador. */
-    public function cancelSubscription(Member $member, StripeGateway $stripe): BaseResponse
+    public function cancelSubscription(Member $member, MollieGateway $mollie, StripeGateway $stripe): BaseResponse
     {
         Gate::authorize('create', Event::class);
         abort_unless($member->club_id === app(CurrentClub::class)->id(), 404);
 
-        $stripe->cancelSubscription($member);
-        $member->update(['subscription_status' => 'canceled', 'stripe_subscription_id' => null]);
+        if ($member->mollie_subscription_id) {
+            $mollie->cancelSubscription($member);
+            $member->update(['subscription_status' => 'canceled', 'mollie_subscription_id' => null]);
+        } elseif ($member->stripe_subscription_id) {
+            $stripe->cancelSubscription($member);
+            $member->update(['subscription_status' => 'canceled', 'stripe_subscription_id' => null]);
+        } else {
+            $member->update(['subscription_status' => 'canceled']);
+        }
 
         return back();
     }

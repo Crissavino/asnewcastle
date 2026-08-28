@@ -260,7 +260,7 @@ function FeeSettings({ config, currency }) {
     );
 }
 
-export default function Cuota({ currency, stripe_ready, bank, my_due, caja, plantel, resumen, subscription, gastos, categorias, eventos, config }) {
+export default function Cuota({ currency, online_ready, bank, my_due, caja, plantel, resumen, subscription, gastos, categorias, eventos, config }) {
     const { t, locale } = useTranslations();
     const { auth, member, flash, errors } = usePage().props;
     const [claimed, setClaimed] = useState(false);
@@ -289,7 +289,7 @@ export default function Cuota({ currency, stripe_ready, bank, my_due, caja, plan
     // El débito automático es el camino principal; el pago manual, la excepción cara.
     const isSub = subscription?.status === 'active';
     const isPastDue = subscription?.status === 'past_due';
-    const canSubscribe = subscription && (subscription.subscribed_fee_cents ?? 0) > 0 && stripe_ready;
+    const canSubscribe = subscription && (subscription.subscribed_fee_cents ?? 0) > 0 && online_ready;
     const hasDiscount = subscription && subscription.discount_cents > 0;
     const baseFee = my_due?.amount_cents ?? (subscription ? subscription.subscribed_fee_cents + subscription.discount_cents : 0);
     const annualSurcharge = subscription ? subscription.discount_cents * 12 : 0;
@@ -321,7 +321,7 @@ export default function Cuota({ currency, stripe_ready, bank, my_due, caja, plan
                         <>
                             <div style={{ marginTop: 10 }}><span className="nc-pill no">{t('cuota.autopay_failed')}</span></div>
                             <p className="nc-meta" style={{ marginTop: 12 }}>{t('cuota.autopay_failed_note')}</p>
-                            {stripe_ready && (
+                            {online_ready && (
                                 <button className="nc-btn" style={{ marginTop: 14 }} onClick={subscribe}>{t('cuota.autopay_retry')}</button>
                             )}
                         </>
@@ -369,7 +369,7 @@ export default function Cuota({ currency, stripe_ready, bank, my_due, caja, plan
                     )}
 
                     {my_due.status === 'pending' && !justPaid && (
-                        stripe_ready ? (
+                        online_ready ? (
                             <button className={`nc-btn${canSubscribe ? ' dark' : ''}`} style={{ marginTop: 16 }} onClick={pay}>
                                 {t('cuota.pay', { amount: money(my_due.amount_cents), currency })}
                             </button>
@@ -483,7 +483,7 @@ export default function Cuota({ currency, stripe_ready, bank, my_due, caja, plan
 
             {isManager && config && <FeeSettings config={config} currency={currency} />}
 
-            {isManager && !stripe_ready && (
+            {isManager && !online_ready && (
                 <div className="nc-card">
                     <div className="nc-label">{t('cuota.stripe_title')}</div>
                     <p className="nc-meta" style={{ marginTop: 8 }}>{t('cuota.stripe_body')}</p>

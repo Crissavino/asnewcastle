@@ -21,6 +21,7 @@ use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\TablaController;
 use App\Http\Controllers\VestuarioController;
 use App\Http\Controllers\ViewModeController;
+use App\Http\Controllers\Webhooks\MollieWebhookController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Controllers\Webhooks\TwilioWebhookController;
 use App\Http\Middleware\VerifyTwilioSignature;
@@ -62,6 +63,9 @@ Route::post('/webhooks/twilio', TwilioWebhookController::class)
 
 // Webhook de Stripe: pagos de cuotas en las cuentas conectadas
 Route::post('/webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
+
+// Webhook de Mollie: manda solo el id; la verificación es traer el pago por API
+Route::post('/webhooks/mollie', MollieWebhookController::class)->name('webhooks.mollie');
 
 // Formulario público de legitimación: solo por link firmado del manager.
 // Sin login y sin acceso a nada más; la sesión ata la ficha al navegador.
