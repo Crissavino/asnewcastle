@@ -126,11 +126,22 @@ class MollieGateway
         return $this->mollie->payments->get($paymentId, [], $this->testmode());
     }
 
-    /** Crea el customer Mollie del jugador si no existe y guarda su id. */
+    /**
+     * Devuelve el customer Mollie del jugador, creándolo si hace falta. Se
+     * auto-repara: si el id guardado no existe en el entorno actual (típico al
+     * pasar de test a live, donde los customers de test no existen), crea uno
+     * nuevo. Así el cambio test→live no rompe el checkout.
+     */
     protected function ensureCustomer(Member $member): string
     {
         if ($member->mollie_customer_id) {
-            return $member->mollie_customer_id;
+            try {
+                $this->mollie->customers->get($member->mollie_customer_id, $this->testmode());
+
+                return $member->mollie_customer_id;
+            } catch (\Throwable) {
+                // El customer no existe en este entorno: seguimos y creamos uno.
+            }
         }
 
         $customer = $this->mollie->customers->create([
@@ -138,7 +149,11 @@ class MollieGateway
             'metadata' => ['member_id' => (string) $member->id],
         ], $this->testmode());
 
-        $member->update(['mollie_customer_id' => $customer->id]);
+        // Nuevo customer: la subscription vieja (de otro entorno) ya no aplica.
+        $member->update([
+            'mollie_customer_id' => $customer->id,
+            'mollie_subscription_id' => null,
+        ]);
 
         return $customer->id;
     }
