@@ -34,8 +34,33 @@ class LimpiarLanzamiento extends Command
         $go = $this->argument('modo') === 'go';
         $this->warn($go ? '>>> MODO GO: se ejecuta de verdad' : '>>> SIMULACRO (dry-run). Pasá "go" para ejecutar.');
 
-        // --- 1. Data de actividad a borrar (hijos antes que padres por las FKs)
-        foreach (['payments', 'dues', 'mvp_votes', 'player_ratings', 'attendances', 'events', 'messages', 'expenses'] as $t) {
+        if ($go) {
+            DB::beginTransaction();
+        }
+
+        try {
+            $this->doCleanup($go);
+            if ($go) {
+                DB::commit();
+            }
+        } catch (\Throwable $e) {
+            if ($go) {
+                DB::rollBack();
+            }
+            $this->error('ERROR: '.$e->getMessage().' — se revirtió todo.');
+
+            return self::FAILURE;
+        }
+
+        $this->info($go ? 'LISTO. Limpieza ejecutada.' : 'Fin del simulacro.');
+
+        return self::SUCCESS;
+    }
+
+    protected function doCleanup(bool $go): void
+    {
+        // --- 1. Data de actividad a borrar (hijos de events y dues primero)
+        foreach (['payments', 'mvp_votes', 'player_ratings', 'attendances', 'expenses', 'dues', 'events', 'messages'] as $t) {
             $n = DB::table($t)->count();
             $this->line("  borrar {$t}: {$n}");
             if ($go) {
@@ -91,9 +116,5 @@ class LimpiarLanzamiento extends Command
         } else {
             $this->error('  dueño (OWNER_PHONE) no encontrado.');
         }
-
-        $this->info($go ? 'LISTO. Limpieza ejecutada.' : 'Fin del simulacro.');
-
-        return self::SUCCESS;
     }
 }
