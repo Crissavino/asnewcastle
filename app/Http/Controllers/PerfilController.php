@@ -45,6 +45,8 @@ class PerfilController extends Controller
         return Inertia::render('Perfil', [
             'me' => [
                 'name' => $member->user->name,
+                'first_name' => $member->user->firstName(),
+                'last_name' => $member->user->lastName(),
                 'shirt_number' => $member->shirt_number,
                 'position' => $member->position,
                 'preferred_foot' => $member->preferred_foot,
@@ -66,7 +68,8 @@ class PerfilController extends Controller
         $member = app(CurrentClub::class)->member();
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'min:3', 'max:80'],
+            'first_name' => ['required', 'string', 'min:2', 'max:40'],
+            'last_name' => ['required', 'string', 'min:2', 'max:40'],
             'position' => ['required', Rule::in(AltaController::POSITIONS)],
             'preferred_foot' => ['required', Rule::in(AltaController::FEET)],
             'shirt_number' => [
@@ -79,7 +82,9 @@ class PerfilController extends Controller
 
         try {
             DB::transaction(function () use ($validated, $member) {
-                $member->user->update(['name' => $validated['name']]);
+                $member->user->update([
+                    'name' => trim($validated['first_name'].' '.$validated['last_name']),
+                ]);
                 $member->update([
                     'position' => $validated['position'],
                     'preferred_foot' => $validated['preferred_foot'],

@@ -37,7 +37,8 @@ class AltaController extends Controller
             'feet' => self::FEET,
             'slots' => self::SLOTS,
             'max_number' => self::MAX_NUMBER,
-            'name' => $current->member()->user->name,
+            'first_name' => $current->member()->user->firstName(),
+            'last_name' => $current->member()->user->lastName(),
         ]);
     }
 
@@ -47,7 +48,8 @@ class AltaController extends Controller
         $member = $current->member();
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'min:3', 'max:80'],
+            'first_name' => ['required', 'string', 'min:2', 'max:40'],
+            'last_name' => ['required', 'string', 'min:2', 'max:40'],
             'position' => ['required', Rule::in(self::POSITIONS)],
             'preferred_foot' => ['required', Rule::in(self::FEET)],
             'shirt_number' => [
@@ -62,7 +64,11 @@ class AltaController extends Controller
 
         try {
             DB::transaction(function () use ($validated, $member) {
-                $member->user->update(['name' => $validated['name']]);
+                // Nombre canónico: "Nombre Apellido". Así el nombre corto
+                // (chat, saludos) sale siempre bien, sin importar la cultura.
+                $member->user->update([
+                    'name' => trim($validated['first_name'].' '.$validated['last_name']),
+                ]);
                 $member->update([
                     'position' => $validated['position'],
                     'preferred_foot' => $validated['preferred_foot'],

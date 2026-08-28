@@ -68,7 +68,7 @@
     "common.language": "اللغة",
     "alta.step": "الخطوة :n من :total",
     "alta.name_q": "كيف نكتب اسمك في قائمة الفريق؟",
-    "alta.name_hint": "الاسم واللقب كما في هويتك.",
+    "alta.name_hint": "اسمك الأول ثم اسم العائلة.",
     "alta.name_placeholder": "اسمك",
     "alta.pos_q": "في أي مركز تلعب؟",
     "alta.pos_hint": "يمكنك تغييره لاحقًا. يساعد في بناء قائمة الفريق.",
@@ -466,5 +466,7 @@
     "legitimacion.thanks_text": "استمارتك مكتملة. سيقدّم المندوب مستنداتك إلى الاتحاد وستُسجَّل لموسم 2026-27. تُحذف المستندات بعد 90 يومًا.",
     "legitimacion.edit": "راجع أو صحّح بياناتي",
     "push.vestuario_title": "💬 غرفة الملابس",
-    "push.vestuario_body": "لديك رسائل غير مقروءة"
+    "push.vestuario_body": "لديك رسائل غير مقروءة",
+    "alta.first_name_placeholder": "الاسم",
+    "alta.last_name_placeholder": "اسم العائلة"
 }

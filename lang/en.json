@@ -68,7 +68,7 @@
     "common.language": "Language",
     "alta.step": "Step :n of :total",
     "alta.name_q": "How should we write you on the team sheet?",
-    "alta.name_hint": "First and last name, as on your ID.",
+    "alta.name_hint": "Your first name, then your surname.",
     "alta.name_placeholder": "Your name",
     "alta.pos_q": "What position do you play?",
     "alta.pos_hint": "You can change it later. It helps build the squad list.",
@@ -466,5 +466,7 @@
     "legitimacion.thanks_text": "Your form is complete. The delegate will file your documents with the Federation and you'll be registered for 2026-27. Documents are deleted after 90 days.",
     "legitimacion.edit": "Review or fix my details",
     "push.vestuario_title": "💬 Dressing room",
-    "push.vestuario_body": "You have unread messages"
+    "push.vestuario_body": "You have unread messages",
+    "alta.first_name_placeholder": "First name",
+    "alta.last_name_placeholder": "Surname"
 }

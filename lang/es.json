@@ -68,7 +68,7 @@
     "common.language": "Idioma",
     "alta.step": "Paso :n de :total",
     "alta.name_q": "¿Cómo te anotamos en la planilla?",
-    "alta.name_hint": "Nombre y apellido, como figura en el documento.",
+    "alta.name_hint": "Tu nombre y tu apellido.",
     "alta.name_placeholder": "Tu nombre",
     "alta.pos_q": "¿En qué puesto jugás?",
     "alta.pos_hint": "Podés cambiarlo después. Sirve para armar la convocatoria.",
@@ -466,5 +466,7 @@
     "legitimacion.thanks_text": "Tu ficha está completa. El delegado presenta tu documentación en la Federación y quedás legitimado para la 2026-27. Los documentos se borran a los 90 días.",
     "legitimacion.edit": "Revisar o corregir mis datos",
     "push.vestuario_title": "💬 Vestuario",
-    "push.vestuario_body": "Tenés mensajes sin leer"
+    "push.vestuario_body": "Tenés mensajes sin leer",
+    "alta.first_name_placeholder": "Nombre",
+    "alta.last_name_placeholder": "Apellido"
 }

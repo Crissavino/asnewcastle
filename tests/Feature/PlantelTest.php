@@ -69,21 +69,23 @@ it('se edita la ficha desde el perfil, con el dorsal protegido', function () {
     Member::factory()->for($club)->create(['shirt_number' => 10]);
 
     $this->actingAs($member->user)->patch('/perfil', [
-        'name' => 'Cristian M. Savino',
+        'first_name' => 'Cristian',
+        'last_name' => 'Savino',
         'position' => 'DEL',
         'preferred_foot' => 'both',
         'shirt_number' => 7,
     ])->assertRedirect();
 
     $member->refresh();
-    expect($member->user->name)->toBe('Cristian M. Savino')
+    expect($member->user->name)->toBe('Cristian Savino')
         ->and($member->position)->toBe('DEL')
         ->and($member->shirt_number)->toBe(7);
 
     // El dorsal tomado se rechaza
     $this->actingAs($member->user)
         ->patch('/perfil', [
-            'name' => 'Cristian M. Savino',
+            'first_name' => 'Cristian',
+            'last_name' => 'Savino',
             'position' => 'DEL',
             'preferred_foot' => 'both',
             'shirt_number' => 10,
@@ -93,7 +95,8 @@ it('se edita la ficha desde el perfil, con el dorsal protegido', function () {
     // Quedarse con el propio número no molesta
     $this->actingAs($member->user)
         ->patch('/perfil', [
-            'name' => 'Cristian M. Savino',
+            'first_name' => 'Cristian',
+            'last_name' => 'Savino',
             'position' => 'DEL',
             'preferred_foot' => 'both',
             'shirt_number' => 7,

@@ -9,7 +9,8 @@ use Inertia\Testing\AssertableInertia as Assert;
 function altaPayload(array $overrides = []): array
 {
     return array_merge([
-        'name' => 'Marius Ilie',
+        'first_name' => 'Marius',
+        'last_name' => 'Ilie',
         'position' => 'MED',
         'preferred_foot' => 'right',
         'shirt_number' => 21,
@@ -39,7 +40,9 @@ it('completa el alta y entra a la app', function () {
         ->assertRedirect(route('agenda'));
 
     $member->refresh();
+    // Se guarda canónico "Nombre Apellido", así el nombre corto sale bien.
     expect($member->user->name)->toBe('Marius Ilie')
+        ->and($member->user->firstName())->toBe('Marius')
         ->and($member->position)->toBe('MED')
         ->and($member->preferred_foot)->toBe('right')
         ->and($member->shirt_number)->toBe(21)

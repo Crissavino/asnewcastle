@@ -68,7 +68,7 @@
     "common.language": "Limba",
     "alta.step": "Pasul :n din :total",
     "alta.name_q": "Cum te trecem pe foaia de joc?",
-    "alta.name_hint": "Nume și prenume, ca în actul de identitate.",
+    "alta.name_hint": "Prenumele, apoi numele de familie.",
     "alta.name_placeholder": "Numele tău",
     "alta.pos_q": "Pe ce poziție joci?",
     "alta.pos_hint": "Poți schimba mai târziu. Ajută la convocări.",
@@ -466,5 +466,7 @@
     "legitimacion.thanks_text": "Fișa ta e completă. Delegatul depune documentele la Federație și ești legitimat pentru 2026-27. Documentele se șterg după 90 de zile.",
     "legitimacion.edit": "Verifică sau corectează datele",
     "push.vestuario_title": "💬 Vestiar",
-    "push.vestuario_body": "Ai mesaje necitite"
+    "push.vestuario_body": "Ai mesaje necitite",
+    "alta.first_name_placeholder": "Prenume",
+    "alta.last_name_placeholder": "Nume de familie"
 }

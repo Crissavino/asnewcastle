@@ -32,6 +32,22 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Nombre de pila y apellido. El `name` se guarda canónico ("Nombre
+     * Apellido"), así que la primera palabra es el nombre y el resto el
+     * apellido. Sirven para prellenar los dos campos del alta/perfil sin
+     * columnas nuevas. Combinar: name = trim("$first $last").
+     */
+    public function firstName(): string
+    {
+        return explode(' ', trim((string) $this->name), 2)[0] ?? '';
+    }
+
+    public function lastName(): string
+    {
+        return explode(' ', trim((string) $this->name), 2)[1] ?? '';
+    }
+
     public function members(): HasMany
     {
         return $this->hasMany(Member::class);

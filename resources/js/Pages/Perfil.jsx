@@ -30,7 +30,8 @@ function ConfirmButton({ className, style, onConfirm, children }) {
 function EditSheet({ me, positions, feet, taken, maxNumber, onClose }) {
     const { t } = useTranslations();
     const [data, setData] = useState({
-        name: me.name ?? '',
+        first_name: me.first_name ?? '',
+        last_name: me.last_name ?? '',
         position: me.position,
         preferred_foot: me.preferred_foot,
         shirt_number: me.shirt_number,
@@ -51,8 +52,13 @@ function EditSheet({ me, positions, feet, taken, maxNumber, onClose }) {
                 <h3 className="nc-display" style={{ fontSize: 21, margin: '5px 0 16px' }}>{t('perfil.edit')}</h3>
 
                 <label className="nc-field-l">
-                    <span className="nc-label">{t('alta.name_placeholder')}</span>
-                    <input value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} />
+                    <span className="nc-label">{t('alta.first_name_placeholder')}</span>
+                    <input value={data.first_name} onChange={(e) => setData({ ...data, first_name: e.target.value })} />
+                </label>
+
+                <label className="nc-field-l">
+                    <span className="nc-label">{t('alta.last_name_placeholder')}</span>
+                    <input value={data.last_name} onChange={(e) => setData({ ...data, last_name: e.target.value })} />
                 </label>
 
                 <label className="nc-field-l">
@@ -86,7 +92,7 @@ function EditSheet({ me, positions, feet, taken, maxNumber, onClose }) {
 
                 {Object.values(errors)[0] && <div className="nc-error">{Object.values(errors)[0]}</div>}
 
-                <button className="nc-btn" style={{ marginTop: 16 }} onClick={save} disabled={data.name.trim().length < 3}>
+                <button className="nc-btn" style={{ marginTop: 16 }} onClick={save} disabled={data.first_name.trim().length < 2 || data.last_name.trim().length < 2}>
                     {t('agenda.save')}
                 </button>
             </div>

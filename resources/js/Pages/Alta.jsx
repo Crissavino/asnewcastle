@@ -5,11 +5,12 @@ import Crest from '../Components/Crest';
 import Kit from '../Components/Kit';
 import { useTranslations } from '../i18n';
 
-export default function Alta({ taken, positions, feet, slots, max_number, name }) {
+export default function Alta({ taken, positions, feet, slots, max_number, first_name, last_name }) {
     const { t } = useTranslations();
     const [step, setStep] = useState(0);
     const { data, setData, post, processing, errors } = useForm({
-        name: name ?? '',
+        first_name: first_name ?? '',
+        last_name: last_name ?? '',
         position: '',
         preferred_foot: '',
         shirt_number: null,
@@ -25,16 +26,24 @@ export default function Alta({ taken, positions, feet, slots, max_number, name }
         {
             q: t('alta.name_q'),
             hint: t('alta.name_hint'),
-            ok: data.name.trim().length > 2,
-            error: errors.name,
+            ok: data.first_name.trim().length > 1 && data.last_name.trim().length > 1,
+            error: errors.first_name || errors.last_name,
             body: (
-                <input
-                    className="nc-input"
-                    autoFocus
-                    placeholder={t('alta.name_placeholder')}
-                    value={data.name}
-                    onChange={(e) => setData('name', e.target.value)}
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <input
+                        className="nc-input"
+                        autoFocus
+                        placeholder={t('alta.first_name_placeholder')}
+                        value={data.first_name}
+                        onChange={(e) => setData('first_name', e.target.value)}
+                    />
+                    <input
+                        className="nc-input"
+                        placeholder={t('alta.last_name_placeholder')}
+                        value={data.last_name}
+                        onChange={(e) => setData('last_name', e.target.value)}
+                    />
+                </div>
             ),
         },
         {
