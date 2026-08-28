@@ -47,6 +47,13 @@ class SwapNombre extends Command
 
         $first = array_shift($parts);
         $parts[] = $first;
+
+        // Además capitaliza la primera letra de cada palabra (sin tocar el
+        // resto), por si cargaron en minúscula ("dorin" -> "Dorin").
+        $parts = array_map(
+            fn ($w) => $w === '' ? $w : mb_strtoupper(mb_substr($w, 0, 1)).mb_substr($w, 1),
+            $parts,
+        );
         $new = implode(' ', $parts);
 
         $this->line("  #{$user->id}: \"{$user->name}\" -> \"{$new}\"");
