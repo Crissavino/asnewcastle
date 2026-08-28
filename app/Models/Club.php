@@ -45,8 +45,14 @@ class Club extends Model
         return $this->hasMany(Member::class);
     }
 
+    /**
+     * Miembros activos VISIBLES del club: excluye a los ocultos (cuenta de
+     * revisión). Todo listado del plantel pasa por acá, así el oculto no
+     * aparece en convocatorias, cuotas, estadísticas ni vestuario. El acceso
+     * del propio oculto se resuelve por User::activeMembers(), que no filtra.
+     */
     public function activeMembers(): HasMany
     {
-        return $this->members()->whereNull('left_at');
+        return $this->members()->whereNull('left_at')->where('members.hidden', false);
     }
 }

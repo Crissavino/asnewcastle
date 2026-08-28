@@ -16,6 +16,7 @@ class Member extends Model
         'club_id',
         'user_id',
         'role',
+        'hidden',
         'shirt_number',
         'position',
         'preferred_foot',
@@ -36,6 +37,7 @@ class Member extends Model
     {
         return [
             'availability' => 'array',
+            'hidden' => 'boolean',
             'joined_at' => 'datetime',
             'left_at' => 'datetime',
             'vestuario_read_at' => 'datetime',
