@@ -60,7 +60,8 @@ class MollieGateway
             'webhookUrl' => $webhookUrl,
             'customerId' => $customerId,
             'sequenceType' => 'first',
-            'method' => 'creditcard',
+            // Sin forzar método: para un primer pago Mollie muestra solo los que
+            // soportan mandato (tarjeta, Apple Pay, Google Pay). No hardcodear.
             'metadata' => ['member_id' => (string) $member->id, 'purpose' => 'subscription_first'],
         ]), [], $this->testmode());
 
