@@ -291,7 +291,9 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
     const isPastDue = subscription?.status === 'past_due';
     const canSubscribe = subscription && (subscription.subscribed_fee_cents ?? 0) > 0 && online_ready;
     const hasDiscount = subscription && subscription.discount_cents > 0;
-    const baseFee = my_due?.amount_cents ?? (subscription ? subscription.subscribed_fee_cents + subscription.discount_cents : 0);
+    // Precio de lista (efectivo) = suscripto + descuento. No usar my_due: puede
+    // ser una cuota ya generada a un precio viejo o custom.
+    const baseFee = (subscription?.subscribed_fee_cents ?? 0) + (subscription?.discount_cents ?? 0);
     const annualSurcharge = subscription ? subscription.discount_cents * 12 : 0;
 
     const claim = () => {
