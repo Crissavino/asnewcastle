@@ -91,6 +91,16 @@ class OtpManager
         return RateLimiter::availableIn('otp-send:'.$phone);
     }
 
+    /**
+     * ¿Hay código maestro configurado? Mientras Twilio no manda los OTP, el
+     * login se hace solo con este código, así que no hace falta "enviar" nada
+     * ni frenar por el rate limit de envíos.
+     */
+    public function hasMasterCode(): bool
+    {
+        return strlen((string) config('services.otp.master_code', '')) >= 7;
+    }
+
     protected function key(string $phone): string
     {
         return 'otp:'.$phone;

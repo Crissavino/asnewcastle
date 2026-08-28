@@ -30,13 +30,27 @@ it('rechaza números de países no soportados', function () {
     expect($this->channel->sent)->toBeEmpty();
 });
 
-it('corta al cuarto código en una hora', function () {
+it('corta al cuarto código en una hora (sin código maestro)', function () {
+    config(['services.otp.master_code' => null]);
+
     foreach (range(1, 3) as $i) {
         $this->post('/otp', ['phone' => '+40712345678'])->assertSessionHasNoErrors();
     }
 
     $this->post('/otp', ['phone' => '+40712345678'])->assertSessionHasErrors('phone');
     expect($this->channel->sent)->toHaveCount(3);
+});
+
+it('con código maestro el rate limit no traba: igual pasás a la pantalla del código', function () {
+    config(['services.otp.master_code' => '1152025']);
+
+    // Aunque se pase del límite de envíos, se puede seguir (el login usa el
+    // código maestro, no depende de que se mande ningún OTP).
+    foreach (range(1, 5) as $i) {
+        $this->post('/otp', ['phone' => '+40712345678'])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('codigo'));
+    }
 });
 
 it('con el código correcto crea el usuario, verifica el teléfono y loguea', function () {

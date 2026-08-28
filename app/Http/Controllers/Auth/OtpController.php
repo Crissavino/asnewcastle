@@ -36,7 +36,9 @@ class OtpController extends Controller
 
         $phone = phone($validated['phone'], self::COUNTRIES)->formatE164();
 
-        if (! $otp->send($phone)) {
+        // Con código maestro el login no depende de "enviar" nada: si el rate
+        // limit de envíos frena, igual dejamos pasar a la pantalla del código.
+        if (! $otp->send($phone) && ! $otp->hasMasterCode()) {
             throw ValidationException::withMessages([
                 'phone' => __('auth.too_many_codes', [
                     'minutes' => (int) ceil($otp->secondsUntilNextSend($phone) / 60),
@@ -49,7 +51,7 @@ class OtpController extends Controller
         return redirect()->route('codigo');
     }
 
-    public function showCode(Request $request): Response|RedirectResponse
+    public function showCode(Request $request, OtpManager $otp): Response|RedirectResponse
     {
         $phone = $request->session()->get('otp_phone');
 
@@ -59,6 +61,8 @@ class OtpController extends Controller
 
         return Inertia::render('Auth/Codigo', [
             'phone_masked' => $this->mask($phone),
+            // Modo código maestro: la pantalla no ofrece "reenviar" nada.
+            'master' => $otp->hasMasterCode(),
         ]);
     }
 
@@ -70,7 +74,7 @@ class OtpController extends Controller
             return redirect()->route('entrar');
         }
 
-        if (! $otp->send($phone)) {
+        if (! $otp->send($phone) && ! $otp->hasMasterCode()) {
             throw ValidationException::withMessages([
                 'code' => __('auth.too_many_codes', [
                     'minutes' => (int) ceil($otp->secondsUntilNextSend($phone) / 60),

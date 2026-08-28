@@ -2,7 +2,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import Crest from '../../Components/Crest';
 import { useTranslations } from '../../i18n';
 
-export default function Codigo({ phone_masked }) {
+export default function Codigo({ phone_masked, master }) {
     const { t } = useTranslations();
     const { data, setData, post, processing, errors } = useForm({ code: '' });
 
@@ -52,9 +52,11 @@ export default function Codigo({ phone_masked }) {
 
                     <div style={{ flex: 1, minHeight: 24 }} />
 
-                    <button type="button" className="nc-skip" onClick={resend}>
-                        {t('auth.resend')}
-                    </button>
+                    {!master && (
+                        <button type="button" className="nc-skip" onClick={resend}>
+                            {t('auth.resend')}
+                        </button>
+                    )}
                     <Link href={route('entrar')} className="nc-skip" style={{ textAlign: 'center', display: 'block' }}>
                         {t('auth.change_phone')}
                     </Link>
