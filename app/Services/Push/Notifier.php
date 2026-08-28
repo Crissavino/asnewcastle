@@ -65,19 +65,16 @@ class Notifier
      */
     public function vestuario(Message $message, Collection $recipients): void
     {
-        $authorName = $message->member?->user?->name ?? '';
-        $author = strtok($authorName, ' ') ?: $authorName;
-
-        $text = trim((string) $message->body) !== '' ? $message->body : '📷';
-        $preview = mb_strlen($text) > 90 ? mb_substr($text, 0, 89).'…' : $text;
-        $body = trim($author.': '.$preview, ': ');
-
+        // Texto genérico ("tenés mensajes sin leer"): la push llega una sola vez
+        // por tanda sin leer y no se actualiza, así que no muestra un mensaje que
+        // puede quedar viejo. Título y cuerpo en el idioma de cada jugador.
         $byLocale = $recipients
             ->filter(fn ($m) => $m->user !== null)
             ->groupBy(fn ($m) => in_array($m->user->locale, ['es', 'ro', 'en', 'ar'], true) ? $m->user->locale : 'en');
 
         foreach ($byLocale as $locale => $members) {
             $title = __('push.vestuario_title', [], $locale);
+            $body = __('push.vestuario_body', [], $locale);
 
             $tokens = DeviceToken::whereIn('user_id', $members->pluck('user.id')->all())->pluck('token')->all();
 

@@ -465,5 +465,6 @@
     "legitimacion.thanks_title": "تم! شكرًا على بياناتك",
     "legitimacion.thanks_text": "استمارتك مكتملة. سيقدّم المندوب مستنداتك إلى الاتحاد وستُسجَّل لموسم 2026-27. تُحذف المستندات بعد 90 يومًا.",
     "legitimacion.edit": "راجع أو صحّح بياناتي",
-    "push.vestuario_title": "💬 غرفة الملابس"
+    "push.vestuario_title": "💬 غرفة الملابس",
+    "push.vestuario_body": "لديك رسائل غير مقروءة"
 }

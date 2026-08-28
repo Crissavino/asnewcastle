@@ -465,5 +465,6 @@
     "legitimacion.thanks_title": "Done! Thanks for your details",
     "legitimacion.thanks_text": "Your form is complete. The delegate will file your documents with the Federation and you'll be registered for 2026-27. Documents are deleted after 90 days.",
     "legitimacion.edit": "Review or fix my details",
-    "push.vestuario_title": "💬 Dressing room"
+    "push.vestuario_title": "💬 Dressing room",
+    "push.vestuario_body": "You have unread messages"
 }
