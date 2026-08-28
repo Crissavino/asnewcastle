@@ -51,6 +51,17 @@ it('completa el alta y entra a la app', function () {
     $this->actingAs($member->user)->get('/agenda')->assertOk();
 });
 
+it('capitaliza cada palabra del nombre, respetando guiones (rumano)', function () {
+    $member = Member::factory()->incomplete()->create();
+    $member->user->update(['name' => null]);
+
+    $this->actingAs($member->user)
+        ->post('/alta', altaPayload(['first_name' => 'adam', 'last_name' => 'burtea-ruprich']))
+        ->assertRedirect(route('agenda'));
+
+    expect($member->fresh()->user->name)->toBe('Adam Burtea-Ruprich');
+});
+
 it('muestra tachados solo los dorsales del club activo', function () {
     $club = Club::factory()->create();
     $taken = Member::factory()->for($club)->create(['shirt_number' => 10]);

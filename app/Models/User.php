@@ -43,6 +43,23 @@ class User extends Authenticatable
         return explode(' ', trim((string) $this->name), 2)[0] ?? '';
     }
 
+    /**
+     * Deja cada palabra con la primera letra en mayúscula, sin tocar el resto
+     * (respeta "McDonald", "Burtea-Ruprich", acentos). Palabra = corrida de
+     * letras; los guiones y espacios cortan, así los apellidos compuestos
+     * también quedan capitalizados.
+     */
+    public static function properCase(?string $name): string
+    {
+        $name = trim((string) $name);
+
+        return preg_replace_callback(
+            '/\p{L}+/u',
+            fn ($m) => mb_strtoupper(mb_substr($m[0], 0, 1)).mb_substr($m[0], 1),
+            $name,
+        ) ?? $name;
+    }
+
     public function lastName(): string
     {
         return explode(' ', trim((string) $this->name), 2)[1] ?? '';

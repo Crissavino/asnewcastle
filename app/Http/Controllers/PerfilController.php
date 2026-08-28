@@ -83,7 +83,7 @@ class PerfilController extends Controller
         try {
             DB::transaction(function () use ($validated, $member) {
                 $member->user->update([
-                    'name' => trim($validated['first_name'].' '.$validated['last_name']),
+                    'name' => \App\Models\User::properCase($validated['first_name'].' '.$validated['last_name']),
                 ]);
                 $member->update([
                     'position' => $validated['position'],

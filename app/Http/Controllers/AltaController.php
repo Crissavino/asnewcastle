@@ -64,10 +64,10 @@ class AltaController extends Controller
 
         try {
             DB::transaction(function () use ($validated, $member) {
-                // Nombre canónico: "Nombre Apellido". Así el nombre corto
-                // (chat, saludos) sale siempre bien, sin importar la cultura.
+                // Nombre canónico "Nombre Apellido" con cada palabra en
+                // mayúscula (incluye apellidos con guion, típico rumano).
                 $member->user->update([
-                    'name' => trim($validated['first_name'].' '.$validated['last_name']),
+                    'name' => \App\Models\User::properCase($validated['first_name'].' '.$validated['last_name']),
                 ]);
                 $member->update([
                     'position' => $validated['position'],
