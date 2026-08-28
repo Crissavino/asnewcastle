@@ -104,6 +104,52 @@ class MollieGateway
         ]);
     }
 
+    /**
+     * Reprograma el débito: cancela la suscripción vigente (si hay) y crea una
+     * nueva con el primer cobro en $startDate. Reusa el mandato del customer.
+     * Se usa cuando el primer pago ya cubrió un mes distinto al que asumía el
+     * alta (ej: el alta cuenta como septiembre, así que el cobro arranca en
+     * octubre en vez del mes que viene).
+     */
+    public function resubscribe(Member $member, string $webhookUrl, string $startDate): void
+    {
+        if (! $member->mollie_customer_id) {
+            return;
+        }
+
+        if ($member->mollie_subscription_id) {
+            try {
+                $this->cancelSubscriptionById($member->mollie_customer_id, $member->mollie_subscription_id);
+            } catch (\Throwable) {
+                // Ya cancelada o inexistente: seguimos y creamos la nueva.
+            }
+        }
+
+        $amount = (int) $member->subscribedFeeCents();
+
+        if ($amount <= 0) {
+            return;
+        }
+
+        $subscription = $this->mollie->subscriptions->createForId(
+            $member->mollie_customer_id,
+            $this->withProfile([
+                'amount' => $this->money($amount, $member->club->currency),
+                'interval' => '1 month',
+                'startDate' => $startDate,
+                'description' => $member->club->name.' · Cuota mensual · #'.$member->id,
+                'webhookUrl' => $webhookUrl,
+                'metadata' => ['member_id' => (string) $member->id],
+            ]),
+            $this->testmode(),
+        );
+
+        $member->update([
+            'mollie_subscription_id' => $subscription->id,
+            'subscription_status' => 'active',
+        ]);
+    }
+
     /** Cancela el débito automático del jugador. */
     public function cancelSubscription(Member $member): void
     {
