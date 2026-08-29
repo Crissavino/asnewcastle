@@ -118,10 +118,23 @@ export default function Vestuario({ messages, mvp, roster_count, first_unread_id
         return () => clearInterval(id);
     }, []);
 
+    // ¿Está pegado al fondo? Se actualiza con cada scroll del usuario, así el
+    // poll sabe si seguir bajando o dejarlo donde está leyendo.
+    const pinned = useRef(true);
     const scrollBottom = () => {
         const b = scrollBox.current;
         if (b) b.scrollTop = b.scrollHeight;
     };
+
+    useEffect(() => {
+        const b = scrollBox.current;
+        if (!b) return;
+        const onScroll = () => {
+            pinned.current = b.scrollHeight - b.scrollTop - b.clientHeight < 60;
+        };
+        b.addEventListener('scroll', onScroll, { passive: true });
+        return () => b.removeEventListener('scroll', onScroll);
+    }, []);
 
     useEffect(() => {
         // Primer ingreso: arrancar en el primer mensaje sin leer; si leíste
@@ -129,9 +142,11 @@ export default function Vestuario({ messages, mvp, roster_count, first_unread_id
         // se corre y quedás en una posición vieja).
         if (!didInit.current) {
             didInit.current = true;
+            const target = firstUnread.current;
+            pinned.current = ! target; // si arranca mid, no está pegado al fondo
             const go = () => {
-                const target = firstUnread.current && document.getElementById(`msg-${firstUnread.current}`);
-                if (target) target.scrollIntoView({ block: 'start' });
+                const el = target && document.getElementById(`msg-${target}`);
+                if (el) el.scrollIntoView({ block: 'start' });
                 else scrollBottom();
             };
             go();
@@ -141,10 +156,8 @@ export default function Vestuario({ messages, mvp, roster_count, first_unread_id
             return () => { clearTimeout(tid); imgs.forEach((i) => i.removeEventListener('load', go)); };
         }
 
-        // Poll: seguir el chat hacia abajo solo si ya estabas cerca del fondo
-        // (no te yankea si estás leyendo mensajes de arriba).
-        const b = scrollBox.current;
-        if (b && b.scrollHeight - b.scrollTop - b.clientHeight < 140) {
+        // Poll: seguir el chat hacia abajo solo si ya estabas pegado al fondo.
+        if (pinned.current) {
             scrollBottom();
         }
     }, [messages]);
