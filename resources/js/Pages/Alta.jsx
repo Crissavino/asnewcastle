@@ -5,7 +5,7 @@ import Crest from '../Components/Crest';
 import Kit from '../Components/Kit';
 import { useTranslations } from '../i18n';
 
-export default function Alta({ taken, positions, feet, slots, max_number, first_name, last_name }) {
+export default function Alta({ taken, positions, feet, slots, max_number, first_name, last_name, role }) {
     const { t } = useTranslations();
     const [step, setStep] = useState(0);
     const { data, setData, post, processing, errors } = useForm({
@@ -22,7 +22,7 @@ export default function Alta({ taken, positions, feet, slots, max_number, first_
             ? data.availability.filter((x) => x !== s)
             : [...data.availability, s]);
 
-    const steps = [
+    const allSteps = [
         {
             q: t('alta.name_q'),
             hint: t('alta.name_hint'),
@@ -102,6 +102,9 @@ export default function Alta({ taken, positions, feet, slots, max_number, first_
             )),
         },
     ];
+
+    // El técnico solo carga el nombre; el jugador hace el wizard completo.
+    const steps = role === 'coach' ? allSteps.slice(0, 1) : allSteps;
 
     const cur = steps[step];
     const last = step === steps.length - 1;

@@ -468,5 +468,13 @@
     "push.vestuario_title": "💬 Vestiar",
     "push.vestuario_body": "Ai mesaje necitite",
     "alta.first_name_placeholder": "Prenume",
-    "alta.last_name_placeholder": "Nume de familie"
+    "alta.last_name_placeholder": "Nume de familie",
+    "perfil.coach": "Antrenor",
+    "perfil.coach_record": "Bilanțul echipei",
+    "perfil.directed": "Conduse",
+    "perfil.won": "Câștigate",
+    "perfil.drawn": "Egaluri",
+    "perfil.lost": "Pierdute",
+    "perfil.staff": "Staff tehnic",
+    "invite.button_coach": "Invită un antrenor"
 }

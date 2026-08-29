@@ -30,6 +30,18 @@ class MemberFactory extends Factory
         return $this->state(fn () => ['role' => 'manager']);
     }
 
+    /** Cuerpo técnico: staff, sin dorsal/puesto/pie/disponibilidad. */
+    public function coach(): static
+    {
+        return $this->state(fn () => [
+            'role' => 'coach',
+            'shirt_number' => null,
+            'position' => null,
+            'preferred_foot' => null,
+            'availability' => null,
+        ]);
+    }
+
     /** Recién invitado: todavía no pasó por el wizard de alta. */
     public function incomplete(): static
     {

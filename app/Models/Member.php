@@ -60,6 +60,12 @@ class Member extends Model
         return $this->role === 'manager';
     }
 
+    /** Cuerpo técnico: es staff, no jugador (no dorsal, no cuota, no juega). */
+    public function isCoach(): bool
+    {
+        return $this->role === 'coach';
+    }
+
     public const FEE_TYPES = ['normal', 'becado', 'custom'];
 
     /** El monto que le corresponde este mes, o null si es becado (no genera cuota). */
@@ -93,11 +99,21 @@ class Member extends Model
         return max($base - $this->club->subscription_discount_cents, 0);
     }
 
-    /** El alta está completa cuando el wizard cargó nombre, puesto, dorsal y disponibilidad. */
+    /**
+     * El alta está completa según el rol: el técnico solo necesita nombre; el
+     * jugador, además, puesto, dorsal y disponibilidad.
+     */
     public function profileComplete(): bool
     {
-        return $this->user->name !== null
-            && $this->position !== null
+        if ($this->user->name === null) {
+            return false;
+        }
+
+        if ($this->isCoach()) {
+            return true;
+        }
+
+        return $this->position !== null
             && $this->shirt_number !== null
             && ! empty($this->availability);
     }

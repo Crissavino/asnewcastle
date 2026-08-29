@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Member;
+use App\Models\User;
 use App\Support\CurrentClub;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
@@ -39,6 +41,7 @@ class AltaController extends Controller
             'max_number' => self::MAX_NUMBER,
             'first_name' => $current->member()->user->firstName(),
             'last_name' => $current->member()->user->lastName(),
+            'role' => $current->member()->role,
         ]);
     }
 
@@ -46,6 +49,11 @@ class AltaController extends Controller
     {
         $current = app(CurrentClub::class);
         $member = $current->member();
+
+        // El técnico solo carga su nombre; se saltea el resto del wizard.
+        if ($member->isCoach()) {
+            return $this->storeCoach($request, $member);
+        }
 
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'min:2', 'max:40'],
@@ -87,6 +95,21 @@ class AltaController extends Controller
 
             throw $e;
         }
+
+        return redirect()->route('agenda');
+    }
+
+    /** Alta del técnico: solo el nombre, nada de dorsal/puesto/disponibilidad. */
+    protected function storeCoach(Request $request, Member $member): RedirectResponse
+    {
+        $validated = $request->validate([
+            'first_name' => ['required', 'string', 'min:2', 'max:40'],
+            'last_name' => ['required', 'string', 'min:2', 'max:40'],
+        ]);
+
+        $member->user->update([
+            'name' => \App\Models\User::properCase($validated['first_name'].' '.$validated['last_name']),
+        ]);
 
         return redirect()->route('agenda');
     }

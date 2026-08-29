@@ -468,5 +468,13 @@
     "push.vestuario_title": "💬 غرفة الملابس",
     "push.vestuario_body": "لديك رسائل غير مقروءة",
     "alta.first_name_placeholder": "الاسم",
-    "alta.last_name_placeholder": "اسم العائلة"
+    "alta.last_name_placeholder": "اسم العائلة",
+    "perfil.coach": "المدرب",
+    "perfil.coach_record": "سجل الفريق",
+    "perfil.directed": "أُديرت",
+    "perfil.won": "فوز",
+    "perfil.drawn": "تعادل",
+    "perfil.lost": "خسارة",
+    "perfil.staff": "الجهاز الفني",
+    "invite.button_coach": "دعوة مدرب"
 }

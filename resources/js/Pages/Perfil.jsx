@@ -29,6 +29,7 @@ function ConfirmButton({ className, style, onConfirm, children }) {
 
 function EditSheet({ me, positions, feet, taken, maxNumber, onClose }) {
     const { t } = useTranslations();
+    const isCoach = me.role === 'coach';
     const [data, setData] = useState({
         first_name: me.first_name ?? '',
         last_name: me.last_name ?? '',
@@ -61,34 +62,38 @@ function EditSheet({ me, positions, feet, taken, maxNumber, onClose }) {
                     <input value={data.last_name} onChange={(e) => setData({ ...data, last_name: e.target.value })} />
                 </label>
 
-                <label className="nc-field-l">
-                    <span className="nc-label">{t('alta.pos_q')}</span>
-                    <select value={data.position} onChange={(e) => setData({ ...data, position: e.target.value })}>
-                        {positions.map((p) => <option key={p} value={p}>{t(`pos.${p}`)}</option>)}
-                    </select>
-                </label>
+                {!isCoach && (
+                    <>
+                        <label className="nc-field-l">
+                            <span className="nc-label">{t('alta.pos_q')}</span>
+                            <select value={data.position} onChange={(e) => setData({ ...data, position: e.target.value })}>
+                                {positions.map((p) => <option key={p} value={p}>{t(`pos.${p}`)}</option>)}
+                            </select>
+                        </label>
 
-                <label className="nc-field-l">
-                    <span className="nc-label">{t('alta.foot_q')}</span>
-                    <select value={data.preferred_foot} onChange={(e) => setData({ ...data, preferred_foot: e.target.value })}>
-                        {feet.map((f) => <option key={f} value={f}>{t(`foot.${f}`)}</option>)}
-                    </select>
-                </label>
+                        <label className="nc-field-l">
+                            <span className="nc-label">{t('alta.foot_q')}</span>
+                            <select value={data.preferred_foot} onChange={(e) => setData({ ...data, preferred_foot: e.target.value })}>
+                                {feet.map((f) => <option key={f} value={f}>{t(`foot.${f}`)}</option>)}
+                            </select>
+                        </label>
 
-                <div className="nc-label" style={{ marginBottom: 8 }}>{t('alta.num_q')}</div>
-                <div className="nc-numgrid">
-                    {Array.from({ length: maxNumber }, (_, i) => i + 1).map((n) => (
-                        <button
-                            key={n}
-                            type="button"
-                            disabled={taken.includes(n)}
-                            className={data.shirt_number === n ? 'on' : ''}
-                            onClick={() => setData({ ...data, shirt_number: n })}
-                        >
-                            {n}
-                        </button>
-                    ))}
-                </div>
+                        <div className="nc-label" style={{ marginBottom: 8 }}>{t('alta.num_q')}</div>
+                        <div className="nc-numgrid">
+                            {Array.from({ length: maxNumber }, (_, i) => i + 1).map((n) => (
+                                <button
+                                    key={n}
+                                    type="button"
+                                    disabled={taken.includes(n)}
+                                    className={data.shirt_number === n ? 'on' : ''}
+                                    onClick={() => setData({ ...data, shirt_number: n })}
+                                >
+                                    {n}
+                                </button>
+                            ))}
+                        </div>
+                    </>
+                )}
 
                 {Object.values(errors)[0] && <div className="nc-error">{Object.values(errors)[0]}</div>}
 
@@ -100,16 +105,17 @@ function EditSheet({ me, positions, feet, taken, maxNumber, onClose }) {
     );
 }
 
-export default function Perfil({ me, season, slots, positions, feet, max_number, taken, roster }) {
+export default function Perfil({ me, season, slots, positions, feet, max_number, taken, roster, staff = [] }) {
     const { t, locale } = useTranslations();
     const { member, flash } = usePage().props;
     const [copied, setCopied] = useState(false);
     const [editing, setEditing] = useState(false);
     const [confirmingDelete, setConfirmingDelete] = useState(false);
     const isManager = member?.role === 'manager';
+    const isCoach = me.role === 'coach';
 
-    const generateInvite = () => {
-        router.post(route('invitacion.crear'), {}, { preserveScroll: true });
+    const generateInvite = (role = 'player') => {
+        router.post(route('invitacion.crear'), { role }, { preserveScroll: true });
     };
 
     const copyInvite = async () => {
@@ -140,45 +146,73 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
         <AppLayout tab="perfil">
             <div className="nc-card">
                 <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                    <Kit n={me.shirt_number} size="lg" />
+                    {isCoach ? (
+                        <div style={{ flex: 'none', width: 54, height: 54, borderRadius: '50%', background: 'var(--ink, #121212)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Archivo Black, sans-serif', fontSize: 20 }}>
+                            {(me.name || '').split(' ').map((w) => w[0]).slice(0, 2).join('')}
+                        </div>
+                    ) : (
+                        <Kit n={me.shirt_number} size="lg" />
+                    )}
                     <div style={{ flex: 1 }}>
                         <h2 className="nc-display" style={{ fontSize: 21, lineHeight: 1 }}>{me.name}</h2>
                         <div className="nc-meta" style={{ marginTop: 5 }}>
-                            {t(`pos.${me.position}`)} · {t(`foot.${me.preferred_foot}`).toLowerCase()}
+                            {isCoach ? t('perfil.coach') : `${t(`pos.${me.position}`)} · ${t(`foot.${me.preferred_foot}`).toLowerCase()}`}
                         </div>
                     </div>
                     <button type="button" className="nc-mini" style={{ flex: 'none', minWidth: 0 }} onClick={() => setEditing(true)} aria-label={t('perfil.edit')}>
                         <Pencil size={13} />
                     </button>
                 </div>
-                <div className="nc-row" style={{ marginTop: 14 }}>
-                    <span className="nc-meta">{t('perfil.equipment')}</span>
-                    <div style={{ display: 'flex', gap: 7 }}>
-                        <Kit n={me.shirt_number} kit="home" size="sm" />
-                        <Kit n={me.shirt_number} kit="away" size="sm" />
+                {!isCoach && (
+                    <div className="nc-row" style={{ marginTop: 14 }}>
+                        <span className="nc-meta">{t('perfil.equipment')}</span>
+                        <div style={{ display: 'flex', gap: 7 }}>
+                            <Kit n={me.shirt_number} kit="home" size="sm" />
+                            <Kit n={me.shirt_number} kit="away" size="sm" />
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {isCoach ? (
+                <div className="nc-card">
+                    <div className="nc-label">{t('perfil.coach_record')}</div>
+                    <div style={{ display: 'flex', gap: 26, marginTop: 12 }}>
+                        {[
+                            [t('perfil.directed'), me.record?.played ?? 0],
+                            [t('perfil.won'), me.record?.won ?? 0],
+                            [t('perfil.drawn'), me.record?.drawn ?? 0],
+                            [t('perfil.lost'), me.record?.lost ?? 0],
+                        ].map(([label, value]) => (
+                            <div key={label}>
+                                <div className="nc-display" style={{ fontSize: 30, lineHeight: 1 }}>{value}</div>
+                                <div className="nc-label" style={{ marginTop: 3 }}>{label}</div>
+                            </div>
+                        ))}
                     </div>
                 </div>
-            </div>
-
-            <div className="nc-card">
-                <div className="nc-label">{t('perfil.season')}</div>
-                <div style={{ display: 'flex', gap: 26, marginTop: 12 }}>
-                    {[
-                        [t('perfil.matches'), season.matches],
-                        [t('perfil.attendance'), season.attendance_pct !== null ? `${season.attendance_pct}%` : '—'],
-                        [t('perfil.mvps'), season.mvps],
-                    ].map(([label, value]) => (
-                        <div key={label}>
-                            <div className="nc-display" style={{ fontSize: 30, lineHeight: 1 }}>{value}</div>
-                            <div className="nc-label" style={{ marginTop: 3 }}>{label}</div>
-                        </div>
-                    ))}
+            ) : (
+                <div className="nc-card">
+                    <div className="nc-label">{t('perfil.season')}</div>
+                    <div style={{ display: 'flex', gap: 26, marginTop: 12 }}>
+                        {[
+                            [t('perfil.matches'), season.matches],
+                            [t('perfil.attendance'), season.attendance_pct !== null ? `${season.attendance_pct}%` : '—'],
+                            [t('perfil.mvps'), season.mvps],
+                        ].map(([label, value]) => (
+                            <div key={label}>
+                                <div className="nc-display" style={{ fontSize: 30, lineHeight: 1 }}>{value}</div>
+                                <div className="nc-label" style={{ marginTop: 3 }}>{label}</div>
+                            </div>
+                        ))}
+                    </div>
+                    <button className="nc-mini" style={{ marginTop: 14 }} onClick={() => router.visit(route('estadisticas'))}>
+                        <BarChart2 size={13} /> {t('stats.view')}
+                    </button>
                 </div>
-                <button className="nc-mini" style={{ marginTop: 14 }} onClick={() => router.visit(route('estadisticas'))}>
-                    <BarChart2 size={13} /> {t('stats.view')}
-                </button>
-            </div>
+            )}
 
+            {!isCoach && (
             <div className="nc-card">
                 <div className="nc-label">{t('perfil.availability')}</div>
                 <p className="nc-meta" style={{ marginTop: 6 }}>{t('perfil.availability_hint')}</p>
@@ -200,6 +234,7 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
                     })}
                 </div>
             </div>
+            )}
 
             <div className="nc-card">
                 <div className="nc-label">{t('perfil.roster')}</div>
@@ -252,6 +287,25 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
                 </div>
             </div>
 
+            {staff.length > 0 && (
+                <div className="nc-card">
+                    <div className="nc-label">{t('perfil.staff')}</div>
+                    <div style={{ marginTop: 6 }}>
+                        {staff.map((s) => (
+                            <div key={s.id} className="nc-row">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                                    <div style={{ flex: 'none', width: 30, height: 30, borderRadius: '50%', background: 'var(--ink, #121212)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Archivo Black, sans-serif', fontSize: 11 }}>
+                                        {(s.name || '').split(' ').map((w) => w[0]).slice(0, 2).join('')}
+                                    </div>
+                                    <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</span>
+                                </div>
+                                <span className="nc-label" style={{ flexShrink: 0 }}>{t('perfil.coach')}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {isManager && (
                 <div className="nc-card">
                     <div className="nc-label">{t('invite.title')}</div>
@@ -262,9 +316,14 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
                                 {copied ? t('invite.copied') : flash.invite_url.replace(/^https?:\/\//, '').slice(0, 34) + '…'}
                             </button>
                         ) : (
-                            <button className="nc-mini" onClick={generateInvite}>
-                                {t('invite.button')}
-                            </button>
+                            <>
+                                <button className="nc-mini" onClick={() => generateInvite('player')}>
+                                    {t('invite.button')}
+                                </button>
+                                <button className="nc-mini" onClick={() => generateInvite('coach')}>
+                                    {t('invite.button_coach')}
+                                </button>
+                            </>
                         )}
                     </div>
                 </div>

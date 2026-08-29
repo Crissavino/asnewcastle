@@ -42,30 +42,78 @@ class PerfilController extends Controller
                 'due_status' => $dues->get($m->id)?->status === 'pending' ? 'pending' : 'paid',
             ]);
 
+        // Cuerpo técnico: aparte del plantel de jugadores.
+        $staff = $current->club()->coaches()
+            ->with('user:id,name')
+            ->get()
+            ->map(fn ($m) => [
+                'id' => $m->id,
+                'name' => $m->user->name,
+                'role' => $m->role,
+            ]);
+
         return Inertia::render('Perfil', [
             'me' => [
                 'name' => $member->user->name,
                 'first_name' => $member->user->firstName(),
                 'last_name' => $member->user->lastName(),
+                'role' => $member->role,
                 'shirt_number' => $member->shirt_number,
                 'position' => $member->position,
                 'preferred_foot' => $member->preferred_foot,
                 'availability' => $member->availability ?? [],
+                // El técnico no tiene stats de jugador: muestra el récord del equipo.
+                'record' => $member->isCoach() ? $this->coachRecord($member) : null,
             ],
-            'season' => $this->season($member),
+            'season' => $member->isCoach() ? null : $this->season($member),
             'slots' => AltaController::SLOTS,
             'positions' => AltaController::POSITIONS,
             'feet' => AltaController::FEET,
             'max_number' => AltaController::MAX_NUMBER,
             'taken' => $this->takenNumbers($member),
             'roster' => $roster,
+            'staff' => $staff,
         ]);
+    }
+
+    /** Récord del equipo desde que el técnico se sumó: dirigidos y G-E-P. */
+    protected function coachRecord(Member $coach): array
+    {
+        $since = $coach->joined_at ?? $coach->created_at;
+
+        $matches = \App\Models\Event::query()
+            ->where('kind', 'match')
+            ->whereNotNull('goals_for')
+            ->whereNotNull('goals_against')
+            ->where('starts_at', '>=', $since)
+            ->get(['goals_for', 'goals_against']);
+
+        return [
+            'played' => $matches->count(),
+            'won' => $matches->filter(fn ($m) => $m->goals_for > $m->goals_against)->count(),
+            'drawn' => $matches->filter(fn ($m) => $m->goals_for === $m->goals_against)->count(),
+            'lost' => $matches->filter(fn ($m) => $m->goals_for < $m->goals_against)->count(),
+        ];
     }
 
     /** Corregir la ficha sin repetir el wizard: nombre, puesto, perfil, dorsal. */
     public function update(Request $request): RedirectResponse
     {
         $member = app(CurrentClub::class)->member();
+
+        // El técnico solo edita su nombre.
+        if ($member->isCoach()) {
+            $validated = $request->validate([
+                'first_name' => ['required', 'string', 'min:2', 'max:40'],
+                'last_name' => ['required', 'string', 'min:2', 'max:40'],
+            ]);
+
+            $member->user->update([
+                'name' => \App\Models\User::properCase($validated['first_name'].' '.$validated['last_name']),
+            ]);
+
+            return back();
+        }
 
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'min:2', 'max:40'],

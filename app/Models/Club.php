@@ -58,6 +58,22 @@ class Club extends Model
         return $this->members()
             ->whereNull('left_at')
             ->where('members.hidden', false)
+            ->where('members.role', '!=', 'coach')
             ->whereNotNull('shirt_number');
+    }
+
+    /**
+     * Cuerpo técnico (entrenadores) activo y con el alta hecha (nombre). Va
+     * aparte de activeMembers() a propósito: el técnico no juega, no paga cuota
+     * ni entra en convocatorias, así que toda la maquinaria de jugadores lo
+     * ignora; solo se lista como staff en el plantel.
+     */
+    public function coaches(): HasMany
+    {
+        return $this->members()
+            ->whereNull('left_at')
+            ->where('members.hidden', false)
+            ->where('members.role', 'coach')
+            ->whereHas('user', fn ($q) => $q->whereNotNull('name'));
     }
 }

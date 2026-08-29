@@ -468,5 +468,13 @@
     "push.vestuario_title": "💬 Dressing room",
     "push.vestuario_body": "You have unread messages",
     "alta.first_name_placeholder": "First name",
-    "alta.last_name_placeholder": "Surname"
+    "alta.last_name_placeholder": "Surname",
+    "perfil.coach": "Coach",
+    "perfil.coach_record": "Team record",
+    "perfil.directed": "Directed",
+    "perfil.won": "Won",
+    "perfil.drawn": "Drawn",
+    "perfil.lost": "Lost",
+    "perfil.staff": "Coaching staff",
+    "invite.button_coach": "Invite a coach"
 }

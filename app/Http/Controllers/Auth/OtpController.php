@@ -132,7 +132,7 @@ class OtpController extends Controller
         // Si llegó con un link de invitación, se lo asocia al club acá
         // (o se le levanta la baja si es un ex-member que vuelve).
         if ($clubId = $request->session()->pull('invite_club_id')) {
-            InviteController::joinOrRejoin($user, $clubId);
+            InviteController::joinOrRejoin($user, $clubId, $request->session()->pull('invite_role', 'player'));
         } elseif (! $user->members()->whereNull('left_at')->exists() && Club::count() === 1) {
             // Lanzamiento de un solo club: un usuario verificado que no está en
             // ningún club activo se suma al único club. Así el flujo de la guía
