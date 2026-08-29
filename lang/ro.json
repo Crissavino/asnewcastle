@@ -28,7 +28,7 @@
     "update.now": "Actualizează acum",
     "update.later": "Mai târziu",
     "sumate.title": "Descarcă aplicația clubului",
-    "sumate.subtitle": "Ai fost invitat la A.S New Castle. Urmează pașii în funcție de telefonul tău.",
+    "sumate.subtitle": "Ai fost invitat la A.S New Castle ca :role. Urmează pașii pentru telefonul tău.",
     "sumate.choose_os": "Alege-ți telefonul",
     "sumate.and_step1": "Descarcă aplicația",
     "sumate.and_download": "⬇️ Descarcă aplicația (Android)",
@@ -477,5 +477,11 @@
     "perfil.lost": "Pierdute",
     "perfil.staff": "Staff tehnic",
     "invite.button_coach": "Invită un antrenor",
-    "agenda.coach_attends": "Participi ca staff tehnic."
+    "agenda.coach_attends": "Participi ca staff tehnic.",
+    "sumate.role_player": "jucător",
+    "sumate.role_coach": "antrenor",
+    "sumate.desktop_title": "Deschide acest link pe telefon",
+    "sumate.desktop_hint": "Aplicația se instalează pe telefon. Copiază linkul și deschide-l acolo (sau trimite-ți-l pe WhatsApp).",
+    "sumate.copy_link": "Copiază linkul",
+    "sumate.ios_code_hint": "Dacă TestFlight îți cere un cod, este :code."
 }

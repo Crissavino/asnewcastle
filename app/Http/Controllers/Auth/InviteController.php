@@ -58,6 +58,7 @@ class InviteController extends Controller
 
         return Inertia::render('Auth/Sumate', [
             'clubName' => $club->name,
+            'role' => $role,
             // Interino sin WhatsApp: se muestra el código maestro. Cuando Twilio
             // esté vivo, OTP_MASTER_CODE se borra y la guía dice "te llega por WhatsApp".
             'masterCode' => config('services.otp.master_code') ?: null,

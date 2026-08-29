@@ -28,7 +28,7 @@
     "update.now": "حدّث الآن",
     "update.later": "لاحقًا",
     "sumate.title": "نزّل تطبيق النادي",
-    "sumate.subtitle": "تمت دعوتك إلى A.S New Castle. اتبع الخطوات حسب هاتفك.",
+    "sumate.subtitle": "تمت دعوتك إلى A.S New Castle بصفة :role. اتبع الخطوات حسب هاتفك.",
     "sumate.choose_os": "اختر هاتفك",
     "sumate.and_step1": "نزّل التطبيق",
     "sumate.and_download": "⬇️ نزّل التطبيق (Android)",
@@ -477,5 +477,11 @@
     "perfil.lost": "خسارة",
     "perfil.staff": "الجهاز الفني",
     "invite.button_coach": "دعوة مدرب",
-    "agenda.coach_attends": "تحضر كجزء من الجهاز الفني."
+    "agenda.coach_attends": "تحضر كجزء من الجهاز الفني.",
+    "sumate.role_player": "لاعب",
+    "sumate.role_coach": "مدرب",
+    "sumate.desktop_title": "افتح هذا الرابط على هاتفك",
+    "sumate.desktop_hint": "يُثبَّت التطبيق على الهاتف. انسخ الرابط وافتحه هناك (أو أرسله لنفسك عبر واتساب).",
+    "sumate.copy_link": "انسخ الرابط",
+    "sumate.ios_code_hint": "إذا طلب TestFlight رمزًا، فهو :code."
 }

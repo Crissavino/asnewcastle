@@ -28,7 +28,7 @@
     "update.now": "Update now",
     "update.later": "Later",
     "sumate.title": "Download the club app",
-    "sumate.subtitle": "You've been invited to A.S New Castle. Follow the steps for your phone.",
+    "sumate.subtitle": "You were invited to A.S New Castle as a :role. Follow these steps for your phone.",
     "sumate.choose_os": "Choose your phone",
     "sumate.and_step1": "Download the app",
     "sumate.and_download": "⬇️ Download the app (Android)",
@@ -477,5 +477,11 @@
     "perfil.lost": "Lost",
     "perfil.staff": "Coaching staff",
     "invite.button_coach": "Invite a coach",
-    "agenda.coach_attends": "You attend as coaching staff."
+    "agenda.coach_attends": "You attend as coaching staff.",
+    "sumate.role_player": "player",
+    "sumate.role_coach": "coach",
+    "sumate.desktop_title": "Open this link on your phone",
+    "sumate.desktop_hint": "The app installs on your phone. Copy the link and open it there (or send it to yourself on WhatsApp).",
+    "sumate.copy_link": "Copy link",
+    "sumate.ios_code_hint": "If TestFlight asks for a code, it's :code."
 }

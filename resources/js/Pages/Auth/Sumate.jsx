@@ -4,11 +4,11 @@ import Crest from '../../Components/Crest';
 import { LOCALES, useTranslations } from '../../i18n';
 
 function detectOs() {
-    if (typeof navigator === 'undefined') return 'android';
+    if (typeof navigator === 'undefined') return 'desktop';
     const ua = navigator.userAgent || '';
     if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
     if (/android/i.test(ua)) return 'android';
-    return 'android';
+    return 'desktop';
 }
 
 // Un paso: círculo con número + contenido (texto y, opcional, un botón).
@@ -25,10 +25,15 @@ function Step({ n, children }) {
     );
 }
 
-export default function Sumate({ clubName, masterCode, apkUrl, testflightUrl, testflightAppStoreUrl }) {
+export default function Sumate({ clubName, role, masterCode, apkUrl, testflightUrl, testflightAppStoreUrl }) {
     const { t, locale } = useTranslations();
     const [os, setOs] = useState(detectOs);
     const [copied, setCopied] = useState(false);
+    const [linkCopied, setLinkCopied] = useState(false);
+
+    // El "código" de TestFlight es la última parte del link de invitación a la beta.
+    const testflightCode = (testflightUrl || '').split('/').filter(Boolean).pop();
+    const roleWord = role === 'coach' ? t('sumate.role_coach') : t('sumate.role_player');
 
     const copyCode = async () => {
         try {
@@ -36,6 +41,14 @@ export default function Sumate({ clubName, masterCode, apkUrl, testflightUrl, te
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
         } catch { /* si el navegador no deja, el código igual está a la vista */ }
+    };
+
+    const copyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            setLinkCopied(true);
+            setTimeout(() => setLinkCopied(false), 1500);
+        } catch { /* nada: el link igual está en la barra */ }
     };
 
     const changeLocale = (code) => {
@@ -76,7 +89,18 @@ export default function Sumate({ clubName, masterCode, apkUrl, testflightUrl, te
                     </div>
 
                     <h2 className="nc-display nc-q" style={{ marginBottom: 4 }}>{t('sumate.title')}</h2>
-                    <p className="nc-meta" style={{ marginBottom: 18 }}>{t('sumate.subtitle')}</p>
+                    <p className="nc-meta" style={{ marginBottom: 18 }}>{t('sumate.subtitle', { role: roleWord })}</p>
+
+                    {/* Si abrieron en la compu, no sirve la guía: que lo abran en el teléfono. */}
+                    {os === 'desktop' && (
+                        <div className="nc-card" style={{ marginBottom: 16, borderColor: 'var(--red-dk, #9C1523)' }}>
+                            <div className="nc-strong">📲 {t('sumate.desktop_title')}</div>
+                            <p className="nc-meta" style={{ margin: '6px 0 10px' }}>{t('sumate.desktop_hint')}</p>
+                            <button type="button" className="nc-btn" onClick={copyLink}>
+                                {linkCopied ? t('sumate.copied') : t('sumate.copy_link')}
+                            </button>
+                        </div>
+                    )}
 
                     {/* Selector de sistema: se autodetecta, pero se puede cambiar. */}
                     <div className="nc-os-switch" role="group" aria-label={t('sumate.choose_os')}>
@@ -88,6 +112,7 @@ export default function Sumate({ clubName, masterCode, apkUrl, testflightUrl, te
                         </button>
                     </div>
 
+                    {os !== 'desktop' && (
                     <div className="nc-guide">
                         {os === 'android' ? (
                             <>
@@ -116,11 +141,17 @@ export default function Sumate({ clubName, masterCode, apkUrl, testflightUrl, te
                                     <a className="nc-btn" href={testflightUrl} style={{ marginTop: 8, display: 'block', textAlign: 'center' }}>
                                         {t('sumate.ios_join')}
                                     </a>
+                                    {testflightCode && (
+                                        <p className="nc-meta" style={{ margin: '6px 0 0' }}>
+                                            {t('sumate.ios_code_hint', { code: testflightCode })}
+                                        </p>
+                                    )}
                                 </Step>
                                 {loginStep(3)}
                             </>
                         )}
                     </div>
+                    )}
 
                     <div style={{ flex: 1, minHeight: 22 }} />
 
