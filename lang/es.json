@@ -476,5 +476,6 @@
     "perfil.drawn": "Empatados",
     "perfil.lost": "Perdidos",
     "perfil.staff": "Cuerpo técnico",
-    "invite.button_coach": "Invitar entrenador"
+    "invite.button_coach": "Invitar entrenador",
+    "agenda.coach_attends": "Vas como cuerpo técnico."
 }

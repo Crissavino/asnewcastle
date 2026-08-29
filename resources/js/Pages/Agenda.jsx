@@ -270,6 +270,7 @@ function EventCard({ ev, onEdit }) {
     const [reminded, setReminded] = useState(false);
     const [showWho, setShowWho] = useState(false);
     const isManager = member?.role === 'manager';
+    const isCoach = member?.role === 'coach';
     const isMatch = ev.kind === 'match';
     // Con "both" se llevan las dos casacas; las camisetas de la lista van en roja
     const kitColor = ev.kit === 'away' ? 'away' : 'home';
@@ -322,7 +323,7 @@ function EventCard({ ev, onEdit }) {
                 </div>
                 <div style={{ textAlign: 'end' }}>
                     <div className="nc-num" style={{ fontSize: 19, fontWeight: 700 }}>{time(ev.starts_at)}</div>
-                    {isMatch && !ev.cancelled && (
+                    {isMatch && !ev.cancelled && !isCoach && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 5, marginTop: 6 }}>
                             {ev.kit === 'both' ? (
                                 <>
@@ -345,17 +346,21 @@ function EventCard({ ev, onEdit }) {
 
             {!ev.cancelled && (
                 <>
-                    <div className="nc-rsvp">
-                        {[
-                            { k: 'in', label: t('agenda.in'), Icon: Check },
-                            { k: 'maybe', label: t('agenda.maybe'), Icon: HelpCircle },
-                            { k: 'out', label: t('agenda.out'), Icon: X },
-                        ].map(({ k, label, Icon }) => (
-                            <button key={k} className={`${k} ${ev.my_status === k ? 'on' : ''}`} onClick={() => setStatus(k)}>
-                                <Icon size={13} /> {label}
-                            </button>
-                        ))}
-                    </div>
+                    {isCoach ? (
+                        <div className="nc-meta" style={{ marginTop: 12 }}>{t('agenda.coach_attends')}</div>
+                    ) : (
+                        <div className="nc-rsvp">
+                            {[
+                                { k: 'in', label: t('agenda.in'), Icon: Check },
+                                { k: 'maybe', label: t('agenda.maybe'), Icon: HelpCircle },
+                                { k: 'out', label: t('agenda.out'), Icon: X },
+                            ].map(({ k, label, Icon }) => (
+                                <button key={k} className={`${k} ${ev.my_status === k ? 'on' : ''}`} onClick={() => setStatus(k)}>
+                                    <Icon size={13} /> {label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
 
                     <div className="nc-count" style={{ alignItems: 'center' }}>
                         <span className="n">{ev.counts.in}</span>

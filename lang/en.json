@@ -476,5 +476,6 @@
     "perfil.drawn": "Drawn",
     "perfil.lost": "Lost",
     "perfil.staff": "Coaching staff",
-    "invite.button_coach": "Invite a coach"
+    "invite.button_coach": "Invite a coach",
+    "agenda.coach_attends": "You attend as coaching staff."
 }

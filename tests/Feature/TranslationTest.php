@@ -49,6 +49,15 @@ it('un idioma ajeno al plantel queda como desconocido, no como español', functi
     expect(LocaleGuesser::guess('see you at the match tomorrow'))->toBe('en');
 });
 
+it('guarda un mensaje de idioma desconocido sin romper (columna alcanza para und)', function () {
+    $member = Member::factory()->create();
+
+    // "Hola" no matchea ninguna lista -> 'und' (3 chars). La columna debe alcanzar.
+    $this->actingAs($member->user)->post('/vestuario', ['body' => 'Hola'])->assertRedirect();
+
+    expect(Message::withoutGlobalScopes()->latest('id')->first()->detected_locale)->toBe('und');
+});
+
 it('guarda el idioma detectado al enviar un mensaje', function () {
     $member = Member::factory()->create();
 

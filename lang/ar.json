@@ -476,5 +476,6 @@
     "perfil.drawn": "تعادل",
     "perfil.lost": "خسارة",
     "perfil.staff": "الجهاز الفني",
-    "invite.button_coach": "دعوة مدرب"
+    "invite.button_coach": "دعوة مدرب",
+    "agenda.coach_attends": "تحضر كجزء من الجهاز الفني."
 }
