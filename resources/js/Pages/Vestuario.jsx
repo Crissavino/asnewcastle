@@ -77,6 +77,7 @@ export default function Vestuario({ messages, mvp, roster_count, first_unread_id
     const { t, locale } = useTranslations();
     const intl = INTL_LOCALES[locale] ?? 'en-GB';
     const end = useRef(null);
+    const scrollBox = useRef(null);
     // Se captura en el primer render: al entrar arrancamos ahí (los polls no lo pisan).
     const firstUnread = useRef(first_unread_id);
     const didInit = useRef(false);
@@ -117,17 +118,35 @@ export default function Vestuario({ messages, mvp, roster_count, first_unread_id
         return () => clearInterval(id);
     }, []);
 
+    const scrollBottom = () => {
+        const b = scrollBox.current;
+        if (b) b.scrollTop = b.scrollHeight;
+    };
+
     useEffect(() => {
-        // Al entrar: arrancar en el primer mensaje sin leer; si leíste todo, abajo.
+        // Primer ingreso: arrancar en el primer mensaje sin leer; si leíste
+        // todo, abajo. Se reajusta cuando cargan las imágenes (si no, el layout
+        // se corre y quedás en una posición vieja).
         if (!didInit.current) {
             didInit.current = true;
-            const target = firstUnread.current && document.getElementById(`msg-${firstUnread.current}`);
-            if (target) {
-                target.scrollIntoView({ block: 'start' });
-                return;
-            }
+            const go = () => {
+                const target = firstUnread.current && document.getElementById(`msg-${firstUnread.current}`);
+                if (target) target.scrollIntoView({ block: 'start' });
+                else scrollBottom();
+            };
+            go();
+            const imgs = [...(scrollBox.current?.querySelectorAll('img') ?? [])].filter((i) => !i.complete);
+            imgs.forEach((i) => i.addEventListener('load', go, { once: true }));
+            const tid = setTimeout(go, 400);
+            return () => { clearTimeout(tid); imgs.forEach((i) => i.removeEventListener('load', go)); };
         }
-        end.current?.scrollIntoView({ block: 'end' });
+
+        // Poll: seguir el chat hacia abajo solo si ya estabas cerca del fondo
+        // (no te yankea si estás leyendo mensajes de arriba).
+        const b = scrollBox.current;
+        if (b && b.scrollHeight - b.scrollTop - b.clientHeight < 140) {
+            scrollBottom();
+        }
     }, [messages]);
 
     // Las fotos del teléfono pesan 4-8MB: se achican a 1600px antes de subir
@@ -200,7 +219,7 @@ export default function Vestuario({ messages, mvp, roster_count, first_unread_id
     return (
         <AppLayout tab="vestuario" eyebrow={t('vestuario.players', { count: roster_count })}>
             <div className="nc-chat">
-                <div className="nc-chat-scroll">
+                <div className="nc-chat-scroll" ref={scrollBox}>
                     {messages.length === 0 && (
                         <p className="nc-meta" style={{ textAlign: 'center', padding: '40px 30px' }}>
                             {t('empty.vestuario')}
