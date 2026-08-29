@@ -73,10 +73,13 @@ function MvpPoll({ mvp, onClose }) {
     );
 }
 
-export default function Vestuario({ messages, mvp, roster_count }) {
+export default function Vestuario({ messages, mvp, roster_count, first_unread_id }) {
     const { t, locale } = useTranslations();
     const intl = INTL_LOCALES[locale] ?? 'en-GB';
     const end = useRef(null);
+    // Se captura en el primer render: al entrar arrancamos ahí (los polls no lo pisan).
+    const firstUnread = useRef(first_unread_id);
+    const didInit = useRef(false);
     const fileRef = useRef(null);
     const [preview, setPreview] = useState(null);
     const [lightbox, setLightbox] = useState(null);
@@ -115,6 +118,15 @@ export default function Vestuario({ messages, mvp, roster_count }) {
     }, []);
 
     useEffect(() => {
+        // Al entrar: arrancar en el primer mensaje sin leer; si leíste todo, abajo.
+        if (!didInit.current) {
+            didInit.current = true;
+            const target = firstUnread.current && document.getElementById(`msg-${firstUnread.current}`);
+            if (target) {
+                target.scrollIntoView({ block: 'start' });
+                return;
+            }
+        }
         end.current?.scrollIntoView({ block: 'end' });
     }, [messages]);
 
@@ -223,7 +235,7 @@ export default function Vestuario({ messages, mvp, roster_count }) {
                             prevKey = key;
 
                             items.push(
-                                <div key={m.id} className={`nc-msg ${m.mine ? 'mine' : ''} ${first ? 'first' : 'chain'}`}>
+                                <div key={m.id} id={`msg-${m.id}`} className={`nc-msg ${m.mine ? 'mine' : ''} ${first ? 'first' : 'chain'}`}>
                                     {!m.mine && (first
                                         ? <Kit n={m.author?.shirt_number} size="sm" />
                                         : <div className="nc-kit-spacer" />

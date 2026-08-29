@@ -10,6 +10,24 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\FakeWhatsAppChannel;
 
+it('la vista del vestuario arranca en el primer mensaje sin leer (o abajo si leyó todo)', function () {
+    $me = Member::factory()->create(['vestuario_read_at' => now()->subHour()]);
+    $other = Member::factory()->for($me->club)->create();
+
+    $old = Message::create(['club_id' => $me->club_id, 'member_id' => $other->id, 'body' => 'viejo', 'is_system' => false]);
+    $old->forceFill(['created_at' => now()->subHours(2)])->save();
+    $new = Message::create(['club_id' => $me->club_id, 'member_id' => $other->id, 'body' => 'nuevo', 'is_system' => false]);
+    $new->forceFill(['created_at' => now()->subMinutes(10)])->save();
+
+    // Arranca en el mensaje nuevo (posterior a lastRead)
+    $this->actingAs($me->user)->get('/vestuario')
+        ->assertInertia(fn (Assert $p) => $p->where('first_unread_id', $new->id));
+
+    // La visita anterior marcó todo como leído: ahora arranca abajo (null)
+    $this->actingAs($me->user)->get('/vestuario')
+        ->assertInertia(fn (Assert $p) => $p->where('first_unread_id', null));
+});
+
 beforeEach(function () {
     $this->whatsapp = new FakeWhatsAppChannel();
     $this->app->instance(WhatsAppChannel::class, $this->whatsapp);

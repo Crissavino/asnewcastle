@@ -21,17 +21,28 @@ class VestuarioController extends Controller
         $current = app(CurrentClub::class);
         $me = $current->member();
 
-        // Entrar/pollear el vestuario = "leí hasta acá". Update directo para no
-        // tocar updated_at en cada poll (cada 8s). Habilita la push de "1er sin leer".
-        DB::table('members')->where('id', $me->id)->update(['vestuario_read_at' => now()]);
+        // Hasta dónde había leído antes de este ingreso (para arrancar ahí).
+        $lastRead = $me->vestuario_read_at;
 
-        $messages = Message::query()
+        $msgs = Message::query()
             ->with('member.user:id,name')
             ->latest('id')
             ->limit(80)
             ->get()
             ->reverse()
-            ->values()
+            ->values();
+
+        // Primer mensaje sin leer (de otro): la vista arranca ahí. Null = leíste
+        // todo, arranca abajo.
+        $firstUnreadId = $lastRead
+            ? $msgs->first(fn (Message $m) => $m->member_id !== $me->id && $m->created_at->gt($lastRead))?->id
+            : null;
+
+        // Entrar/pollear el vestuario = "leí hasta acá". Update directo para no
+        // tocar updated_at en cada poll (cada 8s). Habilita la push de "1er sin leer".
+        DB::table('members')->where('id', $me->id)->update(['vestuario_read_at' => now()]);
+
+        $messages = $msgs
             ->map(fn (Message $m) => [
                 'id' => $m->id,
                 'system' => $m->is_system ? json_decode($m->body, true) : null,
@@ -49,6 +60,7 @@ class VestuarioController extends Controller
 
         return Inertia::render('Vestuario', [
             'messages' => $messages,
+            'first_unread_id' => $firstUnreadId,
             'mvp' => fn () => $this->mvpPoll($me->id),
             'roster_count' => $current->club()->activeMembers()->count(),
         ]);

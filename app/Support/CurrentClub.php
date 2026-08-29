@@ -73,6 +73,15 @@ class CurrentClub
 
     public function effectiveRole(): ?string
     {
-        return $this->member ? ($this->actsAsManager() ? 'manager' : 'player') : null;
+        if (! $this->member) {
+            return null;
+        }
+
+        // El técnico es su propio rol (no entra en el toggle admin/jugador).
+        if ($this->member->isCoach()) {
+            return 'coach';
+        }
+
+        return $this->actsAsManager() ? 'manager' : 'player';
     }
 }
