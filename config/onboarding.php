@@ -12,5 +12,5 @@ return [
     // Android compara su propio versionCode con éste: si el suyo es menor, propone
     // bajar el APK nuevo (el sideload no auto-actualiza como Play/TestFlight).
     // OJO: subir esto en cada release de APK, junto con android/app/build.gradle.
-    'apk_version_code' => (int) env('ANDROID_APK_VERSION_CODE', 3),
+    'apk_version_code' => (int) env('ANDROID_APK_VERSION_CODE', 4),
 ];
