@@ -26,11 +26,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
 
     @routes
+    {{-- Splash de carga: el escudo sobre el rojo del club, en vez del negro
+         mientras carga el JS. Se va (fade) cuando la app monta (app.jsx). --}}
+    <style>
+        html, body { background: #E3E5E0; }
+        #splash { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center;
+            background: #D22233; transition: opacity .35s ease; }
+        #splash.gone { opacity: 0; pointer-events: none; }
+        #splash img { width: 40%; max-width: 190px; animation: splash-pulse 1.4s ease-in-out infinite; }
+        @keyframes splash-pulse { 0%, 100% { transform: scale(1); opacity: .92; } 50% { transform: scale(1.06); opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) { #splash img { animation: none; } }
+    </style>
+
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
     @inertiaHead
 </head>
 <body>
+    <div id="splash"><img src="/img/crest-white.png" alt="A.S New Castle"></div>
     @inertia
     <noscript>
         ASOCIAȚIA SPORTIVĂ NEW CASTLE (Asociatia Sportiva New Castle) — Voluntari, Ilfov, România. CIF 53035344.

@@ -13,6 +13,11 @@ createInertiaApp({
     setup({ el, App, props }) {
         syncDir(props.initialPage);
         createRoot(el).render(<App {...props} />);
+        // La app montó: desvanecemos el splash del escudo.
+        requestAnimationFrame(() => {
+            const s = document.getElementById('splash');
+            if (s) { s.classList.add('gone'); setTimeout(() => s.remove(), 400); }
+        });
     },
     progress: {
         color: '#D22233',

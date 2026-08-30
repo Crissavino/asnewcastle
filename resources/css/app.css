@@ -484,3 +484,8 @@ html:has(.nc-shell), body:has(.nc-shell) { overflow: hidden; height: 100%; }
 @media (min-width: 768px) {
   .nc-top.nc-public > img { display: block !important; }
 }
+
+/* Barra de carga entre pantallas (Inertia/NProgress): un poco más gruesa y con
+   glow, para que se note cuando la navegación tarda (mala señal). */
+#nprogress .bar { height: 3px; }
+#nprogress .peg { box-shadow: 0 0 10px var(--red), 0 0 6px var(--red); }
