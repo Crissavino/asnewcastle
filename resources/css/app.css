@@ -351,6 +351,14 @@ button.nc-day { width: 100%; background: none; border: none; border-top: 1px sol
    Sin scroll de página = sin barra de Safari tapando las tabs. */
 .nc-root:has(.nc-shell) { height: 100vh; height: 100dvh; height: var(--app-vh, 100dvh);
   min-height: 0; overflow: hidden; }
+
+/* iOS: al abrir el teclado, Safari scrollea TODA la ventana para "meter" el
+   input a la vista, y eso empujaba la app hacia arriba dejando un hueco blanco.
+   Con la app (shell) presente, se clava el documento: no puede scrollear, así
+   que la app queda quieta y solo el chat scrollea por dentro. Las pantallas de
+   entrada (login/alta) no tienen shell, así que ahí el scroll normal sigue. */
+html:has(.nc-shell) { overflow: hidden; }
+body:has(.nc-shell) { position: fixed; inset: 0; width: 100%; overflow: hidden; }
 .nc-shell { width: 100%; max-width: 430px; height: 100%; background: var(--paper);
   display: flex; flex-direction: column; position: relative; box-shadow: 0 0 0 1px var(--line); }
 .nc-side { display: none; }

@@ -33,13 +33,17 @@ function syncDir(page) {
 router.on('navigate', (event) => syncDir(event.detail.page));
 
 // Altura REAL del viewport: Safari iOS mueve la barra de abajo y el teclado,
-// y 100vh/100dvh no siempre la siguen. visualViewport no miente nunca.
+// y 100vh/100dvh no siempre la siguen. visualViewport no miente nunca. Además,
+// con el documento clavado (body fixed) iOS igual puede dejar un offsetTop al
+// abrir el teclado; lo compensamos con --app-top para que la app no se corra.
 const setAppVh = () => {
-    const h = window.visualViewport?.height ?? window.innerHeight;
-    document.documentElement.style.setProperty('--app-vh', `${h}px`);
+    const vv = window.visualViewport;
+    document.documentElement.style.setProperty('--app-vh', `${vv?.height ?? window.innerHeight}px`);
+    document.documentElement.style.setProperty('--app-top', `${vv?.offsetTop ?? 0}px`);
 };
 setAppVh();
 window.visualViewport?.addEventListener('resize', setAppVh);
+window.visualViewport?.addEventListener('scroll', setAppVh);
 window.addEventListener('resize', setAppVh);
 window.addEventListener('orientationchange', setAppVh);
 
