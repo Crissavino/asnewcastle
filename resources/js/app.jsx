@@ -13,16 +13,29 @@ createInertiaApp({
     setup({ el, App, props }) {
         syncDir(props.initialPage);
         createRoot(el).render(<App {...props} />);
-        // La app montó: desvanecemos el splash del escudo.
+        // La app montó: desvanecemos el splash web del escudo...
         requestAnimationFrame(() => {
             const s = document.getElementById('splash');
             if (s) { s.classList.add('gone'); setTimeout(() => s.remove(), 400); }
         });
+        // ...y escondemos el splash NATIVO (Capacitor), que tapa toda la carga
+        // remota (bajar + montar) para que no se vea negro. En web es no-op.
+        hideNativeSplash();
     },
     progress: {
         color: '#D22233',
     },
 });
+
+// Splash nativo: se configura con launchAutoHide=false, así queda visible
+// durante toda la carga remota y lo bajamos recién acá, con la app ya montada.
+async function hideNativeSplash() {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+        const { SplashScreen } = await import('@capacitor/splash-screen');
+        await SplashScreen.hide();
+    } catch { /* sin el plugin nativo, no molesta */ }
+}
 
 // Dirección del documento según el idioma. El árabe es RTL; el resto LTR. Como
 // el cambio de idioma es una navegación de Inertia (sin recarga entera), el dir
