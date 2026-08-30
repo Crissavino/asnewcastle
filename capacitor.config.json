@@ -10,6 +10,14 @@
   "plugins": {
     "FirebaseMessaging": {
       "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "backgroundColor": "#D22233",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_INSIDE",
+      "splashFullScreen": true,
+      "splashImmersive": true
     }
   }
 }

@@ -16,7 +16,14 @@
     </style>
 
 
+    <!-- Splash de arranque: escudo del club sobre el rojo. En Android 12+ el
+         sistema usa windowSplashScreen* (fondo rojo + escudo como icono); en
+         versiones viejas cae al drawable/splash (escudo sobre rojo también).
+         Con launchAutoHide=false, el plugin lo mantiene hasta que la app monta. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_crest</item>
         <item name="android:background">@drawable/splash</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>
