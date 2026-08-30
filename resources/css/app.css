@@ -78,7 +78,7 @@ body { overscroll-behavior-y: none; }
 .nc-notif-time { font-size: 11px; color: var(--stone); }
 /* el fondo: franjas de césped recién cortado, casi imperceptibles.
    Es EL área que scrollea: header y tabs viven afuera, clavados. */
-.nc-body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+.nc-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain; padding: 16px 14px 32px;
   background: repeating-linear-gradient(0deg, transparent 0 46px, rgba(18,18,18,.022) 46px 92px); }
 
@@ -323,6 +323,11 @@ a.nc-btn { text-decoration: none; }
 .nc-field-l { display: block; margin-bottom: 12px; }
 .nc-field-l input, .nc-field-l select { width: 100%; padding: 11px 12px; border: 1px solid var(--line);
   border-radius: 2px; font-family: 'Archivo', sans-serif; font-size: 14px; color: var(--ink); background: #fff; margin-top: 5px; }
+
+/* iOS: los inputs nativos date/time no respetan el ancho y desbordan (scroll
+   horizontal). Se les saca el chrome nativo y se fuerzan a no pasarse. */
+.nc-field-l input[type="date"],
+.nc-field-l input[type="time"] { -webkit-appearance: none; appearance: none; min-width: 0; max-width: 100%; text-align: center; }
 
 /* fila-botón de disponibilidad en el perfil */
 button.nc-day { width: 100%; background: none; border: none; border-top: 1px solid var(--line);
