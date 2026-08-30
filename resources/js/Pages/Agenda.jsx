@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { Bell, Check, ChevronDown, ChevronUp, Copy, HelpCircle, MapPin, Pencil, Plus, X } from 'lucide-react';
+import { Bell, Check, ChevronDown, ChevronUp, Copy, HelpCircle, MapPin, MessageCircle, Pencil, Plus, X } from 'lucide-react';
 import { useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
@@ -264,9 +264,10 @@ function PresentesSheet({ ev, onClose }) {
 
 function EventCard({ ev, onEdit }) {
     const { t } = useTranslations();
-    const { member } = usePage().props;
+    const { member, invite_url } = usePage().props;
     const { day, time } = useDates();
     const [copied, setCopied] = useState(false);
+    const [copiedWa, setCopiedWa] = useState(false);
     const [reminded, setReminded] = useState(false);
     const [showWho, setShowWho] = useState(false);
     const isManager = member?.role === 'manager';
@@ -297,6 +298,29 @@ function EventCard({ ev, onEdit }) {
         await navigator.clipboard.writeText(ev.convocation ?? '');
         setCopied(true);
         setTimeout(() => setCopied(false), 1600);
+    };
+
+    // Mensaje listo para pegar en el grupo de WhatsApp: tipo, lugar, hora, la
+    // lista de los que van (por orden de anotación, numerada, sin camiseta) y el
+    // link para sumarse (con la app cae en la agenda; sin la app, a descargarla).
+    const copyForWhatsApp = async () => {
+        const title = isMatch
+            ? t('wa.match_title', { opponent: ev.opponent })
+            : t('wa.training_title') + (ev.notes ? ` — ${ev.notes}` : '');
+
+        const lines = [`🔴⚫ *${title}*`, ''];
+        lines.push(`📅 ${day(ev.starts_at)} · ${time(ev.starts_at)}`);
+        if (ev.venue) lines.push(`📍 ${ev.venue}`);
+        lines.push('');
+        lines.push(`✅ *${t('agenda.going_l')} (${ev.going.length})*`);
+        ev.going.forEach((p, i) => lines.push(`${i + 1}. ${p.name}`));
+        lines.push('');
+        lines.push(`${t('agenda.wa_cta')} 👇`);
+        if (invite_url) lines.push(invite_url);
+
+        await navigator.clipboard.writeText(lines.join('\n'));
+        setCopiedWa(true);
+        setTimeout(() => setCopiedWa(false), 1600);
     };
 
     const whoList = (label, list, ghost = false) => list.length > 0 && (
@@ -396,6 +420,13 @@ function EventCard({ ev, onEdit }) {
                 <div className="nc-admin">
                     <div className="nc-label">{t('agenda.convocation')}</div>
                     <div className="nc-namelist">{ev.convocation || t('agenda.nobody')}</div>
+                    {invite_url && (
+                        <div className="nc-admin-actions">
+                            <button className="nc-mini solid" onClick={copyForWhatsApp}>
+                                <MessageCircle size={13} /> {copiedWa ? t('agenda.copied') : t('agenda.copy_whatsapp')}
+                            </button>
+                        </div>
+                    )}
                     <div className="nc-admin-actions">
                         <button className="nc-mini" onClick={copyList}>
                             <Copy size={13} /> {copied ? t('agenda.copied') : t('agenda.copy_list')}

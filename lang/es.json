@@ -119,6 +119,8 @@
     "agenda.nobody": "Todavía no contestó nadie.",
     "agenda.status_line": ":maybe en duda · :out no van · :pending sin contestar",
     "agenda.copy_list": "Copiar lista",
+    "agenda.copy_whatsapp": "Copiar para WhatsApp",
+    "agenda.wa_cta": "¿Todavía no te sumaste?",
     "agenda.copied": "Copiada",
     "agenda.remind": "Recordar a :count",
     "agenda.kit_note": "La casaca de cada fecha es la que hay que llevar: roja de local, celeste de visitante.",

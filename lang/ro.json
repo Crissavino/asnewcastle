@@ -119,6 +119,8 @@
     "agenda.nobody": "Încă n-a răspuns nimeni.",
     "agenda.status_line": ":maybe nesiguri · :out nu vin · :pending fără răspuns",
     "agenda.copy_list": "Copiază lista",
+    "agenda.copy_whatsapp": "Copiază pentru WhatsApp",
+    "agenda.wa_cta": "Încă nu te-ai înscris?",
     "agenda.copied": "Copiată",
     "agenda.remind": "Amintește-le celor :count",
     "agenda.kit_note": "Echipamentul afișat e cel de adus: roșu acasă, bleu în deplasare.",

@@ -10,6 +10,7 @@ use App\Support\CurrentClub;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -84,6 +85,15 @@ class AgendaController extends Controller
             'events' => $events,
             'recent' => $this->recentMatches(),
             'roster_count' => $rosterCount,
+            // Link firmado del club (rol jugador) para el mensaje de WhatsApp que
+            // el manager pega en el grupo. Con la app: cae en la agenda; sin la
+            // app: pantalla de descarga. Vence a los 7 días. Solo para el manager.
+            'invite_url' => $isManager
+                ? URL::temporarySignedRoute('invitacion', now()->addDays(7), [
+                    'club' => $current->club()->slug,
+                    'role' => 'player',
+                ])
+                : null,
             // Banner de legitimación: visible hasta que la ficha esté completa
             'legitimacion' => [
                 'complete' => Registration::query()

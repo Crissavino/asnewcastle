@@ -119,6 +119,8 @@
     "agenda.nobody": "Nobody has answered yet.",
     "agenda.status_line": ":maybe maybe · :out out · :pending no reply",
     "agenda.copy_list": "Copy list",
+    "agenda.copy_whatsapp": "Copy for WhatsApp",
+    "agenda.wa_cta": "Haven't you joined yet?",
     "agenda.copied": "Copied",
     "agenda.remind": "Remind :count",
     "agenda.kit_note": "The kit shown is the one to bring: red at home, sky blue away.",

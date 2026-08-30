@@ -129,6 +129,24 @@ it('el manager ve la convocatoria en texto plano, en orden de confirmación', fu
         );
 });
 
+it('el manager recibe un link de invitación firmado para el mensaje de WhatsApp; el jugador no', function () {
+    $manager = Member::factory()->manager()->create();
+    $player = Member::factory()->for($manager->club)->create();
+
+    $this->actingAs($manager->user)
+        ->get('/agenda')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('invite_url', fn ($url) => is_string($url)
+                && str_contains($url, "/invitacion/{$manager->club->slug}")
+                && str_contains($url, 'role=player')
+                && str_contains($url, 'signature='))
+        );
+
+    $this->actingAs($player->user)
+        ->get('/agenda')
+        ->assertInertia(fn (Assert $page) => $page->where('invite_url', null));
+});
+
 it('el recordatorio manual va solo a los que no contestaron', function () {
     $manager = Member::factory()->manager()->create();
     $event = Event::factory()->by($manager)->create();
