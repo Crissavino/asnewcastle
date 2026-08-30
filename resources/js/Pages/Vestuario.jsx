@@ -218,7 +218,7 @@ export default function Vestuario({ messages, mvp, roster_count, first_unread_id
             onSuccess: () => {
                 reset();
                 clearImage();
-                if (taRef.current) taRef.current.style.height = 'auto';
+                if (taRef.current) taRef.current.style.height = ''; // vuelve a una línea (min-height)
             },
         });
     };
