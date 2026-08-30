@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Rojo del club para el splash de arranque. -->
+    <color name="splash">#D22233</color>
+
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
@@ -15,8 +18,13 @@
         <item name="android:background">@null</item>
     </style>
 
-
+    <!-- Splash de arranque: escudo del club sobre el rojo. Usa la API de
+         SplashScreen (compat lib, API 23+): fondo rojo + el escudo como icono.
+         Con launchAutoHide=false en capacitor.config, queda hasta que la app
+         monta y llama SplashScreen.hide(). -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
+        <item name="windowSplashScreenBackground">@color/splash</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_crest</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>
