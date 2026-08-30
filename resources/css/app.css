@@ -189,7 +189,7 @@ body { overscroll-behavior-y: none; }
   background: var(--paper); }
 @media (min-width: 768px) { .nc-composer { bottom: 0; } }
 .nc-composer input, .nc-composer textarea { flex: 1; min-width: 0; background: #fff; border: 1px solid var(--line); border-radius: 2px; padding: 11px 12px; color: var(--ink); font-family: 'Archivo', sans-serif; font-size: 14px; }
-.nc-composer textarea { resize: none; overflow-y: auto; display: block; line-height: 20px; min-height: 42px; max-height: 120px; }
+.nc-composer textarea { resize: none; overflow-y: auto; display: block; line-height: 20px; min-height: 44px; max-height: 120px; }
 .nc-composer input::placeholder, .nc-composer textarea::placeholder { color: var(--stone); }
 
 /* fotos en el chat */
@@ -242,7 +242,7 @@ body { overscroll-behavior-y: none; }
 .nc-btn:disabled { opacity: .28; cursor: not-allowed; box-shadow: none; }
 .nc-btn.ghost { background: #fff; border: 1px solid var(--ink); color: var(--ink); box-shadow: 3px 3px 0 rgba(18,18,18,.2); }
 .nc-btn.dark { background: var(--ink); box-shadow: 3px 3px 0 var(--red); }
-.nc-icon-btn { background: var(--red); border: none; border-radius: 2px; width: 44px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; }
+.nc-icon-btn { background: var(--red); border: none; border-radius: 2px; width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; }
 
 /* tabs */
 .nc-tabs { flex: none; display: flex; background: #fff; border-top: 1px solid var(--line);
