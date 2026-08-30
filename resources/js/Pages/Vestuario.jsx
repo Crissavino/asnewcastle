@@ -78,6 +78,14 @@ export default function Vestuario({ messages, mvp, roster_count, first_unread_id
     const intl = INTL_LOCALES[locale] ?? 'en-GB';
     const end = useRef(null);
     const scrollBox = useRef(null);
+    const taRef = useRef(null);
+    // El textarea del composer crece con el texto (hasta ~5 líneas, después scrollea).
+    const autoGrow = () => {
+        const el = taRef.current;
+        if (!el) return;
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    };
     // Se captura en el primer render: al entrar arrancamos ahí (los polls no lo pisan).
     const firstUnread = useRef(first_unread_id);
     const didInit = useRef(false);
@@ -210,6 +218,7 @@ export default function Vestuario({ messages, mvp, roster_count, first_unread_id
             onSuccess: () => {
                 reset();
                 clearImage();
+                if (taRef.current) taRef.current.style.height = 'auto';
             },
         });
     };
@@ -345,9 +354,11 @@ export default function Vestuario({ messages, mvp, roster_count, first_unread_id
                     <button type="button" className="nc-icon-btn ghost" onClick={() => fileRef.current?.click()} aria-label={t('vestuario.photo')}>
                         <Camera size={17} />
                     </button>
-                    <input
+                    <textarea
+                        ref={taRef}
+                        rows={1}
                         value={data.body}
-                        onChange={(e) => setData('body', e.target.value)}
+                        onChange={(e) => { setData('body', e.target.value); autoGrow(); }}
                         placeholder={t('vestuario.placeholder')}
                         maxLength={500}
                     />

@@ -184,12 +184,13 @@ body { overscroll-behavior-y: none; }
 .nc-sys::after { content: ' —'; color: var(--aqua-dk); }
 /* el compositor queda siempre a la vista: pegado arriba de las tabs en
    mobile, al borde de abajo en tablet/desktop */
-.nc-composer { display: flex; gap: 8px; padding: 12px 0 14px; border-top: 1px solid var(--line);
+.nc-composer { display: flex; gap: 8px; align-items: flex-end; padding: 12px 0 14px; border-top: 1px solid var(--line);
   position: sticky; bottom: calc(57px + env(safe-area-inset-bottom)); z-index: 25;
   background: var(--paper); }
 @media (min-width: 768px) { .nc-composer { bottom: 0; } }
-.nc-composer input { flex: 1; background: #fff; border: 1px solid var(--line); border-radius: 2px; padding: 11px 12px; color: var(--ink); font-family: 'Archivo', sans-serif; font-size: 14px; }
-.nc-composer input::placeholder { color: var(--stone); }
+.nc-composer input, .nc-composer textarea { flex: 1; min-width: 0; background: #fff; border: 1px solid var(--line); border-radius: 2px; padding: 11px 12px; color: var(--ink); font-family: 'Archivo', sans-serif; font-size: 14px; }
+.nc-composer textarea { resize: none; overflow-y: auto; max-height: 120px; line-height: 1.35; display: block; }
+.nc-composer input::placeholder, .nc-composer textarea::placeholder { color: var(--stone); }
 
 /* fotos en el chat */
 .nc-photo { display: block; max-width: 100%; max-height: 260px; border-radius: 9px; margin: 2px 0 6px; cursor: pointer; }
@@ -463,10 +464,11 @@ button.nc-day { width: 100%; background: none; border: none; border-top: 1px sol
    en el teléfono ningún campo baja de 16 (el chat, los formularios, todo) */
 @media (max-width: 767px) {
   .nc-composer input,
+  .nc-composer textarea,
   .nc-field-l input,
   .nc-field-l select,
   .nc-rsvp button + input { font-size: 16px; }
-  .nc-composer input { padding: 10px 12px; }
+  .nc-composer input, .nc-composer textarea { padding: 10px 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) { .nc-root *, .nc-root *::before { animation: none !important; transition: none !important; } }
