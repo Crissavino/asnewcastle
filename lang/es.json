@@ -147,6 +147,7 @@
     "cuota.transfer_note": "Cuando el delegado reciba la transferencia, te marca la cuota como paga.",
     "cuota.copy": "Copiar",
     "cuota.copied": "¡Copiado!",
+    "cuota.or": "o",
     "cuota.autopay": "Débito automático",
     "cuota.recommended": "recomendado",
     "cuota.autopay_pitch_short": "Se cobra solo todos los meses. Lo activás una vez y te olvidás.",
