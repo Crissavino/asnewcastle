@@ -23,7 +23,7 @@ class AltaController extends Controller
     /** Días de semana = entrenamiento (después de las 19/20); finde = partido. */
     public const SLOTS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
-    public const MAX_NUMBER = 30;
+    public const MAX_NUMBER = 40;
 
     public function show(): Response|RedirectResponse
     {
