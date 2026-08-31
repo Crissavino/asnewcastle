@@ -1,5 +1,6 @@
 import { router, useForm, usePage } from '@inertiajs/react';
-import { Camera, Send, Star, X } from 'lucide-react';
+import { Send, X } from 'lucide-react';
+import { IconFigura, IconCamara } from '../Components/TabIcons';
 import { useEffect, useRef, useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
@@ -43,7 +44,7 @@ function MvpPoll({ mvp, onClose }) {
                                     disabled={!canVote || c.id === member?.id}
                                     aria-label={t('vestuario.mvp_title')}
                                 >
-                                    <Star size={16} fill={mvp.my_vote === c.id ? 'currentColor' : 'none'} />
+                                    <IconFigura size={16} fill={mvp.my_vote === c.id ? 'currentColor' : 'none'} />
                                     <b className="nc-num">{c.votes}</b>
                                 </button>
                             </div>
@@ -336,7 +337,7 @@ export default function Vestuario({ messages, mvp, roster_count, first_unread_id
                 {/* La encuesta vive detrás de un botón flotante para no comerse el chat */}
                 {mvp && (
                     <button type="button" className="nc-fab" onClick={() => setPollOpen(true)} aria-label={t('vestuario.mvp_title')}>
-                        <Star size={22} fill={mvp.my_vote ? 'currentColor' : 'none'} />
+                        <IconFigura size={22} fill={mvp.my_vote ? 'currentColor' : 'none'} />
                         {mvp.total_votes > 0 && <b className="nc-num">{mvp.total_votes}</b>}
                     </button>
                 )}
@@ -352,7 +353,7 @@ export default function Vestuario({ messages, mvp, roster_count, first_unread_id
                 <form className="nc-composer" onSubmit={send}>
                     <input type="file" accept="image/*" hidden ref={fileRef} onChange={pickImage} />
                     <button type="button" className="nc-icon-btn ghost" onClick={() => fileRef.current?.click()} aria-label={t('vestuario.photo')}>
-                        <Camera size={17} />
+                        <IconCamara size={17} />
                     </button>
                     <textarea
                         ref={taRef}

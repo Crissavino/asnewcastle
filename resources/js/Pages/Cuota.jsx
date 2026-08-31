@@ -1,5 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
-import { Bell, Check, Copy, Shield } from 'lucide-react';
+import { Check, Copy, Shield } from 'lucide-react';
+import { IconBell } from '../Components/TabIcons';
 import { useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
@@ -573,7 +574,7 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                                     </div>
                                     <div className="nc-admin-actions">
                                         <button className="nc-mini solid" onClick={claim}>
-                                            <Bell size={13} />
+                                            <IconBell size={13} />
                                             {claimed || flash.status
                                                 ? t('cuota.claimed', { count: caja.debtors.length })
                                                 : t('cuota.claim', { count: caja.debtors.length })}

@@ -1,5 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
-import { ArrowLeft, Check, Star, X } from 'lucide-react';
+import { ArrowLeft, Check, X } from 'lucide-react';
+import { IconFigura } from '../Components/TabIcons';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
 import { useTranslations } from '../i18n';
@@ -147,7 +148,7 @@ export default function Estadisticas({ stats }) {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                                 {m.votes > 0 && (
                                     <span className="nc-meta nc-num" style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                                        <Star size={12} /> {m.votes}
+                                        <IconFigura size={12} /> {m.votes}
                                     </span>
                                 )}
                                 {m.played

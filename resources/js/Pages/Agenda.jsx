@@ -1,5 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { Bell, Check, ChevronDown, ChevronUp, Copy, HelpCircle, MapPin, MessageCircle, Pencil, Plus, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Copy, HelpCircle, MessageCircle, Pencil, Plus, X } from 'lucide-react';
+import { IconUbicacion, IconBell } from '../Components/TabIcons';
 import { useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
@@ -368,7 +369,7 @@ function EventCard({ ev, onEdit }) {
             </div>
 
             <div className="nc-meta" style={{ marginTop: 10, display: 'flex', gap: 6 }}>
-                <MapPin size={13} style={{ marginTop: 3, flexShrink: 0 }} />
+                <IconUbicacion size={13} style={{ marginTop: 3, flexShrink: 0 }} />
                 <span>{ev.venue}</span>
             </div>
             {ev.notes && <div className="nc-meta" style={{ marginTop: 3 }}>{ev.notes}</div>}
@@ -438,7 +439,7 @@ function EventCard({ ev, onEdit }) {
                         </button>
                         {toRemind > 0 && (
                             <button className="nc-mini solid" onClick={remind} disabled={reminded !== null}>
-                                <Bell size={13} /> {t('agenda.remind', { count: toRemind })}
+                                <IconBell size={13} /> {t('agenda.remind', { count: toRemind })}
                             </button>
                         )}
                     </div>
