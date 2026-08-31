@@ -19,7 +19,7 @@ body { overscroll-behavior-y: none; }
   background: #E3E5E0; min-height: 100vh; display: flex; justify-content: center;
 }
 .nc-root *, .nc-root *::before, .nc-root *::after { box-sizing: border-box; }
-.nc-app { width: 100%; max-width: 430px; min-height: 100vh; background: var(--paper);
+.nc-app { width: 100%; max-width: 500px; min-height: 100vh; background: var(--paper);
   display: flex; flex-direction: column; position: relative; box-shadow: 0 0 0 1px var(--line); }
 /* Tipografía display en itálica: energía de camiseta / póster de partido */
 .nc-display { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; letter-spacing: -.01em; font-style: italic; }
@@ -327,7 +327,7 @@ a.nc-btn { text-decoration: none; }
 .nc-sheet { position: fixed; inset: 0; background: rgba(18,18,18,.55); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
 /* max-height sobre el viewport REAL (--app-vh): con 92vh de iOS el sheet quedaba
    más alto que la pantalla visible y no se podía scrollear hasta el botón */
-.nc-sheet-inner { width: 100%; max-width: 430px; background: #fff; border-top: 4px solid var(--red);
+.nc-sheet-inner { width: 100%; max-width: 500px; background: #fff; border-top: 4px solid var(--red);
   padding: 22px 20px calc(26px + env(safe-area-inset-bottom)); animation: nc-up .2s ease-out;
   max-height: calc(100dvh - 54px); max-height: calc(var(--app-vh, 100dvh) - 54px);
   overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
@@ -380,7 +380,7 @@ button.nc-day { width: 100%; background: none; border: none; border-top: 1px sol
 .nc-root:has(.nc-shell) { position: fixed; top: var(--app-top, 0px); left: 0; right: 0;
   height: 100dvh; height: var(--app-vh, 100dvh); min-height: 0; overflow: hidden; }
 html:has(.nc-shell), body:has(.nc-shell) { overflow: hidden; height: 100%; }
-.nc-shell { width: 100%; max-width: 430px; height: 100%; background: var(--paper);
+.nc-shell { width: 100%; max-width: 500px; height: 100%; background: var(--paper);
   display: flex; flex-direction: column; position: relative; box-shadow: 0 0 0 1px var(--line); }
 .nc-side { display: none; }
 .nc-main { flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
