@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { Bell } from 'lucide-react';
+import { IconBell } from './TabIcons';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from '../i18n';
 
@@ -75,7 +75,7 @@ export default function NotificationBell() {
     return (
         <div className="nc-bell" ref={ref}>
             <button type="button" className="nc-bell-btn" onClick={toggle} aria-label={t('notifications.title')}>
-                <Bell size={20} strokeWidth={2} />
+                <IconBell size={20} strokeWidth={2} />
                 {unread > 0 && <b className="nc-bell-badge nc-num">{unread > 9 ? '9+' : unread}</b>}
             </button>
 

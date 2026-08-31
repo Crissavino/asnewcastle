@@ -1,5 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
-import { Bell, Check, Copy, Shield } from 'lucide-react';
+import { Check, Copy, Shield } from 'lucide-react';
+import { IconBell } from '../Components/TabIcons';
 import { useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
@@ -255,7 +256,7 @@ function FeeSettings({ config, currency }) {
                     </div>
                     {(m.subscription_status === 'active' || m.subscription_status === 'past_due') && (
                         <div className="nc-row" style={{ paddingInlineStart: 34, marginTop: -2, marginBottom: 6 }}>
-                            <span className="nc-meta" style={{ fontSize: 11, color: m.subscription_status === 'active' ? 'var(--aqua-dk)' : 'var(--red-dk)' }}>
+                            <span className="nc-meta" style={{ fontSize: 11, color: m.subscription_status === 'active' ? 'var(--aqua-tx)' : 'var(--red-dk)' }}>
                                 {m.subscription_status === 'active' ? t('cuota.autopay_on') : t('cuota.autopay_failed')}
                             </span>
                             <ConfirmMini onConfirm={() => cancelSub(m.id)}>{t('cuota.autopay_cancel')}</ConfirmMini>
@@ -420,7 +421,7 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                     </div>
                     <div className="nc-row" style={{ marginTop: 12 }}>
                         <span className="nc-meta">{t('cuota.month_in')}</span>
-                        <span className="nc-num" style={{ fontSize: 14, color: 'var(--aqua-dk)', fontWeight: 700 }}>
+                        <span className="nc-num" style={{ fontSize: 14, color: 'var(--aqua-tx)', fontWeight: 700 }}>
                             +{money(resumen.month_in_cents)} {currency}
                         </span>
                     </div>
@@ -531,7 +532,7 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                         <div className="nc-label" style={{ marginBottom: 2 }}>{t('cuota.all_time')}</div>
                         <div className="nc-row">
                             <span className="nc-meta">{t('cuota.total_paid')}</span>
-                            <span className="nc-num" style={{ fontSize: 14, color: 'var(--aqua-dk)', fontWeight: 700 }}>
+                            <span className="nc-num" style={{ fontSize: 14, color: 'var(--aqua-tx)', fontWeight: 700 }}>
                                 {money(caja.paid_all_cents)} {currency}
                             </span>
                         </div>
@@ -587,7 +588,7 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                                     </div>
                                     <div className="nc-admin-actions">
                                         <button className="nc-mini solid" onClick={claim}>
-                                            <Bell size={13} />
+                                            <IconBell size={13} />
                                             {claimed || flash.status
                                                 ? t('cuota.claimed', { count: caja.debtors.length })
                                                 : t('cuota.claim', { count: caja.debtors.length })}

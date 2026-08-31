@@ -1,5 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { Bell, Check, ChevronDown, ChevronUp, Copy, HelpCircle, MapPin, MessageCircle, Pencil, Plus, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Copy, HelpCircle, MessageCircle, Pencil, Plus, X } from 'lucide-react';
+import { IconUbicacion, IconBell } from '../Components/TabIcons';
 import { useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
@@ -249,7 +250,7 @@ function PresentesSheet({ ev, onClose }) {
                                     <Kit n={p.shirt_number ?? '–'} size="sm" />
                                     <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name ?? '—'}</span>
                                 </span>
-                                {on ? <Check size={15} color="var(--aqua-dk)" /> : <X size={15} style={{ opacity: 0.5 }} />}
+                                {on ? <Check size={15} color="var(--aqua-tx)" /> : <X size={15} style={{ opacity: 0.5 }} />}
                             </button>
                         );
                     })}
@@ -338,10 +339,10 @@ function EventCard({ ev, onEdit }) {
     );
 
     return (
-        <div className={`nc-card ${isMatch ? (ev.is_home ? 'match' : 'away-match') : ''}`} style={ev.cancelled ? { opacity: 0.6 } : undefined}>
+        <div className={`nc-card ${isMatch ? (ev.is_home ? 'match' : 'away-match') : 'training'}`} style={ev.cancelled ? { opacity: 0.6 } : undefined}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                 <div>
-                    <div className="nc-label" style={{ color: isMatch ? (ev.is_home ? 'var(--red)' : 'var(--aqua-dk)') : 'var(--stone)' }}>
+                    <div className="nc-label" style={{ color: isMatch ? (ev.is_home ? 'var(--red)' : 'var(--aqua-tx)') : 'var(--stone)' }}>
                         {isMatch ? (ev.is_home ? t('agenda.match_home') : t('agenda.match_away')) : t('agenda.training')}
                         {ev.cancelled && <span className="nc-pill no" style={{ marginInlineStart: 8 }}>{t('agenda.cancelled')}</span>}
                     </div>
@@ -351,7 +352,7 @@ function EventCard({ ev, onEdit }) {
                     {ev.opponent && <div className="nc-meta">{day(ev.starts_at)}</div>}
                 </div>
                 <div style={{ textAlign: 'end' }}>
-                    <div className="nc-num" style={{ fontSize: 19, fontWeight: 700 }}>{time(ev.starts_at)}</div>
+                    <div className="nc-num nc-time" style={{ fontSize: 21, fontWeight: 700 }}>{time(ev.starts_at)}</div>
                     {isMatch && !ev.cancelled && !isCoach && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 5, marginTop: 6 }}>
                             {ev.kit === 'both' ? (
@@ -368,7 +369,7 @@ function EventCard({ ev, onEdit }) {
             </div>
 
             <div className="nc-meta" style={{ marginTop: 10, display: 'flex', gap: 6 }}>
-                <MapPin size={13} style={{ marginTop: 3, flexShrink: 0 }} />
+                <IconUbicacion size={13} style={{ marginTop: 3, flexShrink: 0 }} />
                 <span>{ev.venue}</span>
             </div>
             {ev.notes && <div className="nc-meta" style={{ marginTop: 3 }}>{ev.notes}</div>}
@@ -438,7 +439,7 @@ function EventCard({ ev, onEdit }) {
                         </button>
                         {toRemind > 0 && (
                             <button className="nc-mini solid" onClick={remind} disabled={reminded !== null}>
-                                <Bell size={13} /> {t('agenda.remind', { count: toRemind })}
+                                <IconBell size={13} /> {t('agenda.remind', { count: toRemind })}
                             </button>
                         )}
                     </div>

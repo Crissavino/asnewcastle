@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { CalendarDays, ListOrdered, MessageSquare, Wallet, User } from 'lucide-react';
+import { IconAgenda, IconTabla, IconVestuario, IconCuota, IconPerfil } from '../Components/TabIcons';
 import AndroidUpdate from '../Components/AndroidUpdate';
 import Crest from '../Components/Crest';
 import Kit from '../Components/Kit';
@@ -7,11 +7,11 @@ import NotificationBell from '../Components/NotificationBell';
 import { useTranslations } from '../i18n';
 
 const TABS = [
-    { key: 'agenda', route: 'agenda', Icon: CalendarDays },
-    { key: 'tabla', route: 'tabla', Icon: ListOrdered },
-    { key: 'vestuario', route: 'vestuario', Icon: MessageSquare },
-    { key: 'cuota', route: 'cuota', Icon: Wallet },
-    { key: 'perfil', route: 'perfil', Icon: User },
+    { key: 'agenda', route: 'agenda', Icon: IconAgenda },
+    { key: 'tabla', route: 'tabla', Icon: IconTabla },
+    { key: 'vestuario', route: 'vestuario', Icon: IconVestuario },
+    { key: 'cuota', route: 'cuota', Icon: IconCuota },
+    { key: 'perfil', route: 'perfil', Icon: IconPerfil },
 ];
 
 function NavLinks({ iconSize }) {
