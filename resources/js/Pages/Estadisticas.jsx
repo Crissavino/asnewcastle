@@ -151,7 +151,7 @@ export default function Estadisticas({ stats }) {
                                     </span>
                                 )}
                                 {m.played
-                                    ? <Check size={15} color="var(--aqua-dk, #2E8288)" />
+                                    ? <Check size={15} color="var(--aqua-tx, #16646A)" />
                                     : <X size={15} color="var(--red-dk, #B01C2B)" style={{ opacity: 0.7 }} />}
                             </div>
                         </div>

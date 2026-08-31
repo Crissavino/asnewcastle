@@ -228,7 +228,7 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
                                 style={{ opacity: on ? 1 : 0.45 }}
                             >
                                 <span style={{ fontSize: 14 }}>{t(`slot.${s}`)}</span>
-                                {on ? <Check size={15} color="var(--aqua-dk)" /> : <span className="nc-meta">—</span>}
+                                {on ? <Check size={15} color="var(--aqua-tx)" /> : <span className="nc-meta">—</span>}
                             </button>
                         );
                     })}

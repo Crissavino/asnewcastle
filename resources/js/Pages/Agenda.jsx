@@ -249,7 +249,7 @@ function PresentesSheet({ ev, onClose }) {
                                     <Kit n={p.shirt_number ?? '–'} size="sm" />
                                     <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name ?? '—'}</span>
                                 </span>
-                                {on ? <Check size={15} color="var(--aqua-dk)" /> : <X size={15} style={{ opacity: 0.5 }} />}
+                                {on ? <Check size={15} color="var(--aqua-tx)" /> : <X size={15} style={{ opacity: 0.5 }} />}
                             </button>
                         );
                     })}
@@ -341,7 +341,7 @@ function EventCard({ ev, onEdit }) {
         <div className={`nc-card ${isMatch ? (ev.is_home ? 'match' : 'away-match') : 'training'}`} style={ev.cancelled ? { opacity: 0.6 } : undefined}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                 <div>
-                    <div className="nc-label" style={{ color: isMatch ? (ev.is_home ? 'var(--red)' : 'var(--aqua-dk)') : 'var(--stone)' }}>
+                    <div className="nc-label" style={{ color: isMatch ? (ev.is_home ? 'var(--red)' : 'var(--aqua-tx)') : 'var(--stone)' }}>
                         {isMatch ? (ev.is_home ? t('agenda.match_home') : t('agenda.match_away')) : t('agenda.training')}
                         {ev.cancelled && <span className="nc-pill no" style={{ marginInlineStart: 8 }}>{t('agenda.cancelled')}</span>}
                     </div>

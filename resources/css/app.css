@@ -185,7 +185,7 @@ body { overscroll-behavior-y: none; }
 .nc-orig { display: block; color: var(--stone); font-size: 12.5px; }
 .nc-tr-text { display: block; margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--line); }
 .nc-tr-link { align-self: flex-start; background: none; border: none; cursor: pointer; padding: 3px 4px 0;
-  font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 700; color: var(--aqua-dk);
+  font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 700; color: var(--aqua-tx);
   letter-spacing: .04em; text-transform: uppercase; }
 .nc-tr-link:disabled { color: var(--stone); cursor: default; }
 .nc-daysep { text-align: center; margin: 18px 0 8px; }
@@ -193,8 +193,8 @@ body { overscroll-behavior-y: none; }
   color: var(--stone); background: rgba(18,18,18,.06); padding: 4px 12px; border-radius: 12px; }
 /* los avisos del sistema como cinta de ticker */
 .nc-sys { text-align: center; font-size: 11px; color: var(--stone); letter-spacing: .07em; padding: 4px 0 14px; text-transform: uppercase; font-weight: 600; }
-.nc-sys::before { content: '— '; color: var(--aqua-dk); }
-.nc-sys::after { content: ' —'; color: var(--aqua-dk); }
+.nc-sys::before { content: '— '; color: var(--aqua-tx); }
+.nc-sys::after { content: ' —'; color: var(--aqua-tx); }
 /* el compositor queda siempre a la vista: pegado arriba de las tabs en
    mobile, al borde de abajo en tablet/desktop */
 .nc-composer { display: flex; gap: 8px; align-items: flex-end; padding: 12px 0 14px; border-top: 1px solid var(--line);
@@ -330,7 +330,7 @@ a.nc-btn { text-decoration: none; }
 .nc-bar i { display: block; height: 100%;
   background: repeating-linear-gradient(90deg, transparent 0 5px, rgba(255,255,255,.4) 5px 6px), var(--red); }
 .nc-pill { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; padding: 4px 8px; border-radius: 2px; }
-.nc-pill.ok { background: rgba(46,130,136,.14); color: var(--aqua-dk); }
+.nc-pill.ok { background: rgba(46,130,136,.14); color: var(--aqua-tx); }
 .nc-pill.no { background: rgba(210,34,51,.11); color: var(--red-dk); }
 
 /* formulario */

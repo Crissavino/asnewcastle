@@ -93,7 +93,7 @@ function ManagerBoard({ roster, publicUrl }) {
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 6 }}>
                         {r.status !== 'pendiente' ? (
-                            <span className="nc-meta" style={{ fontSize: 12, color: 'var(--aqua-dk, #2b8a8f)' }}>
+                            <span className="nc-meta" style={{ fontSize: 12, color: 'var(--aqua-tx, #16646A)' }}>
                                 {t(`legitimacion.status_${r.status}`)}
                             </span>
                         ) : r.missing === null ? (

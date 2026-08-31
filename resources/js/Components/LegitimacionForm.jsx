@@ -63,7 +63,7 @@ function FileField({ label, uploaded, file, onChange, accept = FILE_ACCEPT, erro
                 {file ? (
                     <span className="nc-meta" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
                 ) : uploaded ? (
-                    <span className="nc-meta" style={{ fontSize: 12, color: 'var(--aqua-dk, #2b8a8f)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <span className="nc-meta" style={{ fontSize: 12, color: 'var(--aqua-tx, #16646A)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                         <Check size={14} /> {t('legitimacion.uploaded')}
                     </span>
                 ) : null}
