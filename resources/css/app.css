@@ -268,11 +268,14 @@ body { overscroll-behavior-y: none; }
 .nc-tabs a.on { color: var(--red); border-top-color: var(--red);
   background: linear-gradient(180deg, rgba(210,34,51,.07), transparent 70%); }
 
-/* alta */
-.nc-step { padding: calc(24px + env(safe-area-inset-top)) 20px 28px;
+/* alta y pantallas de entrada (login, código) */
+.nc-step { position: relative; padding: calc(24px + env(safe-area-inset-top)) 20px 28px;
   display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+/* filete tricolor del club arriba de la tarjeta de entrada */
+.nc-step::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+  background: linear-gradient(90deg, var(--red) 0 40%, var(--ink) 40% 60%, var(--aqua) 60% 100%); }
 .nc-progress { display: flex; gap: 4px; margin-bottom: 26px; }
-.nc-progress i { flex: 1; height: 3px; background: var(--line); }
+.nc-progress i { flex: 1; height: 3px; border-radius: 2px; background: var(--line); }
 .nc-progress i.on { background: var(--red); }
 .nc-q { font-size: 25px; line-height: 1.03; margin: 6px 0 20px; }
 .nc-opt { width: 100%; text-align: start; padding: 15px 16px; margin-bottom: 8px; cursor: pointer;
@@ -282,6 +285,7 @@ body { overscroll-behavior-y: none; }
 .nc-input { width: 100%; background: transparent; border: none; border-bottom: 3px solid var(--ink);
   padding: 8px 0; color: var(--ink); font-family: 'Archivo Black', sans-serif; font-size: 25px; text-transform: uppercase; }
 .nc-input::placeholder { color: #C6C9C4; }
+.nc-input:focus { border-bottom-color: var(--red); outline: none; }
 .nc-numgrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
 .nc-numgrid button { aspect-ratio: 1; border: 1px solid var(--line); background: #fff; color: var(--ink);
   border-radius: 2px; cursor: pointer; font-family: 'Rubik', sans-serif; font-size: 13px; font-weight: 600; }
