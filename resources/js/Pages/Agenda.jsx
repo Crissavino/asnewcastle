@@ -338,7 +338,7 @@ function EventCard({ ev, onEdit }) {
     );
 
     return (
-        <div className={`nc-card ${isMatch ? (ev.is_home ? 'match' : 'away-match') : ''}`} style={ev.cancelled ? { opacity: 0.6 } : undefined}>
+        <div className={`nc-card ${isMatch ? (ev.is_home ? 'match' : 'away-match') : 'training'}`} style={ev.cancelled ? { opacity: 0.6 } : undefined}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                 <div>
                     <div className="nc-label" style={{ color: isMatch ? (ev.is_home ? 'var(--red)' : 'var(--aqua-dk)') : 'var(--stone)' }}>
@@ -351,7 +351,7 @@ function EventCard({ ev, onEdit }) {
                     {ev.opponent && <div className="nc-meta">{day(ev.starts_at)}</div>}
                 </div>
                 <div style={{ textAlign: 'end' }}>
-                    <div className="nc-num" style={{ fontSize: 19, fontWeight: 700 }}>{time(ev.starts_at)}</div>
+                    <div className="nc-num nc-time" style={{ fontSize: 21, fontWeight: 700 }}>{time(ev.starts_at)}</div>
                     {isMatch && !ev.cancelled && !isCoach && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 5, marginTop: 6 }}>
                             {ev.kit === 'both' ? (

@@ -12,6 +12,8 @@ body { overscroll-behavior-y: none; }
 
 .nc-root {
   --red: #D22233; --red-dk: #9C1523; --aqua: #8AD4D8; --aqua-dk: #2E8288;
+  /* teal profundo SOLO para texto sobre blanco: el celeste claro no contrasta */
+  --aqua-tx: #16646A;
   --ink: #121212; --paper: #F1F2EF; --card: #FFFFFF; --stone: #767B77; --line: #DBDDD8;
   font-family: 'Archivo', system-ui, sans-serif; color: var(--ink);
   background: #E3E5E0; min-height: 100vh; display: flex; justify-content: center;
@@ -36,14 +38,20 @@ body { overscroll-behavior-y: none; }
 .nc-kit { filter: drop-shadow(1px 2px 0 rgba(18,18,18,.18)); }
 .nc-kit.ghost { opacity: .3; filter: grayscale(.85); }
 
-/* header: rojo a rayas + línea negra + filete celeste — los tres colores del club */
+/* header: rojo con profundidad (gradiente + rayas) + resplandor celeste en la
+   esquina + línea negra + filete celeste. Sin overflow:hidden porque el panel
+   de notificaciones cuelga anclado acá. */
 .nc-top { position: relative; flex: none; z-index: 20; color: #fff;
   padding: calc(14px + env(safe-area-inset-top)) 16px 13px;
   display: flex; align-items: center; gap: 12px; border-bottom: 3px solid var(--ink);
-  box-shadow: 0 3px 0 var(--aqua); }
+  box-shadow: 0 3px 0 var(--aqua);
+  background:
+    radial-gradient(150px 130px at 100% -12%, rgba(138,212,216,.34), transparent 72%),
+    repeating-linear-gradient(90deg, transparent 0 9px, rgba(255,255,255,.16) 9px 11px),
+    linear-gradient(118deg, var(--red) 0 52%, var(--red-dk) 100%); }
 .nc-top img { filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
-.nc-eyebrow { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; font-weight: 700; opacity: .85; }
-.nc-h1 { font-size: 24px; line-height: .95; margin: 2px 0 0; text-shadow: 2px 2px 0 rgba(0,0,0,.28); }
+.nc-eyebrow { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; font-weight: 700; opacity: .9; }
+.nc-h1 { font-size: 26px; line-height: .92; margin: 2px 0 0; text-shadow: 2px 2px 0 rgba(0,0,0,.3); }
 .nc-role { margin-inline-start: auto; display: flex; background: rgba(0,0,0,.28); border-radius: 2px; padding: 2px; }
 .nc-role button { border: none; background: transparent; color: rgba(255,255,255,.75); cursor: pointer;
   font-family: 'Archivo', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .08em;
@@ -82,12 +90,15 @@ body { overscroll-behavior-y: none; }
   overscroll-behavior: contain; padding: 16px 14px 32px;
   background: repeating-linear-gradient(0deg, transparent 0 46px, rgba(18,18,18,.022) 46px 92px); }
 
-.nc-card { background: var(--card); border: 1px solid var(--line); border-radius: 2px; padding: 16px; margin-bottom: 12px;
-  position: relative; box-shadow: 0 1px 0 rgba(18,18,18,.05); }
-.nc-card.match { border-left: 4px solid var(--red);
+.nc-card { background: var(--card); border: 1px solid var(--line); border-radius: 3px; padding: 16px; margin-bottom: 12px;
+  position: relative; box-shadow: 0 2px 0 rgba(18,18,18,.06), 0 10px 20px -16px rgba(18,18,18,.45); }
+.nc-card.match { border-left: 5px solid var(--red);
   background-image: repeating-linear-gradient(115deg, transparent 0 18px, rgba(210,34,51,.03) 18px 36px); }
-.nc-card.away-match { border-left: 4px solid var(--aqua-dk);
+.nc-card.away-match { border-left: 5px solid var(--aqua-dk);
   background-image: repeating-linear-gradient(115deg, transparent 0 18px, rgba(46,130,136,.04) 18px 36px); }
+/* entrenamiento: riel negro y la hora en rojo (el partido la deja en tinta) */
+.nc-card.training { border-left: 5px solid var(--ink); }
+.nc-card.training .nc-time { color: var(--red); }
 .nc-label { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--stone); font-weight: 700; }
 /* banderín de córner en los títulos de sección de cada tarjeta */
 .nc-card > .nc-label::before, .nc-admin > .nc-label::before { content: ''; display: inline-block;
@@ -102,15 +113,15 @@ body { overscroll-behavior-y: none; }
   font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
   display: flex; align-items: center; justify-content: center; gap: 5px; transition: background .14s, color .14s, border-color .14s; }
 .nc-rsvp button:hover { border-color: var(--ink); color: var(--ink); }
-.nc-rsvp button.on.in { background: var(--red); border-color: var(--red); color: #fff; }
+.nc-rsvp button.on.in { background: var(--red); border-color: var(--red); color: #fff; box-shadow: 2px 2px 0 var(--ink); }
 .nc-rsvp button.on.maybe { background: var(--aqua); border-color: var(--aqua); color: var(--ink); }
 .nc-rsvp button.on.out { background: var(--ink); border-color: var(--ink); color: #fff; }
 .nc-root button:focus-visible, .nc-root input:focus-visible, .nc-root select:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 
 /* el contador como marcador: número gigante con subrayado celeste de resaltador */
 .nc-count { display: flex; align-items: baseline; gap: 7px; margin-top: 16px; }
-.nc-count .n { font-family: 'Archivo Black', sans-serif; font-size: 32px; line-height: 1; font-style: italic;
-  box-shadow: inset 0 -7px 0 rgba(138,212,216,.55); padding: 0 3px; }
+.nc-count .n { font-family: 'Archivo Black', sans-serif; font-size: 38px; line-height: 1; font-style: italic;
+  box-shadow: inset 0 -8px 0 rgba(138,212,216,.6); padding: 0 3px; }
 .nc-kits { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 11px; }
 
 /* bloque delegado */
