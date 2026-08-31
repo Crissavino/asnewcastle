@@ -45,7 +45,7 @@ class GenerateMonthlyDues extends Command
                     [
                         'amount_cents' => $amount,
                         'status' => 'pending',
-                        'due_date' => $period->copy()->day(20)->toDateString(),
+                        'due_date' => $period->copy()->day(10)->toDateString(),
                     ],
                 );
 

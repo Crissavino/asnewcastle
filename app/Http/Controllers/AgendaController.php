@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendEventConvocation;
+use App\Models\Due;
 use App\Models\Event;
 use App\Models\Registration;
 use App\Services\SystemMessages;
@@ -94,6 +95,15 @@ class AgendaController extends Controller
                     'role' => 'player',
                 ])
                 : null,
+            // Banner de cuota impaga en la home: desde el día 5 del mes y hasta
+            // que pague, si el jugador debe la cuota de este mes (los del débito
+            // automático no tienen due, así que no lo ven).
+            'dues_banner' => now()->day >= 5 && Due::withoutGlobalScopes()
+                ->where('club_id', $current->club()->id)
+                ->where('member_id', $member->id)
+                ->whereDate('period', now()->startOfMonth())
+                ->where('status', 'pending')
+                ->exists(),
             // Banner de legitimación: visible hasta que la ficha esté completa
             'legitimacion' => [
                 'complete' => Registration::query()

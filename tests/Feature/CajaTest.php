@@ -5,6 +5,7 @@ use App\Models\Event;
 use App\Models\Expense;
 use App\Models\Member;
 use App\Models\Message;
+use App\Models\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 
 it('todo el plantel ve quién está al día y quién debe, y el resumen de caja', function () {
@@ -116,14 +117,16 @@ it('un gasto se puede atar a un evento del club, pero no a uno ajeno', function 
     ])->assertNotFound();
 });
 
-it('el día del vencimiento se publica en el vestuario quiénes deben', function () {
+it('el día del vencimiento (10) publica en el vestuario quién pagó y quién debe', function () {
+    $this->travelTo('2026-09-10 10:00');
+
     $manager = Member::factory()->manager()->create();
     $manager->user->update(['name' => 'Cristian Savino']);
     $deudor = Member::factory()->for($manager->club)->create();
     $deudor->user->update(['name' => 'Fabián Rodríguez']);
 
-    Due::factory()->forMember($manager)->paid()->create(['due_date' => today()]);
-    Due::factory()->forMember($deudor)->create(['due_date' => today()]);
+    Due::factory()->forMember($manager)->paid()->create(['period' => '2026-09-01', 'due_date' => '2026-09-10']);
+    Due::factory()->forMember($deudor)->create(['period' => '2026-09-01', 'due_date' => '2026-09-10']);
 
     $this->artisan('cuotas:avisar')->assertSuccessful();
 
@@ -132,16 +135,63 @@ it('el día del vencimiento se publica en el vestuario quiénes deben', function
 
     expect($body['key'])->toBe('system.dues_due')
         ->and($body['params']['names'])->toBe('Fabián')
+        ->and($body['params']['paid'])->toBe(1)
+        ->and($body['params']['total'])->toBe(2)
         ->and($body['params']['names'])->not->toContain('Cristian');
 });
 
-it('sin vencimientos hoy, el aviso no publica nada', function () {
+it('en un día que no es de aviso (ej. 8), no publica nada en el vestuario', function () {
+    $this->travelTo('2026-09-08 10:00'); // el 8 no está en los días de recordatorio
+
     $manager = Member::factory()->manager()->create();
-    Due::factory()->forMember($manager)->create(['due_date' => today()->addDays(5)]);
+    Due::factory()->forMember($manager)->create(['period' => '2026-09-01', 'due_date' => '2026-09-10']);
 
     $this->artisan('cuotas:avisar')->assertSuccessful();
 
     expect(Message::withoutGlobalScopes()->count())->toBe(0);
+});
+
+it('en un día de recordatorio (ej. 3) manda campanita a los deudores, sin publicar en el vestuario', function () {
+    $this->travelTo('2026-09-03 10:00');
+
+    $manager = Member::factory()->manager()->create();
+    $deudor = Member::factory()->for($manager->club)->create();
+    Due::factory()->forMember($deudor)->create(['period' => '2026-09-01', 'due_date' => '2026-09-10']);
+
+    $this->artisan('cuotas:avisar')->assertSuccessful();
+
+    expect(Notification::where('member_id', $deudor->id)->count())->toBe(1)
+        ->and(Message::withoutGlobalScopes()->count())->toBe(0);
+});
+
+it('el banner de cuota en la home aparece desde el día 5 si el jugador debe', function () {
+    $this->travelTo('2026-09-06 12:00');
+
+    $member = Member::factory()->create();
+    Due::factory()->forMember($member)->create(['period' => '2026-09-01', 'due_date' => '2026-09-10']);
+
+    $this->actingAs($member->user)->get('/agenda')
+        ->assertInertia(fn (Assert $page) => $page->where('dues_banner', true));
+});
+
+it('el banner de cuota no aparece antes del día 5', function () {
+    $this->travelTo('2026-09-03 12:00');
+
+    $member = Member::factory()->create();
+    Due::factory()->forMember($member)->create(['period' => '2026-09-01', 'due_date' => '2026-09-10']);
+
+    $this->actingAs($member->user)->get('/agenda')
+        ->assertInertia(fn (Assert $page) => $page->where('dues_banner', false));
+});
+
+it('el banner de cuota no aparece si ya pagó', function () {
+    $this->travelTo('2026-09-06 12:00');
+
+    $member = Member::factory()->create();
+    Due::factory()->forMember($member)->paid()->create(['period' => '2026-09-01', 'due_date' => '2026-09-10']);
+
+    $this->actingAs($member->user)->get('/agenda')
+        ->assertInertia(fn (Assert $page) => $page->where('dues_banner', false));
 });
 
 it('el manager nombra y quita admins, pero nunca se toca a sí mismo', function () {

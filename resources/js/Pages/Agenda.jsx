@@ -528,7 +528,7 @@ function RecentResults({ recent, onLoadResult, onLoadPresence }) {
 
 export default function Agenda({ events, recent, roster_count }) {
     const { t } = useTranslations();
-    const { member } = usePage().props;
+    const { member, dues_banner } = usePage().props;
     const [formEvent, setFormEvent] = useState(null); // null cerrado · false alta · {ev} edición
     const [resultFor, setResultFor] = useState(null);
     const [presenceFor, setPresenceFor] = useState(null);
@@ -536,6 +536,13 @@ export default function Agenda({ events, recent, roster_count }) {
 
     return (
         <AppLayout tab="agenda">
+            {dues_banner && (
+                <Link href={route('cuota')} className="nc-duebanner">
+                    <span>{t('agenda.dues_banner')}</span>
+                    <span className="nc-duebanner-cta">{t('agenda.dues_banner_cta')} →</span>
+                </Link>
+            )}
+
             {isManager && (
                 <button
                     className="nc-btn dark"

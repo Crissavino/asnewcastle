@@ -112,6 +112,14 @@ body { overscroll-behavior-y: none; }
 .nc-meta { font-size: 13px; color: var(--stone); line-height: 1.45; }
 /* links en las notas del evento: rojo, subrayado, y las URLs largas envuelven */
 .nc-link { color: var(--red-dk); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+/* banner de cuota impaga en la home: rojo, prominente, linkea a Cuota */
+.nc-duebanner { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: linear-gradient(118deg, var(--red), var(--red-dk)); color: #fff;
+  border-radius: 3px; padding: 13px 15px; margin-bottom: 14px; text-decoration: none;
+  box-shadow: 3px 3px 0 var(--ink); }
+.nc-duebanner > span:first-child { font-size: 13.5px; font-weight: 600; line-height: 1.35; }
+.nc-duebanner-cta { flex: none; font-family: 'Archivo Black', sans-serif; font-style: italic;
+  text-transform: uppercase; font-size: 13px; letter-spacing: .04em; white-space: nowrap; }
 /* Confirmación tras "Recordar a N": visible unos segundos debajo de los botones */
 .nc-reminded { margin-top: 8px; padding: 8px 10px; background: var(--paper); border-left: 3px solid var(--red); color: var(--ink); font-weight: 600; }
 
