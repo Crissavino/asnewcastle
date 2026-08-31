@@ -147,6 +147,7 @@
     "cuota.transfer_note": "Când delegatul primește transferul, îți marchează cotizația ca plătită.",
     "cuota.copy": "Copiază",
     "cuota.copied": "Copiat!",
+    "cuota.or": "sau",
     "cuota.autopay": "Plată automată",
     "cuota.recommended": "recomandat",
     "cuota.autopay_pitch_short": "Se încasează automat în fiecare lună. O activezi o dată și gata.",

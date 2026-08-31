@@ -147,6 +147,7 @@
     "cuota.transfer_note": "Once the manager receives the transfer, they'll mark your dues as paid.",
     "cuota.copy": "Copy",
     "cuota.copied": "Copied!",
+    "cuota.or": "or",
     "cuota.autopay": "Auto-pay",
     "cuota.recommended": "recommended",
     "cuota.autopay_pitch_short": "Charged automatically every month. Turn it on once and forget it.",

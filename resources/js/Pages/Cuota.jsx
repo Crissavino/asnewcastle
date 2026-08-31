@@ -12,10 +12,11 @@ function money(cents) {
     return cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2);
 }
 
-// Pago de la cuota por transferencia: se muestra cuando el club no tiene pago
-// online (Stripe). El jugador transfiere al IBAN del club poniendo su nombre y
-// el mes en el concepto; el manager marca la cuota pagada al recibirla.
-function BankTransfer({ bank, amount, currency, reference }) {
+// Pago de la cuota por transferencia. Siempre disponible si el club tiene IBAN;
+// cuando además hay pago online, va como alternativa (secondary) debajo, con un
+// separador "— o —". El jugador transfiere al IBAN poniendo su nombre y el mes
+// en el concepto; el manager marca la cuota pagada al recibirla.
+function BankTransfer({ bank, amount, currency, reference, secondary = false }) {
     const { t } = useTranslations();
     const [copied, setCopied] = useState('');
 
@@ -28,7 +29,13 @@ function BankTransfer({ bank, amount, currency, reference }) {
     };
 
     return (
-        <div className="nc-transfer" style={{ marginTop: 16 }}>
+        <>
+        {secondary && (
+            <div style={{ textAlign: 'center', color: 'var(--stone)', fontSize: 12, fontWeight: 700, letterSpacing: '.14em', margin: '16px 0 0' }}>
+                — {t('cuota.or')} —
+            </div>
+        )}
+        <div className="nc-transfer" style={{ marginTop: secondary ? 8 : 16 }}>
             <div className="nc-strong">{t('cuota.transfer_title')}</div>
             <p className="nc-meta" style={{ margin: '4px 0 12px' }}>
                 {t('cuota.transfer_hint', { amount, currency })}
@@ -63,6 +70,7 @@ function BankTransfer({ bank, amount, currency, reference }) {
 
             <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.transfer_note')}</p>
         </div>
+        </>
     );
 }
 
@@ -371,20 +379,26 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                     )}
 
                     {my_due.status === 'pending' && !justPaid && (
-                        online_ready ? (
-                            <button className={`nc-btn${canSubscribe ? ' dark' : ''}`} style={{ marginTop: 16 }} onClick={pay}>
-                                {t('cuota.pay', { amount: money(my_due.amount_cents), currency })}
-                            </button>
-                        ) : bank?.iban ? (
-                            <BankTransfer
-                                bank={bank}
-                                amount={money(my_due.amount_cents)}
-                                currency={currency}
-                                reference={`${auth?.user?.name ?? ''} · ${periodLabel}`.trim()}
-                            />
-                        ) : (
-                            <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.not_ready')}</p>
-                        )
+                        <>
+                            {/* Pago online primero (más importante): tarjeta o suscripción */}
+                            {online_ready && (
+                                <button className={`nc-btn${canSubscribe ? ' dark' : ''}`} style={{ marginTop: 16 }} onClick={pay}>
+                                    {t('cuota.pay', { amount: money(my_due.amount_cents), currency })}
+                                </button>
+                            )}
+                            {/* Transferencia como alternativa (siempre que haya IBAN) */}
+                            {bank?.iban ? (
+                                <BankTransfer
+                                    bank={bank}
+                                    amount={money(my_due.amount_cents)}
+                                    currency={currency}
+                                    reference={`${auth?.user?.name ?? ''} · ${periodLabel}`.trim()}
+                                    secondary={online_ready}
+                                />
+                            ) : !online_ready && (
+                                <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.not_ready')}</p>
+                            )}
+                        </>
                     )}
                 </div>
             ) : (!my_due && !isSub && !justSubscribed && (subscription?.subscribed_fee_cents ?? 0) <= 0) ? (
