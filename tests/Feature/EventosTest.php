@@ -198,3 +198,20 @@ it('el job programado recuerda una sola vez, 24hs antes, a los que no contestaro
     $this->artisan('eventos:recordar')->assertSuccessful();
     expect($this->whatsapp->templates)->toBeEmpty();
 });
+
+it('eventos:recordar-duda avisa solo a los que están en duda, y en dry no manda nada', function () {
+    $manager = Member::factory()->manager()->create();
+    $event = Event::factory()->by($manager)->create();
+    $va = Member::factory()->for($manager->club)->create();
+    $duda = Member::factory()->for($manager->club)->create();
+    $callado = Member::factory()->for($manager->club)->create();
+
+    Attendance::create(['event_id' => $event->id, 'member_id' => $va->id, 'status' => 'in', 'responded_at' => now()]);
+    Attendance::create(['event_id' => $event->id, 'member_id' => $duda->id, 'status' => 'maybe', 'responded_at' => now()]);
+
+    $this->artisan('eventos:recordar-duda')->assertSuccessful();
+    expect($this->whatsapp->templates)->toBeEmpty();
+
+    $this->artisan('eventos:recordar-duda go')->assertSuccessful();
+    expect($this->whatsapp->templateRecipients())->toBe([$duda->user->phone]);
+});
