@@ -5,8 +5,21 @@ import { useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
 import { useTranslations } from '../i18n';
+import { openExternal } from '../native';
 
 const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB', ar: 'ar-u-nu-latn' };
+
+// Notas del evento con links clickeables: separa las URLs del texto y las abre
+// en el navegador del sistema (no en el webview de Capacitor). Sirve para el
+// link de la cancha en Maps, y cualquier otro que pongan.
+const URL_RE = /(https?:\/\/[^\s]+)/g;
+function linkify(text) {
+    return String(text).split(URL_RE).map((part, i) =>
+        /^https?:\/\//i.test(part)
+            ? <a key={i} href={part} className="nc-link" onClick={(e) => { e.preventDefault(); openExternal(part); }}>{part}</a>
+            : part
+    );
+}
 
 function useDates() {
     const { locale } = useTranslations();
@@ -372,7 +385,7 @@ function EventCard({ ev, onEdit }) {
                 <IconUbicacion size={13} style={{ marginTop: 3, flexShrink: 0 }} />
                 <span>{ev.venue}</span>
             </div>
-            {ev.notes && <div className="nc-meta" style={{ marginTop: 3 }}>{ev.notes}</div>}
+            {ev.notes && <div className="nc-meta" style={{ marginTop: 3 }}>{linkify(ev.notes)}</div>}
 
             {!ev.cancelled && (
                 <>

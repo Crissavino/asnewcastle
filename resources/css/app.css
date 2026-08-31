@@ -110,6 +110,8 @@ body { overscroll-behavior-y: none; }
 .nc-card > .nc-label::before, .nc-admin > .nc-label::before { content: ''; display: inline-block;
   width: 6px; height: 6px; background: var(--red); margin-inline-end: 7px; transform: skewX(-14deg); vertical-align: 1px; }
 .nc-meta { font-size: 13px; color: var(--stone); line-height: 1.45; }
+/* links en las notas del evento: rojo, subrayado, y las URLs largas envuelven */
+.nc-link { color: var(--red-dk); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
 /* Confirmación tras "Recordar a N": visible unos segundos debajo de los botones */
 .nc-reminded { margin-top: 8px; padding: 8px 10px; background: var(--paper); border-left: 3px solid var(--red); color: var(--ink); font-weight: 600; }
 
