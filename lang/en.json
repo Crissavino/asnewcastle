@@ -321,7 +321,7 @@
     "fee.becado": "Scholarship",
     "fee.custom": "Custom",
     "invite.title": "Invite players",
-    "agenda.reminded": "Reminder sent ✓",
+    "agenda.reminded": "Reminder sent to :count ✓ — they got a notification to confirm",
     "notifications.title": "Notifications",
     "notifications.empty": "Nothing new for now",
     "notifications.now": "just now",

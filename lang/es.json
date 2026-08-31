@@ -321,7 +321,7 @@
     "fee.becado": "Becado",
     "fee.custom": "Personalizada",
     "invite.title": "Invitar jugadores",
-    "agenda.reminded": "Recordatorio enviado ✓",
+    "agenda.reminded": "Recordatorio enviado a :count ✓ — les llegó la notificación para confirmar",
     "notifications.title": "Notificaciones",
     "notifications.empty": "Sin novedades por ahora",
     "notifications.now": "recién",

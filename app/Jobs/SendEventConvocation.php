@@ -27,11 +27,11 @@ class SendEventConvocation implements ShouldQueue
             return;
         }
 
-        $answered = $this->event->attendances()->pluck('member_id');
-
-        $recipients = $this->event->club->activeMembers()
+        // Recordatorio: solo a los que no definieron (sin contestar o en duda)
+        $recipients = ($this->onlyUnanswered
+            ? $this->event->membersToRemind()
+            : $this->event->club->activeMembers())
             ->with('user')
-            ->when($this->onlyUnanswered, fn ($q) => $q->whereNotIn('id', $answered))
             ->get();
 
         foreach ($recipients as $member) {

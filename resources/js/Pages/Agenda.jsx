@@ -268,7 +268,8 @@ function EventCard({ ev, onEdit }) {
     const { day, time } = useDates();
     const [copied, setCopied] = useState(false);
     const [copiedWa, setCopiedWa] = useState(false);
-    const [reminded, setReminded] = useState(false);
+    // Cuántos recibieron el último recordatorio (null = ninguno en curso)
+    const [reminded, setReminded] = useState(null);
     const [showWho, setShowWho] = useState(false);
     const isManager = member?.role === 'manager';
     const isCoach = member?.role === 'coach';
@@ -280,12 +281,16 @@ function EventCard({ ev, onEdit }) {
         router.post(route('asistencia', ev.id), { status }, { preserveScroll: true });
     };
 
+    // Se recuerda a los que no definieron: sin contestar + en duda. Los que
+    // dijeron Voy / No voy quedan afuera.
+    const toRemind = ev.counts.pending + ev.counts.maybe;
+
     const remind = () => {
         router.post(route('eventos.recordar', ev.id), {}, {
             preserveScroll: true,
-            onSuccess: () => {
-                setReminded(true);
-                setTimeout(() => setReminded(false), 2500);
+            onSuccess: (page) => {
+                setReminded(page.props.flash?.reminded ?? toRemind);
+                setTimeout(() => setReminded(null), 6000);
             },
         });
     };
@@ -431,12 +436,17 @@ function EventCard({ ev, onEdit }) {
                         <button className="nc-mini" onClick={copyList}>
                             <Copy size={13} /> {copied ? t('agenda.copied') : t('agenda.copy_list')}
                         </button>
-                        {ev.counts.pending > 0 && (
-                            <button className="nc-mini solid" onClick={remind} disabled={reminded}>
-                                <Bell size={13} /> {reminded ? t('agenda.reminded') : t('agenda.remind', { count: ev.counts.pending })}
+                        {toRemind > 0 && (
+                            <button className="nc-mini solid" onClick={remind} disabled={reminded !== null}>
+                                <Bell size={13} /> {t('agenda.remind', { count: toRemind })}
                             </button>
                         )}
                     </div>
+                    {reminded !== null && (
+                        <div className="nc-meta nc-reminded" role="status">
+                            {t('agenda.reminded', { count: reminded })}
+                        </div>
+                    )}
                     <div className="nc-admin-actions">
                         <button className="nc-mini" onClick={() => onEdit(ev)}>
                             <Pencil size={13} /> {t('agenda.edit')}

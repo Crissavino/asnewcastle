@@ -182,7 +182,9 @@ class AgendaController extends Controller
 
         SendEventConvocation::dispatch($event, onlyUnanswered: true);
 
-        return back();
+        // La UI muestra "Recordatorio enviado a N": el job corre en cola, así que
+        // el conteo se calcula acá con el mismo criterio que usa el job.
+        return back()->with('reminded', $event->membersToRemind()->count());
     }
 
     protected function validated(Request $request): array

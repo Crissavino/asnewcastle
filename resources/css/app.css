@@ -93,6 +93,8 @@ body { overscroll-behavior-y: none; }
 .nc-card > .nc-label::before, .nc-admin > .nc-label::before { content: ''; display: inline-block;
   width: 6px; height: 6px; background: var(--red); margin-inline-end: 7px; transform: skewX(-14deg); vertical-align: 1px; }
 .nc-meta { font-size: 13px; color: var(--stone); line-height: 1.45; }
+/* Confirmación tras "Recordar a N": visible unos segundos debajo de los botones */
+.nc-reminded { margin-top: 8px; padding: 8px 10px; background: var(--paper); border-left: 3px solid var(--red); color: var(--ink); font-weight: 600; }
 
 .nc-rsvp { display: flex; gap: 7px; margin-top: 14px; }
 .nc-rsvp button { flex: 1; padding: 10px 4px; border-radius: 2px; cursor: pointer; background: #fff;

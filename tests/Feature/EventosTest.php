@@ -147,20 +147,30 @@ it('el manager recibe un link de invitación firmado para el mensaje de WhatsApp
         ->assertInertia(fn (Assert $page) => $page->where('invite_url', null));
 });
 
-it('el recordatorio manual va solo a los que no contestaron', function () {
+it('el recordatorio manual va a los que no contestaron y a los que están en duda', function () {
     $manager = Member::factory()->manager()->create();
     $event = Event::factory()->by($manager)->create();
-    $respondio = Member::factory()->for($manager->club)->create();
+    $va = Member::factory()->for($manager->club)->create();
+    $noVa = Member::factory()->for($manager->club)->create();
+    $duda = Member::factory()->for($manager->club)->create();
     $callado = Member::factory()->for($manager->club)->create();
 
-    Attendance::create(['event_id' => $event->id, 'member_id' => $respondio->id, 'status' => 'in', 'responded_at' => now()]);
+    Attendance::create(['event_id' => $event->id, 'member_id' => $va->id, 'status' => 'in', 'responded_at' => now()]);
+    Attendance::create(['event_id' => $event->id, 'member_id' => $noVa->id, 'status' => 'out', 'responded_at' => now()]);
+    Attendance::create(['event_id' => $event->id, 'member_id' => $duda->id, 'status' => 'maybe', 'responded_at' => now()]);
 
-    $this->actingAs($manager->user)->post("/eventos/{$event->id}/recordar");
+    // El manager tampoco contestó: son 3 avisados (manager, duda, callado)
+    $this->actingAs($manager->user)
+        ->post("/eventos/{$event->id}/recordar")
+        ->assertRedirect()
+        ->assertSessionHas('reminded', 3);
 
     $recipients = $this->whatsapp->templateRecipients();
     expect($recipients)->toContain($callado->user->phone)
+        ->toContain($duda->user->phone)
         ->toContain($manager->user->phone)
-        ->not->toContain($respondio->user->phone);
+        ->not->toContain($va->user->phone)
+        ->not->toContain($noVa->user->phone);
 });
 
 it('el job programado recuerda una sola vez, 24hs antes, a los que no contestaron', function () {

@@ -59,6 +59,17 @@ class Event extends Model
         return $this->hasMany(Attendance::class);
     }
 
+    /**
+     * A quién se le recuerda: al plantel activo menos los que ya definieron
+     * (Voy / No voy). El que está en duda todavía no confirmó, así que entra.
+     */
+    public function membersToRemind(): HasMany
+    {
+        $decided = $this->attendances()->whereIn('status', ['in', 'out'])->select('member_id');
+
+        return $this->club->activeMembers()->whereNotIn('members.id', $decided);
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'created_by_member_id');

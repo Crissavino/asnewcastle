@@ -63,6 +63,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'status' => fn () => $request->session()->get('status'),
                 'invite_url' => fn () => $request->session()->get('invite_url'),
+                'reminded' => fn () => $request->session()->get('reminded'),
             ],
 
             // Control de versión del APK: la app nativa Android compara su

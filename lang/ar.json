@@ -319,7 +319,7 @@
     "fee.becado": "منحة",
     "fee.custom": "مخصّص",
     "invite.title": "ادعُ لاعبين",
-    "agenda.reminded": "أُرسل التذكير ✓",
+    "agenda.reminded": "أُرسل التذكير إلى :count ✓ — وصلهم إشعار للتأكيد",
     "notifications.title": "الإشعارات",
     "notifications.empty": "لا جديد الآن",
     "notifications.now": "الآن",

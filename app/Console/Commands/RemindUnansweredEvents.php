@@ -10,7 +10,7 @@ class RemindUnansweredEvents extends Command
 {
     protected $signature = 'eventos:recordar';
 
-    protected $description = 'Recordatorio 24hs antes del evento, solo a los que no contestaron';
+    protected $description = 'Recordatorio 24hs antes del evento a los que no contestaron o están en duda';
 
     public function handle(): int
     {

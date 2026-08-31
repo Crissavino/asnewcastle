@@ -321,7 +321,7 @@
     "fee.becado": "Bursier",
     "fee.custom": "Personalizată",
     "invite.title": "Invită jucători",
-    "agenda.reminded": "Memento trimis ✓",
+    "agenda.reminded": "Memento trimis la :count ✓ — au primit notificarea să confirme",
     "notifications.title": "Notificări",
     "notifications.empty": "Nimic nou deocamdată",
     "notifications.now": "acum",
