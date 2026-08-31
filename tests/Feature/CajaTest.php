@@ -1,12 +1,15 @@
 <?php
 
+use App\Models\DeviceToken;
 use App\Models\Due;
 use App\Models\Event;
 use App\Models\Expense;
 use App\Models\Member;
 use App\Models\Message;
 use App\Models\Notification;
+use App\Services\Push\PushSender;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\FakePushSender;
 
 it('todo el plantel ve quién está al día y quién debe, y el resumen de caja', function () {
     $manager = Member::factory()->manager()->create();
@@ -151,17 +154,23 @@ it('en un día que no es de aviso (ej. 8), no publica nada en el vestuario', fun
     expect(Message::withoutGlobalScopes()->count())->toBe(0);
 });
 
-it('en un día de recordatorio (ej. 3) manda campanita a los deudores, sin publicar en el vestuario', function () {
+it('en un día de recordatorio (ej. 3): campanita + push a los deudores, sin publicar en el vestuario', function () {
     $this->travelTo('2026-09-03 10:00');
+
+    $push = new FakePushSender();
+    $this->app->instance(PushSender::class, $push);
 
     $manager = Member::factory()->manager()->create();
     $deudor = Member::factory()->for($manager->club)->create();
+    DeviceToken::create(['user_id' => $deudor->user_id, 'token' => 'tok-deudor', 'platform' => 'android']);
     Due::factory()->forMember($deudor)->create(['period' => '2026-09-01', 'due_date' => '2026-09-10']);
 
     $this->artisan('cuotas:avisar')->assertSuccessful();
 
     expect(Notification::where('member_id', $deudor->id)->count())->toBe(1)
-        ->and(Message::withoutGlobalScopes()->count())->toBe(0);
+        ->and(Message::withoutGlobalScopes()->count())->toBe(0)
+        ->and($push->allTokens())->toContain('tok-deudor')
+        ->and($push->sent[0]['data']['url'])->toBe('/cuota');
 });
 
 it('el banner de cuota en la home aparece desde el día 5 si el jugador debe', function () {

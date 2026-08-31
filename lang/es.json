@@ -473,6 +473,8 @@
     "legitimacion.edit": "Revisar o corregir mis datos",
     "push.vestuario_title": "💬 Vestuario",
     "push.vestuario_body": "Tenés mensajes sin leer",
+    "push.dues_title": "💳 Cuota del mes",
+    "push.dues_body": "Todavía tenés la cuota pendiente. Pagala 🙏",
     "alta.first_name_placeholder": "Nombre",
     "alta.last_name_placeholder": "Apellido",
     "perfil.coach": "Entrenador",

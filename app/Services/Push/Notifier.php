@@ -93,6 +93,35 @@ class Notifier
         }
     }
 
+    /**
+     * Push de recordatorio de cuota a los deudores, en el idioma de cada uno.
+     *
+     * @param  Collection<int, \App\Models\Member>  $recipients
+     */
+    public function dues(Collection $recipients): void
+    {
+        $byLocale = $recipients
+            ->filter(fn ($m) => $m->user !== null)
+            ->groupBy(fn ($m) => in_array($m->user->locale, ['es', 'ro', 'en'], true) ? $m->user->locale : 'es');
+
+        foreach ($byLocale as $locale => $members) {
+            $title = __('push.dues_title', [], $locale);
+            $body = __('push.dues_body', [], $locale);
+
+            $tokens = DeviceToken::whereIn('user_id', $members->pluck('user.id')->all())->pluck('token')->all();
+
+            if (empty($tokens)) {
+                continue;
+            }
+
+            $invalid = $this->sender->send($tokens, $title, $body, ['url' => '/cuota']);
+
+            if ($invalid) {
+                DeviceToken::whereIn('token', $invalid)->delete();
+            }
+        }
+    }
+
     /** @return array{0: string, 1: string}  [titleKey, bodyKey] */
     private function keysFor(string $notice, bool $isReminder, bool $isMatch): array
     {

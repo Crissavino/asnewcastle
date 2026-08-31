@@ -6,6 +6,7 @@ use App\Models\Club;
 use App\Models\Due;
 use App\Models\Message;
 use App\Services\Notifications;
+use App\Services\Push\Notifier;
 use Illuminate\Console\Command;
 
 class AnnounceDueDues extends Command
@@ -19,7 +20,7 @@ class AnnounceDueDues extends Command
 
     public const DUE_DAY = 10;
 
-    public function handle(Notifications $inApp): int
+    public function handle(Notifications $inApp, Notifier $push): int
     {
         $today = today();
 
@@ -33,11 +34,11 @@ class AnnounceDueDues extends Command
         $isDueDay = $today->day === self::DUE_DAY;
         $reminded = 0;
 
-        Club::query()->each(function (Club $club) use ($inApp, $period, $isDueDay, &$reminded) {
+        Club::query()->each(function (Club $club) use ($inApp, $push, $period, $isDueDay, &$reminded) {
             $dues = Due::withoutGlobalScopes()
                 ->where('club_id', $club->id)
                 ->whereDate('period', $period)
-                ->with('member.user:id,name')
+                ->with('member.user:id,name,locale')
                 ->get();
 
             if ($dues->isEmpty()) {
@@ -46,10 +47,15 @@ class AnnounceDueDues extends Command
 
             $pending = $dues->where('status', 'pending');
 
-            // Recordatorio personal (campanita + push) a cada deudor.
+            // Campanita in-app a cada deudor.
             foreach ($pending as $due) {
                 $inApp->dueDue($due);
                 $reminded++;
+            }
+
+            // Push (buzz al teléfono) a los deudores, en el idioma de cada uno.
+            if ($pending->isNotEmpty()) {
+                $push->dues($pending->map(fn ($d) => $d->member));
             }
 
             // El día del vencimiento: además, anuncio en el vestuario.

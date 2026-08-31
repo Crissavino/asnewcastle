@@ -473,6 +473,8 @@
     "legitimacion.edit": "Review or fix my details",
     "push.vestuario_title": "💬 Dressing room",
     "push.vestuario_body": "You have unread messages",
+    "push.dues_title": "💳 Monthly dues",
+    "push.dues_body": "Your dues are still pending. Please pay 🙏",
     "alta.first_name_placeholder": "First name",
     "alta.last_name_placeholder": "Surname",
     "perfil.coach": "Coach",
