@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Due;
 use App\Models\Event;
 use App\Models\Expense;
@@ -118,21 +119,32 @@ class CuotaController extends Controller
 
             // Configuración de cuota: monto del club y tipo por jugador.
             // SOLO manager: el tipo de cuota de cada uno no lo ve nadie más.
+            $members = $club->activeMembers()
+                ->with('user:id,name')
+                ->orderBy('shirt_number')
+                ->get();
+
+            // Auditoría (solo manager): quién dejó el tipo de cuota de cada uno
+            // y quién marcó a mano la cuota del mes. Dos consultas, no N+1.
+            $feeAudit = AuditLog::latestFor('fee_type.set', Member::class, $members->pluck('id'));
+            $monthDues = $dues->keyBy('member_id'); // las del período, ya cargadas arriba
+            $dueAudit = AuditLog::latestFor('due.status.set', Due::class, $monthDues->pluck('id'));
+
             $props['config'] = [
                 'monthly_fee_cents' => $club->monthly_fee_cents,
                 'subscription_discount_cents' => $club->subscription_discount_cents,
-                'members' => $club->activeMembers()
-                    ->with('user:id,name')
-                    ->orderBy('shirt_number')
-                    ->get()
-                    ->map(fn ($m) => [
-                        'id' => $m->id,
-                        'name' => $m->user->name,
-                        'shirt_number' => $m->shirt_number,
-                        'fee_type' => $m->fee_type,
-                        'custom_fee_cents' => $m->custom_fee_cents,
-                        'subscription_status' => $m->subscription_status,
-                    ]),
+                'members' => $members->map(fn ($m) => [
+                    'id' => $m->id,
+                    'name' => $m->user->name,
+                    'shirt_number' => $m->shirt_number,
+                    'fee_type' => $m->fee_type,
+                    'custom_fee_cents' => $m->custom_fee_cents,
+                    'subscription_status' => $m->subscription_status,
+                    // Última vez que alguien tocó su tipo de cuota (null si nunca)
+                    'fee_by' => $this->auditLine($feeAudit->get($m->id)),
+                    // Marca a mano de su cuota del mes (efectivo/condonada), si la hubo
+                    'due_mark' => $this->auditLine($dueAudit->get($monthDues->get($m->id)?->id)),
+                ]),
             ];
 
             // Eventos recientes para atar un gasto (el árbitro del partido vs X)
@@ -171,6 +183,23 @@ class CuotaController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * Línea de auditoría para la vista del manager: quién, cuándo y a qué valor.
+     * Devuelve null si no hay registro (ej. cuota normal que nadie tocó nunca).
+     */
+    protected function auditLine(?AuditLog $log): ?array
+    {
+        if (! $log) {
+            return null;
+        }
+
+        return [
+            'by' => $log->actor?->user?->name,   // null = acción del sistema
+            'at' => $log->created_at->toDateString(),
+            'to' => $log->meta['to'] ?? null,
+        ];
     }
 
     /** El delegado edita la cuota mensual del club. */
@@ -212,9 +241,19 @@ class CuotaController extends Controller
             'custom_fee_cents' => ['required_if:fee_type,custom', 'nullable', 'integer', 'min:1', 'max:10000000'],
         ]);
 
+        $from = $member->fee_type;
+        $newCustom = $validated['fee_type'] === 'custom' ? $validated['custom_fee_cents'] : null;
+
         $member->update([
             'fee_type' => $validated['fee_type'],
-            'custom_fee_cents' => $validated['fee_type'] === 'custom' ? $validated['custom_fee_cents'] : null,
+            'custom_fee_cents' => $newCustom,
+        ]);
+
+        // Quién dejó becado/personalizado/normal a quién: queda registrado.
+        AuditLog::record('fee_type.set', $member, [
+            'from' => $from,
+            'to' => $validated['fee_type'],
+            'amount_cents' => $newCustom,
         ]);
 
         // La cuota pendiente del mes se ajusta al tipo nuevo (si no tiene pagos)
@@ -376,7 +415,14 @@ class CuotaController extends Controller
             'status' => ['required', Rule::in(['pending', 'paid', 'waived'])],
         ]);
 
+        $from = $due->status;
         $due->update(['status' => $validated['status']]);
+
+        // Quién marcó a mano una cuota pagada/condonada/pendiente.
+        AuditLog::record('due.status.set', $due, [
+            'from' => $from,
+            'to' => $validated['status'],
+        ]);
 
         return back();
     }

@@ -202,6 +202,14 @@ function FeeSettings({ config, currency }) {
         }, { preserveScroll: true });
     };
 
+    // Autor de una acción de auditoría (null = acción automática del sistema).
+    const auditWho = (by) => by || t('cuota.audit_system');
+    // 'AAAA-MM-DD' → 'DD/MM' para la línea de auditoría.
+    const auditDate = (iso) => {
+        const [, m, d] = iso.split('-');
+        return `${d}/${m}`;
+    };
+
     return (
         <div className="nc-card">
             <div className="nc-label">{t('cuota.settings')}</div>
@@ -270,6 +278,20 @@ function FeeSettings({ config, currency }) {
                                 {m.subscription_status === 'active' ? t('cuota.autopay_on') : t('cuota.autopay_failed')}
                             </span>
                             <ConfirmMini onConfirm={() => cancelSub(m.id)}>{t('cuota.autopay_cancel')}</ConfirmMini>
+                        </div>
+                    )}
+                    {(m.fee_by || m.due_mark) && (
+                        <div style={{ paddingInlineStart: 34, marginTop: -1, marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            {m.fee_by && (
+                                <span className="nc-meta" style={{ fontSize: 11 }}>
+                                    {t('cuota.audit_fee', { by: auditWho(m.fee_by.by), at: auditDate(m.fee_by.at) })}
+                                </span>
+                            )}
+                            {m.due_mark && (
+                                <span className="nc-meta" style={{ fontSize: 11 }}>
+                                    {t('cuota.audit_due', { what: t('cuota.audit_' + m.due_mark.to), by: auditWho(m.due_mark.by), at: auditDate(m.due_mark.at) })}
+                                </span>
+                            )}
                         </div>
                     )}
                     </div>
