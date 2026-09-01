@@ -335,6 +335,10 @@ a.nc-btn { text-decoration: none; }
 
 /* sheets */
 .nc-sheet { position: fixed; inset: 0; background: rgba(18,18,18,.55); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
+/* Con un sheet abierto ocultamos las tabs de abajo: son un modal, y si no
+   quedan tapando (y robando el tap de) el botón del sheet, como el de Guardar
+   en Nuevo gasto. */
+.nc-shell:has(.nc-sheet) .nc-tabs { display: none; }
 /* max-height sobre el viewport REAL (--app-vh): con 92vh de iOS el sheet quedaba
    más alto que la pantalla visible y no se podía scrollear hasta el botón */
 .nc-sheet-inner { width: 100%; max-width: 500px; background: #fff; border-top: 4px solid var(--red);
