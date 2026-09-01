@@ -73,16 +73,23 @@ class CuotaController extends Controller
         // siguen siendo solo del manager: se gatean en el front por el rol.
         $dues = Due::query()->whereDate('period', $period)->with('member.user:id,name')->get();
         $active = $dues->where('status', '!=', 'waived'); // condonadas fuera del objetivo
+        $pending = $dues->where('status', 'pending');
+
+        // "Al día" = TODO el plantel menos los que deben (pendientes). Así los
+        // becados, suscriptos y pagados figuran al día por igual: hacia afuera
+        // nadie sabe quién es becado. La plata (recaudado/objetivo) sí sale solo
+        // de las cuotas reales, porque los becados no deben dinero.
+        $rosterCount = $club->activeMembers()->count();
 
         $props['caja'] = [
             'collected_cents' => $active->where('status', 'paid')->sum('amount_cents'),
             'target_cents' => $active->sum('amount_cents'),
-            'paid_count' => $active->where('status', 'paid')->count(),
-            'total_count' => $active->count(),
+            'up_to_date' => max($rosterCount - $pending->count(), 0),
+            'players_total' => $rosterCount,
             // Histórico de cuotas (todos los meses): lo cobrado vs lo que se debe
             'paid_all_cents' => (int) Due::query()->where('status', 'paid')->sum('amount_cents'),
             'owed_all_cents' => (int) Due::query()->where('status', 'pending')->sum('amount_cents'),
-            'debtors' => $dues->where('status', 'pending')->values()->map(fn ($d) => [
+            'debtors' => $pending->values()->map(fn ($d) => [
                 'due_id' => $d->id,
                 'name' => $d->member->user->name,
                 'shirt_number' => $d->member->shirt_number,

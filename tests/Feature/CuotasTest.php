@@ -54,12 +54,29 @@ it('el manager ve la caja con los que deben, sin teléfonos', function () {
     $this->actingAs($manager->user)
         ->get('/cuota')
         ->assertInertia(fn (Assert $page) => $page
-            ->where('caja.paid_count', 1)
-            ->where('caja.total_count', 2)
+            ->where('caja.up_to_date', 1)
+            ->where('caja.players_total', 2)
             ->where('caja.collected_cents', 12000)
             ->where('caja.target_cents', 24000)
             ->has('caja.debtors', 1)
             ->missing('caja.debtors.0.phone')
+        );
+});
+
+it('el becado figura al día en la caja: hacia afuera no se distingue', function () {
+    $manager = Member::factory()->manager()->create();
+    Due::factory()->forMember($manager)->paid()->create();
+    $deudor = Member::factory()->for($manager->club)->create();
+    Due::factory()->forMember($deudor)->create();      // pendiente
+    Member::factory()->for($manager->club)->create();  // becado: sin cuota generada
+
+    $this->actingAs($manager->user)
+        ->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page
+            // 3 jugadores, 1 debe → 2 al día (el becado cuenta al día)
+            ->where('caja.players_total', 3)
+            ->where('caja.up_to_date', 2)
+            ->has('caja.debtors', 1) // solo el deudor; el becado no aparece
         );
 });
 
@@ -129,12 +146,13 @@ it('el manager marca cuotas en efectivo o las condona, y la caja lo refleja', fu
     expect($due->fresh()->status)->toBe('paid')
         ->and($dueCondonada->fresh()->status)->toBe('waived');
 
-    // La condonada no cuenta ni como objetivo ni como deuda
+    // La condonada no suma al objetivo ni como deuda, pero el jugador SÍ figura
+    // al día (2 de 2): hacia afuera no se distingue al condonado/becado.
     $this->actingAs($manager->user)
         ->get('/cuota')
         ->assertInertia(fn (Assert $page) => $page
-            ->where('caja.total_count', 1)
-            ->where('caja.paid_count', 1)
+            ->where('caja.players_total', 2)
+            ->where('caja.up_to_date', 2)
             ->where('caja.target_cents', 12000)
             ->has('caja.debtors', 0)
         );

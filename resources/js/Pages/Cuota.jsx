@@ -534,7 +534,7 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                         <i style={{ width: `${caja.target_cents ? (caja.collected_cents / caja.target_cents) * 100 : 0}%` }} />
                     </div>
                     <div className="nc-meta" style={{ marginTop: 8 }}>
-                        {t('cuota.up_to_date', { paid: caja.paid_count, total: caja.total_count })}
+                        {t('cuota.up_to_date', { paid: caja.up_to_date, total: caja.players_total })}
                     </div>
 
                     {/* Histórico de cuotas: cobrado vs adeudado en todos los meses */}
