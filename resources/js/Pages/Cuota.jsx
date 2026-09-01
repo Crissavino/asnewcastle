@@ -84,15 +84,23 @@ function ExpenseSheet({ categorias, eventos, currency, onClose }) {
         description: '',
         event_id: '',
     });
+    const [processing, setProcessing] = useState(false);
+    const [errors, setErrors] = useState({});
 
     const save = () => {
+        setProcessing(true);
         router.post(route('gastos.crear'), {
             category: data.category,
             amount_cents: Math.round(parseFloat(data.amount) * 100),
             spent_on: data.spent_on,
             description: data.description || null,
             event_id: data.event_id || null,
-        }, { onSuccess: onClose, preserveScroll: true });
+        }, {
+            onSuccess: onClose,
+            onError: setErrors,
+            onFinish: () => setProcessing(false),
+            preserveScroll: true,
+        });
     };
 
     return (
@@ -135,8 +143,10 @@ function ExpenseSheet({ categorias, eventos, currency, onClose }) {
                     <input value={data.description} onChange={(e) => setData({ ...data, description: e.target.value })} maxLength={120} />
                 </label>
 
-                <button className="nc-btn" style={{ marginTop: 8 }} disabled={!data.amount || parseFloat(data.amount) <= 0} onClick={save}>
-                    {t('agenda.save')}
+                {Object.values(errors)[0] && <div className="nc-error">{Object.values(errors)[0]}</div>}
+
+                <button className="nc-btn" style={{ marginTop: 8 }} disabled={processing || !data.amount || parseFloat(data.amount) <= 0} onClick={save}>
+                    {processing ? t('agenda.saving') : t('agenda.save')}
                 </button>
             </div>
         </div>

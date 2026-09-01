@@ -19,7 +19,9 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'category' => ['required', Rule::in(Expense::CATEGORIES)],
             'amount_cents' => ['required', 'integer', 'min:1', 'max:10000000'],
-            'spent_on' => ['required', 'date', 'before_or_equal:today'],
+            // Se permite fecha futura: a veces se registra un gasto para un
+            // evento que todavía no pasó (ej. pago de la cancha por adelantado).
+            'spent_on' => ['required', 'date'],
             'description' => ['nullable', 'string', 'max:120'],
             'event_id' => ['nullable', 'integer'],
         ]);
