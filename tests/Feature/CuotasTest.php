@@ -67,8 +67,8 @@ it('el becado figura al día en la caja: hacia afuera no se distingue', function
     $manager = Member::factory()->manager()->create();
     Due::factory()->forMember($manager)->paid()->create();
     $deudor = Member::factory()->for($manager->club)->create();
-    Due::factory()->forMember($deudor)->create();      // pendiente
-    Member::factory()->for($manager->club)->create();  // becado: sin cuota generada
+    Due::factory()->forMember($deudor)->create();                          // pendiente
+    Member::factory()->for($manager->club)->create(['fee_type' => 'becado']); // becado: no genera cuota
 
     $this->actingAs($manager->user)
         ->get('/cuota')
@@ -78,6 +78,41 @@ it('el becado figura al día en la caja: hacia afuera no se distingue', function
             ->where('caja.up_to_date', 2)
             ->has('caja.debtors', 1) // solo el deudor; el becado no aparece
         );
+});
+
+it('un jugador Normal sin cuota generada figura como deudor al abrir la caja', function () {
+    // Se sumó a mitad de mes o pasó de becado a normal: nunca corrió el job
+    // que le genera la cuota. Antes figuraba "al día" (bug); ahora la caja se
+    // la completa y aparece como deudor accionable.
+    $manager = Member::factory()->manager()->create();
+    Due::factory()->forMember($manager)->paid()->create();
+    $sinCuota = Member::factory()->for($manager->club)->create(['fee_type' => 'normal']);
+    // Ojo: NO le creamos ninguna cuota.
+
+    $this->actingAs($manager->user)
+        ->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('caja.players_total', 2)
+            ->where('caja.up_to_date', 1)          // solo el manager; el otro debe
+            ->has('caja.debtors', 1)
+            ->where('caja.debtors.0.name', $sinCuota->user->name)
+            ->where('caja.debtors.0.due_id', fn ($id) => $id !== null) // accionable
+        );
+
+    // La cuota quedó realmente creada en la base (idempotente: no duplica)
+    $this->actingAs($manager->user)->get('/cuota');
+    expect(Due::withoutGlobalScopes()->where('member_id', $sinCuota->id)->count())->toBe(1);
+});
+
+it('el suscripto al débito automático no recibe una cuota manual por la caja', function () {
+    $manager = Member::factory()->manager()->create();
+    $suscripto = Member::factory()->for($manager->club)
+        ->create(['fee_type' => 'normal', 'subscription_status' => 'active']);
+
+    $this->actingAs($manager->user)->get('/cuota');
+
+    // Su cuota sale por la invoice del débito, no por acá
+    expect(Due::withoutGlobalScopes()->where('member_id', $suscripto->id)->count())->toBe(0);
 });
 
 it('pagar manda al checkout de Stripe de la cuenta conectada', function () {

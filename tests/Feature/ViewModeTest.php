@@ -6,6 +6,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 it('la caja (recaudación, histórico y deudores) la ve todo el plantel', function () {
     $manager = Member::factory()->manager()->create();
+    Due::factory()->forMember($manager)->paid()->create(); // el manager, al día
     $player = Member::factory()->for($manager->club)->create();
     Due::factory()->forMember($player)->create(['amount_cents' => 28000]);
 

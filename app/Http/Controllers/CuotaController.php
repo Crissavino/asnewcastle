@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\Club;
 use App\Models\Due;
 use App\Models\Event;
 use App\Models\Expense;
@@ -29,6 +30,13 @@ class CuotaController extends Controller
         // Rol EFECTIVO: si el dueño está "viendo como jugador", acá figura player.
         $isManager = $current->actsAsManager();
         $period = now()->startOfMonth();
+
+        // Todo jugador activo con cuota real tiene que tener su cuota del mes.
+        // El job mensual la genera el día 1, pero quien se suma después (o pasa
+        // de becado a normal) se quedaba sin cuota y — como "sin cuota" contaba
+        // igual que becado — figuraba al día sin estarlo. Acá se completan las
+        // que falten, para que la caja nunca enmascare a un deudor.
+        $this->ensurePeriodDues($club, $period);
 
         $myDue = Due::query()
             ->where('member_id', $member->id)
@@ -183,6 +191,44 @@ class CuotaController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * Completa las cuotas del período que falten para los jugadores activos
+     * con cuota real. Idempotente (firstOrCreate por club+member+período) y
+     * silenciosa: NO manda la notificación de "cuota nueva" — eso lo hace solo
+     * el job mensual; acá solo tapamos huecos (altas a mitad de mes, cambios de
+     * becado a normal) para que el estado de la caja sea siempre consistente.
+     *
+     * Becados (sin monto) y suscriptos al débito automático (su cuota sale por
+     * la invoice, con descuento) se saltean, igual que en el job mensual.
+     */
+    protected function ensurePeriodDues(Club $club, $period): void
+    {
+        foreach ($club->activeMembers()->get() as $member) {
+            if ($member->subscription_status === 'active') {
+                continue;
+            }
+
+            $amount = $member->monthlyFeeCents();
+
+            if ($amount === null || $amount === 0) {
+                continue;
+            }
+
+            Due::withoutGlobalScopes()->firstOrCreate(
+                [
+                    'club_id' => $club->id,
+                    'member_id' => $member->id,
+                    'period' => $period,
+                ],
+                [
+                    'amount_cents' => $amount,
+                    'status' => 'pending',
+                    'due_date' => $period->copy()->day(10)->toDateString(),
+                ],
+            );
+        }
     }
 
     /**
