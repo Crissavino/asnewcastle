@@ -505,5 +505,6 @@
     "predict.win_l": "ganamos",
     "predict.draw_l": "empatamos",
     "predict.lose_l": "perdemos",
-    "predict.carrot": "Con tu Voy subimos a :p% 🔥"
+    "predict.carrot": "Con tu Voy subimos a :p% 🔥",
+    "predict.carrot_doubt": "¿En duda? Con tu Voy subimos a :p% 🔥"
 }

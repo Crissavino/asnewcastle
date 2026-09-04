@@ -505,5 +505,6 @@
     "predict.win_l": "câștigăm",
     "predict.draw_l": "egal",
     "predict.lose_l": "pierdem",
-    "predict.carrot": "Confirmă și urcăm la :p% 🔥"
+    "predict.carrot": "Confirmă și urcăm la :p% 🔥",
+    "predict.carrot_doubt": "Nehotărât? Cu Da-ul tău urcăm la :p% 🔥"
 }

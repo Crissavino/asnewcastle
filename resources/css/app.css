@@ -152,6 +152,10 @@ body { overscroll-behavior-y: none; }
   font-family: 'Archivo', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: .05em;
   text-transform: uppercase; transition: background .14s, color .14s; }
 .nc-predict-cta:hover { background: var(--red); color: #fff; }
+/* Al que está en duda se le habla más fuerte: botón lleno, no punteado */
+.nc-predict-cta.duda { background: var(--red); border: 1px solid var(--red); color: #fff;
+  box-shadow: 2px 2px 0 var(--ink); }
+.nc-predict-cta.duda:hover { background: var(--red-dk); border-color: var(--red-dk); }
 
 /* el contador como marcador: número gigante con subrayado celeste de resaltador */
 .nc-count { display: flex; align-items: baseline; gap: 7px; margin-top: 16px; }

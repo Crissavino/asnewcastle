@@ -421,10 +421,18 @@ function EventCard({ ev, onEdit }) {
                                 <span><b className="nc-num">{ev.prediction.draw}%</b> {t('predict.draw_l')}</span>
                                 <span><b className="nc-num">{ev.prediction.lose}%</b> {t('predict.lose_l')}</span>
                             </div>
-                            {!isCoach && ev.my_status !== 'in'
+                            {/* La zanahoria: al que no contestó, y con más fuerza al que está
+                                en duda. Al que dijo "No voy" no se le insiste. */}
+                            {!isCoach && (ev.my_status == null || ev.my_status === 'maybe')
                                 && ev.prediction.if_you_confirm > ev.prediction.win && (
-                                <button type="button" className="nc-predict-cta" onClick={() => setStatus('in')}>
-                                    {t('predict.carrot', { p: ev.prediction.if_you_confirm })}
+                                <button
+                                    type="button"
+                                    className={`nc-predict-cta${ev.my_status === 'maybe' ? ' duda' : ''}`}
+                                    onClick={() => setStatus('in')}
+                                >
+                                    {t(ev.my_status === 'maybe' ? 'predict.carrot_doubt' : 'predict.carrot', {
+                                        p: ev.prediction.if_you_confirm,
+                                    })}
                                 </button>
                             )}
                         </div>

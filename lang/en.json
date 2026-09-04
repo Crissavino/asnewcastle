@@ -505,5 +505,6 @@
     "predict.win_l": "we win",
     "predict.draw_l": "draw",
     "predict.lose_l": "we lose",
-    "predict.carrot": "Confirm and we climb to :p% 🔥"
+    "predict.carrot": "Confirm and we climb to :p% 🔥",
+    "predict.carrot_doubt": "Still unsure? Your yes takes us to :p% 🔥"
 }
