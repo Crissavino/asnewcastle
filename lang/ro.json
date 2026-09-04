@@ -258,6 +258,7 @@
     "agenda.maybe_l": "Nesiguri",
     "agenda.out_l": "Nu vin",
     "agenda.pending_l": ":count fără răspuns",
+    "agenda.pending_l2": "Fără răspuns",
     "agenda.mvp_of": "Omul meciului: :name",
     "empty.agenda_manager": "Încă nu sunt evenimente. Creează primul cu „Eveniment nou”: convocarea ajunge la tot lotul pe WhatsApp.",
     "cuota.waive": "Bursă",

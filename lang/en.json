@@ -258,6 +258,7 @@
     "agenda.maybe_l": "Maybe",
     "agenda.out_l": "Out",
     "agenda.pending_l": ":count no reply",
+    "agenda.pending_l2": "No reply",
     "agenda.mvp_of": "MOTM: :name",
     "empty.agenda_manager": "No events yet. Create the first one with \"New event\": the call-up reaches the whole squad on WhatsApp.",
     "cuota.waive": "Scholarship",

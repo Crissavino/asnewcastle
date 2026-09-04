@@ -25,14 +25,20 @@ class AgendaController extends Controller
         // Rol EFECTIVO: si el dueño está "viendo como jugador", figura player.
         $isManager = $current->actsAsManager();
 
-        $rosterCount = $current->club()->activeMembers()->count();
+        // El plantel activo, una sola vez: para el conteo y para saber quién
+        // NO contestó (los que no tienen fila de asistencia en el evento).
+        $roster = $current->club()->activeMembers()
+            ->orderBy('shirt_number')
+            ->with('user:id,name')
+            ->get();
+        $rosterCount = $roster->count();
 
         $events = Event::query()
             ->where('starts_at', '>=', now()->subHours(3))
             ->orderBy('starts_at')
             ->with(['attendances.member.user:id,name'])
             ->get()
-            ->map(function (Event $event) use ($member, $isManager, $rosterCount) {
+            ->map(function (Event $event) use ($member, $isManager, $roster, $rosterCount) {
                 $byStatus = $event->attendances->groupBy('status');
 
                 // Orden de inscripción: el primero que confirmó aparece primero
@@ -48,7 +54,16 @@ class AgendaController extends Controller
                 $going = $names('in');
                 $maybe = $names('maybe');
                 $out = $names('out');
-                $pending = $rosterCount - $event->attendances->count();
+
+                // No contestaron: jugadores activos sin fila de asistencia.
+                // Ordenados por dorsal (el roster ya viene ordenado).
+                $answered = $event->attendances->pluck('member_id')->all();
+                $pending = $roster->reject(fn ($m) => in_array($m->id, $answered, true))
+                    ->map(fn ($m) => [
+                        'id' => $m->id,
+                        'shirt_number' => $m->shirt_number,
+                        'name' => $m->user->name,
+                    ])->values();
 
                 $data = [
                     'id' => $event->id,
@@ -65,11 +80,12 @@ class AgendaController extends Controller
                         'in' => $going->count(),
                         'maybe' => $maybe->count(),
                         'out' => $out->count(),
-                        'pending' => max($pending, 0),
+                        'pending' => $pending->count(),
                     ],
                     'going' => $going,
                     'maybe' => $maybe,
                     'out' => $out,
+                    'pending' => $pending,
                 ];
 
                 if ($isManager) {

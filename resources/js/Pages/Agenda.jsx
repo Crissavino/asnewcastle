@@ -427,9 +427,7 @@ function EventCard({ ev, onEdit }) {
                             {whoList(t('agenda.going_l'), ev.going)}
                             {whoList(t('agenda.maybe_l'), ev.maybe, true)}
                             {whoList(t('agenda.out_l'), ev.out, true)}
-                            {ev.counts.pending > 0 && (
-                                <div className="nc-meta" style={{ marginTop: 8 }}>{t('agenda.pending_l', { count: ev.counts.pending })}</div>
-                            )}
+                            {whoList(t('agenda.pending_l2'), ev.pending, true)}
                         </div>
                     )}
                 </>

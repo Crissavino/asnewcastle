@@ -147,6 +147,41 @@ it('el manager recibe un link de invitación firmado para el mensaje de WhatsApp
         ->assertInertia(fn (Assert $page) => $page->where('invite_url', null));
 });
 
+it('la agenda lista por nombre a los que no contestaron, no solo el número', function () {
+    $manager = Member::factory()->manager()->create(); // no contesta
+    $event = Event::factory()->by($manager)->create();
+    $va = Member::factory()->for($manager->club)->create();
+    $duda = Member::factory()->for($manager->club)->create();
+    $callado = Member::factory()->for($manager->club)->create(); // no contesta
+
+    Attendance::create(['event_id' => $event->id, 'member_id' => $va->id, 'status' => 'in', 'responded_at' => now()]);
+    Attendance::create(['event_id' => $event->id, 'member_id' => $duda->id, 'status' => 'maybe', 'responded_at' => now()]);
+
+    $this->actingAs($manager->user)
+        ->get('/agenda')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('events.0.counts.pending', 2)             // manager + callado
+            ->has('events.0.pending', 2)
+            ->where('events.0.pending', fn ($pending) => collect($pending)->pluck('name')->sort()->values()->all()
+                === collect([$manager->user->name, $callado->user->name])->sort()->values()->all())
+        );
+});
+
+it('un jugador que ya contestó no aparece entre los que no contestaron', function () {
+    $manager = Member::factory()->manager()->create();
+    $event = Event::factory()->by($manager)->create();
+    $va = Member::factory()->for($manager->club)->create();
+    Attendance::create(['event_id' => $event->id, 'member_id' => $va->id, 'status' => 'in', 'responded_at' => now()]);
+    Attendance::create(['event_id' => $event->id, 'member_id' => $manager->id, 'status' => 'in', 'responded_at' => now()]);
+
+    $this->actingAs($manager->user)
+        ->get('/agenda')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('events.0.counts.pending', 0)
+            ->has('events.0.pending', 0)
+        );
+});
+
 it('el recordatorio manual va a los que no contestaron y a los que están en duda', function () {
     $manager = Member::factory()->manager()->create();
     $event = Event::factory()->by($manager)->create();
