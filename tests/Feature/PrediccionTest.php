@@ -158,7 +158,7 @@ it('el historial cuenta aunque el cruce sea de la temporada pasada', function ()
 it('sin cruces en la app, el historial sale del fixture scrapeado', function () {
     $fixtureVs = fn (int $gf, int $ga) => [[
         'etapa' => 3,
-        'date' => now()->subWeeks(4)->format('d.m.Y'),
+        'date' => now()->subWeeks(4)->format('Y-m-d'),
         'opponent' => 'AS Moara Vlăsiei',
         'is_home' => true,
         'played' => true,
@@ -177,6 +177,56 @@ it('sin cruces en la app, el historial sale del fixture scrapeado', function () 
     confirman($eventoPerdimos, 8);
 
     expect(pronostico($eventoGanamos)['win'])->toBeGreaterThan(pronostico($eventoPerdimos)['win']);
+});
+
+it('el cruce de la temporada pasada sale del historial importado de la web', function () {
+    $historial = fn (int $gf, int $ga) => [[
+        'etapa' => 12,
+        'date' => now()->subMonths(10)->format('Y-m-d'),
+        'opponent' => 'AS Moara Vlăsiei',
+        'is_home' => false,
+        'played' => true,
+        'home_score' => $ga,
+        'away_score' => $gf,
+    ]];
+
+    $conHistorial = clubConTabla();
+    $conHistorial->update(['history_json' => $historial(1, 3)]);
+    $sinHistorial = clubConTabla();
+
+    $eventoConHistorial = partidoFuturo($conHistorial);
+    $eventoSinHistorial = partidoFuturo($sinHistorial);
+    confirman($eventoConHistorial, 8);
+    confirman($eventoSinHistorial, 8);
+
+    expect(pronostico($eventoConHistorial)['win'])->toBeLessThan(pronostico($eventoSinHistorial)['win']);
+});
+
+it('no cuenta dos veces el cruce que está en la app y también en el historial', function () {
+    $cruce = now()->subMonths(3);
+    $fila = fn (string $date, int $hs, int $as) => [
+        'etapa' => 8, 'date' => $date, 'opponent' => 'AS Moara Vlăsiei',
+        'is_home' => true, 'played' => true, 'home_score' => $hs, 'away_score' => $as,
+    ];
+    // Un cruce viejo perdido, igual en los dos clubes
+    $viejo = $fila(now()->subMonths(14)->format('Y-m-d'), 0, 2);
+
+    $duplicado = clubConTabla();
+    $duplicado->update(['history_json' => [$fila($cruce->format('Y-m-d'), 3, 1), $viejo]]);
+    $soloApp = clubConTabla();
+    $soloApp->update(['history_json' => [$viejo]]);
+
+    // El mismo partido reciente con resultado cargado en la app, en los dos clubes
+    foreach ([$duplicado, $soloApp] as $club) {
+        partidoFuturo($club, ['starts_at' => $cruce, 'goals_for' => 3, 'goals_against' => 1]);
+    }
+
+    $eventoDuplicado = partidoFuturo($duplicado);
+    $eventoSoloApp = partidoFuturo($soloApp);
+    confirman($eventoDuplicado, 8);
+    confirman($eventoSoloApp, 8);
+
+    expect(pronostico($eventoDuplicado)['win'])->toBe(pronostico($eventoSoloApp)['win']);
 });
 
 it('matchea al rival aunque el nombre venga con diacríticos o prefijo de club', function () {
@@ -253,7 +303,7 @@ it('un plantel bien calificado suma más que uno sin historia', function () {
 it('la racha reciente del equipo pesa en el pronóstico', function () {
     $fixtureConRacha = fn (int $gf, int $ga) => collect(range(1, 3))->map(fn ($i) => [
         'etapa' => $i,
-        'date' => now()->subWeeks(6 - $i)->format('d.m.Y'),
+        'date' => now()->subWeeks(6 - $i)->format('Y-m-d'),
         'opponent' => "AS Rival {$i}",
         'is_home' => true,
         'played' => true,

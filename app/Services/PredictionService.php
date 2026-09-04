@@ -110,37 +110,51 @@ class PredictionService
     }
 
     /**
-     * Historial contra este rival: primero los cruces con resultado cargado en
-     * la app (incluye Copa); si no hay, los del fixture scrapeado. Los más
-     * recientes pesan más.
+     * Historial contra este rival, de las tres fuentes juntas: cruces con
+     * resultado cargado en la app (incluye Copa), el fixture actual y el
+     * historial de temporadas pasadas importado de la web. Se ordena por fecha
+     * y los más recientes pesan más.
      */
     protected function headToHead(Event $event): float
     {
         $opponent = $this->normalize($event->opponent ?? '');
 
-        $results = Event::withoutGlobalScopes()
+        $fromApp = Event::withoutGlobalScopes()
             ->where('club_id', $event->club_id)
             ->where('kind', 'match')
             ->whereNull('cancelled_at')
             ->whereKeyNot($event->id)
             ->whereNotNull('goals_for')
             ->whereNotNull('goals_against')
-            ->orderByDesc('starts_at')
             ->get()
             ->filter(fn (Event $e) => $this->sameTeam($this->normalize($e->opponent ?? ''), $opponent))
-            ->map(fn (Event $e) => $e->goals_for <=> $e->goals_against);
+            ->map(fn (Event $e) => [
+                'day' => $e->starts_at->format('Y-m-d'),
+                'result' => $e->goals_for <=> $e->goals_against,
+            ]);
 
-        if ($results->isEmpty()) {
-            $results = collect($event->club->fixture_json ?? [])
-                ->filter(fn ($row) => ($row['played'] ?? false)
-                    && $this->sameTeam($this->normalize($row['opponent']), $opponent))
-                ->reverse()
-                ->map(fn ($row) => $row['is_home']
+        // Afuera lo scrapeado que ya está en la app: mismo rival, mismo día
+        $appDays = $fromApp->pluck('day');
+
+        $scraped = collect($event->club->fixture_json ?? [])
+            ->concat($event->club->history_json ?? [])
+            ->filter(fn ($row) => ($row['played'] ?? false)
+                && $this->sameTeam($this->normalize($row['opponent']), $opponent)
+                && ! $appDays->contains($row['date']))
+            ->map(fn ($row) => [
+                'day' => $row['date'],
+                'result' => $row['is_home']
                     ? $row['home_score'] <=> $row['away_score']
-                    : $row['away_score'] <=> $row['home_score']);
-        }
+                    : $row['away_score'] <=> $row['home_score'],
+            ]);
 
-        return 0.4 * $this->weightedAverage($results->take(3)->values());
+        $results = $fromApp->concat($scraped)
+            ->sortByDesc('day')
+            ->pluck('result')
+            ->take(3)
+            ->values();
+
+        return 0.4 * $this->weightedAverage($results);
     }
 
     /** Racha: los últimos 5 resultados del fixture scrapeado. */

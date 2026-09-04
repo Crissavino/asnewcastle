@@ -27,6 +27,7 @@ class Club extends Model
         'standings_url',
         'fixture_url',
         'fixture_json',
+        'history_json',
     ];
 
     protected function casts(): array
@@ -35,6 +36,7 @@ class Club extends Model
             'stripe_onboarded_at' => 'datetime',
             'standings_json' => 'array',
             'fixture_json' => 'array',
+            'history_json' => 'array',
             'monthly_fee_cents' => 'integer',
             'subscription_discount_cents' => 'integer',
         ];

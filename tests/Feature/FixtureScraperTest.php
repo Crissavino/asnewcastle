@@ -29,6 +29,33 @@ it('parsea el fixture: solo los partidos del club, con local/visitante y resulta
         ->and($rows[2]['is_home'])->toBeFalse();
 });
 
+it('el comando de historial importa los resultados de una temporada pasada', function () {
+    $url = 'https://www.frf-ajf.ro/ilfov/competitii-fotbal/liga-a-5-a-11111/program';
+    Http::fake([$url => Http::response(programHtml())]);
+
+    $club = Club::factory()->create(['name' => 'A.S New Castle']);
+
+    $this->artisan('tabla:historial', ['club' => $club->slug, 'url' => $url])->assertSuccessful();
+
+    // Del program de prueba, solo el partido jugado (con resultado) va al historial
+    $history = $club->fresh()->history_json;
+    expect($history)->toHaveCount(1)
+        ->and($history[0]['opponent'])->toBe('1 DECEMBRIE')
+        ->and($history[0]['played'])->toBeTrue();
+});
+
+it('importar la misma temporada dos veces no duplica el historial', function () {
+    $url = 'https://www.frf-ajf.ro/ilfov/competitii-fotbal/liga-a-5-a-11111/program';
+    Http::fake([$url => Http::response(programHtml())]);
+
+    $club = Club::factory()->create(['name' => 'A.S New Castle']);
+
+    $this->artisan('tabla:historial', ['club' => $club->slug, 'url' => $url])->assertSuccessful();
+    $this->artisan('tabla:historial', ['club' => $club->slug, 'url' => $url])->assertSuccessful();
+
+    expect($club->fresh()->history_json)->toHaveCount(1);
+});
+
 it('el comando importa el fixture y lo deja en fixture_json', function () {
     Http::fake([PROGRAM_URL => Http::response(programHtml())]);
 
