@@ -104,6 +104,23 @@ it('un jugador Normal sin cuota generada figura como deudor al abrir la caja', f
     expect(Due::withoutGlobalScopes()->where('member_id', $sinCuota->id)->count())->toBe(1);
 });
 
+it('abrir la caja NO pisa ni duplica una cuota ya pagada', function () {
+    // Garantía contra el incidente: si un jugador ya tiene su cuota del mes
+    // pagada, ensurePeriodDues (que corre al abrir la caja) la encuentra y la
+    // deja intacta — nunca la vuelve a pending ni crea una segunda.
+    $manager = Member::factory()->manager()->create();
+    $jugador = Member::factory()->for($manager->club)->create(['fee_type' => 'normal']);
+    $pagada = Due::factory()->forMember($jugador)->paid()->create();
+
+    $this->actingAs($manager->user)->get('/cuota');
+    $this->actingAs($manager->user)->get('/cuota'); // dos veces, por las dudas
+
+    $suyas = Due::withoutGlobalScopes()->where('member_id', $jugador->id)->get();
+    expect($suyas)->toHaveCount(1)
+        ->and($suyas->first()->id)->toBe($pagada->id)
+        ->and($suyas->first()->status)->toBe('paid');
+});
+
 it('el suscripto al débito automático no recibe una cuota manual por la caja', function () {
     $manager = Member::factory()->manager()->create();
     $suscripto = Member::factory()->for($manager->club)
