@@ -499,5 +499,11 @@
     "sumate.desktop_title": "Deschide acest link pe telefon",
     "sumate.desktop_hint": "Aplicația se instalează pe telefon. Copiază linkul și deschide-l acolo (sau trimite-ți-l pe WhatsApp).",
     "sumate.copy_link": "Copiază linkul",
-    "sumate.ios_code_hint": "Dacă TestFlight îți cere un cod, este :code."
+    "sumate.ios_code_hint": "Dacă TestFlight îți cere un cod, este :code.",
+    "predict.title": "Șansele meciului",
+    "predict.unknown_rival": "rival fără date de ligă",
+    "predict.win_l": "câștigăm",
+    "predict.draw_l": "egal",
+    "predict.lose_l": "pierdem",
+    "predict.carrot": "Confirmă și urcăm la :p% 🔥"
 }

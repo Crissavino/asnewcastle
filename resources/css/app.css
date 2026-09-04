@@ -134,6 +134,25 @@ body { overscroll-behavior-y: none; }
 .nc-rsvp button.on.out { background: var(--ink); border-color: var(--ink); color: #fff; }
 .nc-root button:focus-visible, .nc-root input:focus-visible, .nc-root select:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 
+/* Pronóstico del partido: barra ganamos/empatamos/perdemos + la zanahoria
+   "con tu Voy subimos a X%" (tocarla confirma). La barra anima al recargar. */
+.nc-predict { margin-top: 14px; }
+.nc-predict-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.nc-predict-bar { display: flex; height: 11px; margin-top: 7px; background: var(--paper);
+  border: 1px solid var(--line); }
+.nc-predict-bar span { transition: width .6s cubic-bezier(.22, 1, .36, 1); }
+.nc-predict-bar .w { background: var(--red); }
+.nc-predict-bar .d { background: var(--line); }
+.nc-predict-bar .l { background: var(--ink); }
+.nc-predict-legend { display: flex; justify-content: space-between; margin-top: 6px;
+  font-size: 12px; color: var(--stone); }
+.nc-predict-legend b { font-weight: 700; font-size: 13px; color: var(--ink); }
+.nc-predict-cta { width: 100%; min-height: 44px; margin-top: 9px; padding: 10px 8px; cursor: pointer;
+  background: #fff; border: 1px dashed var(--red); border-radius: 2px; color: var(--red);
+  font-family: 'Archivo', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; transition: background .14s, color .14s; }
+.nc-predict-cta:hover { background: var(--red); color: #fff; }
+
 /* el contador como marcador: número gigante con subrayado celeste de resaltador */
 .nc-count { display: flex; align-items: baseline; gap: 7px; margin-top: 16px; }
 .nc-count .n { font-family: 'Archivo Black', sans-serif; font-size: 38px; line-height: 1; font-style: italic;

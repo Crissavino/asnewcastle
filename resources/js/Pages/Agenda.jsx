@@ -405,6 +405,31 @@ function EventCard({ ev, onEdit }) {
                         </div>
                     )}
 
+                    {ev.prediction && (
+                        <div className="nc-predict">
+                            <div className="nc-predict-head">
+                                <span className="nc-label">{t('predict.title')}</span>
+                                {!ev.prediction.opponent_known && <span className="nc-meta">{t('predict.unknown_rival')}</span>}
+                            </div>
+                            <div className="nc-predict-bar">
+                                <span className="w" style={{ width: `${ev.prediction.win}%` }} />
+                                <span className="d" style={{ width: `${ev.prediction.draw}%` }} />
+                                <span className="l" style={{ width: `${ev.prediction.lose}%` }} />
+                            </div>
+                            <div className="nc-predict-legend">
+                                <span><b className="nc-num">{ev.prediction.win}%</b> {t('predict.win_l')}</span>
+                                <span><b className="nc-num">{ev.prediction.draw}%</b> {t('predict.draw_l')}</span>
+                                <span><b className="nc-num">{ev.prediction.lose}%</b> {t('predict.lose_l')}</span>
+                            </div>
+                            {!isCoach && ev.my_status !== 'in'
+                                && ev.prediction.if_you_confirm > ev.prediction.win && (
+                                <button type="button" className="nc-predict-cta" onClick={() => setStatus('in')}>
+                                    {t('predict.carrot', { p: ev.prediction.if_you_confirm })}
+                                </button>
+                            )}
+                        </div>
+                    )}
+
                     <div className="nc-count" style={{ alignItems: 'center' }}>
                         <span className="n">{ev.counts.in}</span>
                         <span className="nc-meta" style={{ flex: 1 }}>

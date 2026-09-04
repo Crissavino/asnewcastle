@@ -6,6 +6,7 @@ use App\Jobs\SendEventConvocation;
 use App\Models\Due;
 use App\Models\Event;
 use App\Models\Registration;
+use App\Services\PredictionService;
 use App\Services\SystemMessages;
 use App\Support\CurrentClub;
 use Illuminate\Http\RedirectResponse;
@@ -86,6 +87,8 @@ class AgendaController extends Controller
                     'maybe' => $maybe,
                     'out' => $out,
                     'pending' => $pending,
+                    // Chances de ganar/empatar/perder (null si no es partido futuro)
+                    'prediction' => app(PredictionService::class)->forEvent($event, $member),
                 ];
 
                 if ($isManager) {

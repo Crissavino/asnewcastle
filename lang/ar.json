@@ -483,5 +483,11 @@
     "sumate.desktop_title": "افتح هذا الرابط على هاتفك",
     "sumate.desktop_hint": "يُثبَّت التطبيق على الهاتف. انسخ الرابط وافتحه هناك (أو أرسله لنفسك عبر واتساب).",
     "sumate.copy_link": "انسخ الرابط",
-    "sumate.ios_code_hint": "إذا طلب TestFlight رمزًا، فهو :code."
+    "sumate.ios_code_hint": "إذا طلب TestFlight رمزًا، فهو :code.",
+    "predict.title": "توقعات المباراة",
+    "predict.unknown_rival": "لا بيانات دوري عن هذا الخصم",
+    "predict.win_l": "نفوز",
+    "predict.draw_l": "تعادل",
+    "predict.lose_l": "نخسر",
+    "predict.carrot": "أكّد حضورك ونرتفع إلى :p% 🔥"
 }

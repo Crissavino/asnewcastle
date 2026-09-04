@@ -499,5 +499,11 @@
     "sumate.desktop_title": "Abrí este link en tu teléfono",
     "sumate.desktop_hint": "La app se instala en el teléfono. Copiá el link y abrilo ahí (o mandátelo por WhatsApp).",
     "sumate.copy_link": "Copiar link",
-    "sumate.ios_code_hint": "Si TestFlight te pide un código, es :code."
+    "sumate.ios_code_hint": "Si TestFlight te pide un código, es :code.",
+    "predict.title": "Chances del partido",
+    "predict.unknown_rival": "rival sin datos de liga",
+    "predict.win_l": "ganamos",
+    "predict.draw_l": "empatamos",
+    "predict.lose_l": "perdemos",
+    "predict.carrot": "Con tu Voy subimos a :p% 🔥"
 }

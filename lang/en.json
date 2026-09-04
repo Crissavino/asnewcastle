@@ -499,5 +499,11 @@
     "sumate.desktop_title": "Open this link on your phone",
     "sumate.desktop_hint": "The app installs on your phone. Copy the link and open it there (or send it to yourself on WhatsApp).",
     "sumate.copy_link": "Copy link",
-    "sumate.ios_code_hint": "If TestFlight asks for a code, it's :code."
+    "sumate.ios_code_hint": "If TestFlight asks for a code, it's :code.",
+    "predict.title": "Match odds",
+    "predict.unknown_rival": "no league data on this rival",
+    "predict.win_l": "we win",
+    "predict.draw_l": "draw",
+    "predict.lose_l": "we lose",
+    "predict.carrot": "Confirm and we climb to :p% 🔥"
 }
