@@ -469,7 +469,7 @@ function EventCard({ ev, onEdit }) {
             {isManager && !ev.cancelled && (
                 <div className="nc-admin">
                     <div className="nc-label">{t('agenda.convocation')}</div>
-                    <div className="nc-namelist">{ev.convocation || t('agenda.nobody')}</div>
+                    <div className="nc-namelist" style={{ whiteSpace: 'pre-line' }}>{ev.convocation || t('agenda.nobody')}</div>
                     {invite_url && (
                         <div className="nc-admin-actions">
                             <button className="nc-mini solid" onClick={copyForWhatsApp}>

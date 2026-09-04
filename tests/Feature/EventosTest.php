@@ -109,23 +109,38 @@ it('la agenda solo muestra eventos del club activo', function () {
         ->assertInertia(fn (Assert $page) => $page->has('events', 1));
 });
 
-it('el manager ve la convocatoria en texto plano, en orden de confirmación', function () {
-    $manager = Member::factory()->manager()->create(['shirt_number' => 5]);
+it('el manager ve la convocatoria por puestos, para armar el once', function () {
+    $manager = Member::factory()->manager()->create(['shirt_number' => 5, 'position' => 'MED']);
     $manager->user->update(['name' => 'Sergio Quiroga']);
     $event = Event::factory()->by($manager)->create();
 
-    $p10 = Member::factory()->for($manager->club)->create(['shirt_number' => 10]);
-    $p10->user->update(['name' => 'Cristian Savino']);
+    $plantel = [
+        [10, 'DEL', 'Cristian Savino'],
+        [1, 'ARQ', 'Stefan Savu'],
+        [4, 'DEF', 'Alex Popescu'],
+        [2, 'DEF', 'Mihai Idor'],
+        [30, null, 'Dan Del Zoppo'],
+    ];
 
-    // Cristian (10) confirma antes que Sergio (5): va primero aunque tenga
-    // número más alto — la lista es orden de inscripción, no de camiseta.
-    Attendance::create(['event_id' => $event->id, 'member_id' => $p10->id, 'status' => 'in', 'responded_at' => now()->subHours(2)]);
-    Attendance::create(['event_id' => $event->id, 'member_id' => $manager->id, 'status' => 'in', 'responded_at' => now()->subHour()]);
+    foreach ($plantel as $i => [$number, $position, $name]) {
+        $m = Member::factory()->for($manager->club)->create(['shirt_number' => $number, 'position' => $position]);
+        $m->user->update(['name' => $name]);
+        // Confirman en cualquier orden: la lista igual sale por puesto y dorsal
+        Attendance::create(['event_id' => $event->id, 'member_id' => $m->id, 'status' => 'in', 'responded_at' => now()->subMinutes(10 - $i)]);
+    }
+
+    Attendance::create(['event_id' => $event->id, 'member_id' => $manager->id, 'status' => 'in', 'responded_at' => now()]);
 
     $this->actingAs($manager->user)
         ->get('/agenda')
         ->assertInertia(fn (Assert $page) => $page
-            ->where('events.0.convocation', '10 Cristian Savino · 5 Sergio Quiroga')
+            ->where('events.0.convocation', implode("\n", [
+                'ARQ: 1 Stefan Savu',
+                'DEF: 2 Mihai Idor · 4 Alex Popescu',
+                'MED: 5 Sergio Quiroga',
+                'DEL: 10 Cristian Savino',
+                'S/P: 30 Dan Del Zoppo',
+            ]))
         );
 });
 

@@ -49,6 +49,7 @@ class AgendaController extends Controller
                     ->map(fn ($a) => [
                         'id' => $a->member_id,
                         'shirt_number' => $a->member->shirt_number,
+                        'position' => $a->member->position,
                         'name' => $a->member->user->name,
                     ])->values();
 
@@ -92,10 +93,19 @@ class AgendaController extends Controller
                 ];
 
                 if ($isManager) {
-                    // La lista en texto plano copiable: "10 Cristian Savino · 5 Sergio Quiroga"
-                    $data['convocation'] = $going
-                        ->map(fn ($p) => trim($p['shirt_number'].' '.$p['name']))
-                        ->implode(' · ');
+                    // La lista copiable, una línea por puesto y por dorsal adentro,
+                    // para armar el once de un vistazo. S/P = sin puesto cargado.
+                    $data['convocation'] = collect(['ARQ', 'DEF', 'MED', 'DEL', null])
+                        ->map(function ($position) use ($going) {
+                            $line = $going->where('position', $position)
+                                ->sortBy('shirt_number')
+                                ->map(fn ($p) => trim($p['shirt_number'].' '.$p['name']))
+                                ->implode(' · ');
+
+                            return $line === '' ? null : ($position ?? 'S/P').': '.$line;
+                        })
+                        ->filter()
+                        ->implode("\n");
                 }
 
                 return $data;
