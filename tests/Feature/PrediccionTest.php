@@ -140,6 +140,21 @@ it('haber perdido el cruce anterior baja el pronóstico (historial en la app)', 
     expect(pronostico($eventoGanamos)['win'])->toBeGreaterThan(pronostico($eventoPerdimos)['win']);
 });
 
+it('el historial cuenta aunque el cruce sea de la temporada pasada', function () {
+    $conHistoria = clubConTabla();
+    $sinHistoria = clubConTabla();
+
+    // Liga 5, temporada pasada: nos ganaron 3-1 (cargado en la app)
+    partidoFuturo($conHistoria, ['starts_at' => now()->subMonths(10), 'goals_for' => 1, 'goals_against' => 3]);
+
+    $eventoConHistoria = partidoFuturo($conHistoria);
+    $eventoSinHistoria = partidoFuturo($sinHistoria);
+    confirman($eventoConHistoria, 8);
+    confirman($eventoSinHistoria, 8);
+
+    expect(pronostico($eventoConHistoria)['win'])->toBeLessThan(pronostico($eventoSinHistoria)['win']);
+});
+
 it('sin cruces en la app, el historial sale del fixture scrapeado', function () {
     $fixtureVs = fn (int $gf, int $ga) => [[
         'etapa' => 3,
