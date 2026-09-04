@@ -43,7 +43,8 @@ class ImportarHistorial extends Command
 
         $merged = collect($club->history_json ?? [])
             ->concat($rows)
-            ->unique(fn ($row) => $row['date'].'|'.$row['opponent'])
+            // La etapa desambigua: en temporadas viejas hay filas sin fecha
+            ->unique(fn ($row) => $row['etapa'].'|'.$row['date'].'|'.$row['opponent'])
             ->sortBy('date')
             ->values()
             ->all();
