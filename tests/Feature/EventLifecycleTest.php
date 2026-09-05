@@ -155,3 +155,28 @@ it('todos ven quiénes van, dudan y no van, con nombres', function () {
             ->where('events.0.out.0.name', $otro->user->name)
         );
 });
+
+it('una edición cosmética (kick-off, link, notas) no molesta a nadie', function () {
+    $manager = Member::factory()->manager()->create();
+    Member::factory()->for($manager->club)->create();
+    $event = Event::factory()->by($manager)->create(['notes' => 'Kick of 11:00 - https://maps.app.goo.gl/xyz']);
+
+    $this->actingAs($manager->user)->put("/eventos/{$event->id}", [
+        'kind' => 'match',
+        'opponent' => $event->opponent,
+        'is_home' => $event->is_home,
+        'starts_at' => $event->starts_at->format('Y-m-d H:i'),
+        'kickoff_time' => '11:00',
+        'venue' => $event->venue,
+        'venue_url' => 'https://maps.app.goo.gl/xyz',
+        'kit' => $event->kit,
+        'notes' => null,
+    ])->assertRedirect(route('agenda'));
+
+    $event->refresh();
+    expect($event->kickoff_at)->not->toBeNull()
+        ->and($event->notes)->toBeNull()
+        // Ni WhatsApp ni mensaje del sistema: nadie se enteró
+        ->and($this->whatsapp->templates)->toHaveCount(0)
+        ->and(Message::withoutGlobalScopes()->where('is_system', true)->count())->toBe(0);
+});

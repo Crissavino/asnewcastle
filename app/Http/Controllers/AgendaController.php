@@ -181,8 +181,13 @@ class AgendaController extends Controller
 
         $event->update($this->validated($request));
 
-        SendEventConvocation::dispatch($event, notice: 'update');
-        app(SystemMessages::class)->eventUpdated($event);
+        // Se avisa solo si cambió algo que le importa al plantel. Agregar el
+        // kick-off, el link de la cancha o tocar las notas es edición
+        // cosmética: silenciosa, para no gastar la pólvora de los avisos.
+        if ($event->wasChanged(['kind', 'opponent', 'is_home', 'starts_at', 'venue', 'kit'])) {
+            SendEventConvocation::dispatch($event, notice: 'update');
+            app(SystemMessages::class)->eventUpdated($event);
+        }
 
         return redirect()->route('agenda');
     }
