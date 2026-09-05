@@ -506,5 +506,9 @@
     "predict.draw_l": "empatamos",
     "predict.lose_l": "perdemos",
     "predict.carrot": "Con tu Voy subimos a :p% 🔥",
-    "predict.carrot_doubt": "¿En duda? Con tu Voy subimos a :p% 🔥"
+    "predict.carrot_doubt": "¿En duda? Con tu Voy subimos a :p% 🔥",
+    "notes.title": "Notas del cuerpo técnico",
+    "notes.placeholder": "Qué pasó, qué probar, quién anduvo bien…",
+    "notes.edited_by": "Editó :name",
+    "notes.saved": "Guardado ✓"
 }

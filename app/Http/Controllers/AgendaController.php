@@ -25,6 +25,8 @@ class AgendaController extends Controller
         $member = $current->member();
         // Rol EFECTIVO: si el dueño está "viendo como jugador", figura player.
         $isManager = $current->actsAsManager();
+        // Staff = manager o coach: los únicos que saben que el bloc existe
+        $isStaff = in_array($current->effectiveRole(), ['manager', 'coach'], true);
 
         // El plantel activo, una sola vez: para el conteo y para saber quién
         // NO contestó (los que no tienen fila de asistencia en el evento).
@@ -39,7 +41,7 @@ class AgendaController extends Controller
             ->orderBy('starts_at')
             ->with(['attendances.member.user:id,name'])
             ->get()
-            ->map(function (Event $event) use ($member, $isManager, $roster, $rosterCount) {
+            ->map(function (Event $event) use ($member, $isManager, $isStaff, $roster, $rosterCount) {
                 $byStatus = $event->attendances->groupBy('status');
 
                 // Orden de inscripción: el primero que confirmó aparece primero
@@ -91,6 +93,10 @@ class AgendaController extends Controller
                     // Chances de ganar/empatar/perder (null si no es partido futuro)
                     'prediction' => app(PredictionService::class)->forEvent($event, $member),
                 ];
+
+                if ($isStaff) {
+                    $data['staff_notes'] = $this->staffNotesPayload($event);
+                }
 
                 if ($isManager) {
                     // La lista copiable, una línea por puesto y por dorsal adentro,
@@ -213,6 +219,26 @@ class AgendaController extends Controller
         return back();
     }
 
+    /** El bloc compartido del cuerpo técnico. Sin notificaciones: es interno. */
+    public function staffNotes(Request $request, Event $event): RedirectResponse
+    {
+        $current = app(CurrentClub::class);
+        $current->assertOwns($event);
+        Gate::authorize('annotate', $event);
+
+        $validated = $request->validate([
+            'body' => ['nullable', 'string', 'max:5000'],
+        ]);
+
+        $event->forceFill([
+            'staff_notes' => $validated['body'] ?: null,
+            'staff_notes_updated_by_member_id' => $current->member()->id,
+            'staff_notes_updated_at' => now(),
+        ])->save();
+
+        return back();
+    }
+
     public function remind(Event $event): RedirectResponse
     {
         app(CurrentClub::class)->assertOwns($event);
@@ -248,11 +274,22 @@ class AgendaController extends Controller
         ];
     }
 
+    /** Payload del bloc del cuerpo técnico — solo se arma para staff. */
+    protected function staffNotesPayload(Event $event): array
+    {
+        return [
+            'body' => $event->staff_notes,
+            'updated_by' => $event->staffNotesEditor?->user?->name,
+            'updated_at' => $event->staff_notes_updated_at?->toIso8601String(),
+        ];
+    }
+
     /** Los últimos 3 partidos jugados, con resultado y figura si ya cerró. */
     protected function recentMatches(): array
     {
         $current = app(CurrentClub::class);
         $isManager = $current->actsAsManager();
+        $isStaff = in_array($current->effectiveRole(), ['manager', 'coach'], true);
         // Para confirmar presentes: el plantel activo, una sola vez
         $roster = $isManager
             ? $current->club()->activeMembers()->with('user:id,name')->orderBy('shirt_number')->get()
@@ -266,7 +303,7 @@ class AgendaController extends Controller
             ->limit(3)
             ->with(['mvpVotes.voted.user:id,name', 'attendances'])
             ->get()
-            ->map(function (Event $event) use ($isManager, $roster) {
+            ->map(function (Event $event) use ($isManager, $isStaff, $roster) {
                 $winner = null;
 
                 if ($event->mvp_closed_at && $event->mvpVotes->isNotEmpty()) {
@@ -286,6 +323,10 @@ class AgendaController extends Controller
                         : null,
                     'mvp' => $winner,
                 ];
+
+                if ($isStaff) {
+                    $data['staff_notes'] = $this->staffNotesPayload($event);
+                }
 
                 if ($isManager) {
                     $data['presence'] = [

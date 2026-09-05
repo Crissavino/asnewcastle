@@ -23,6 +23,7 @@ class Event extends Model
         'venue',
         'kit',
         'notes',
+        'staff_notes',
         'notified_at',
         'reminded_at',
         'mvp_opened_at',
@@ -43,6 +44,7 @@ class Event extends Model
             'mvp_opened_at' => 'datetime',
             'mvp_closed_at' => 'datetime',
             'attendance_confirmed_at' => 'datetime',
+            'staff_notes_updated_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'goals_for' => 'integer',
             'goals_against' => 'integer',
@@ -73,6 +75,12 @@ class Event extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(Member::class, 'created_by_member_id');
+    }
+
+    /** Quién tocó el bloc del cuerpo técnico por última vez. */
+    public function staffNotesEditor(): BelongsTo
+    {
+        return $this->belongsTo(Member::class, 'staff_notes_updated_by_member_id');
     }
 
     public function isMatch(): bool

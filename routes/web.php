@@ -106,6 +106,7 @@ Route::middleware('auth')->group(function () {
             Route::put('/eventos/{event}', [AgendaController::class, 'update'])->name('eventos.actualizar');
             Route::post('/eventos/{event}/cancelar', [AgendaController::class, 'cancel'])->name('eventos.cancelar');
             Route::post('/eventos/{event}/resultado', [AgendaController::class, 'result'])->name('eventos.resultado');
+            Route::put('/eventos/{event}/notas', [AgendaController::class, 'staffNotes'])->name('eventos.notas');
             Route::post('/eventos/{event}/presentes', [PresenceController::class, 'store'])->name('eventos.presentes');
             Route::post('/eventos/{event}/recordar', [AgendaController::class, 'remind'])->name('eventos.recordar');
             Route::post('/eventos/{event}/asistencia', [AttendanceController::class, 'store'])->name('asistencia');

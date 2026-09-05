@@ -157,6 +157,18 @@ body { overscroll-behavior-y: none; }
   box-shadow: 2px 2px 0 var(--ink); }
 .nc-predict-cta.duda:hover { background: var(--red-dk); border-color: var(--red-dk); }
 
+/* Bloc del cuerpo técnico: solo lo renderizan manager y coach (el prop no
+   viaja para el resto). Colapsado muestra la última nota como vista previa. */
+.nc-staffnotes { margin-top: 12px; padding-top: 10px; border-top: 2px dashed var(--line); }
+.nc-staffnotes-toggle { width: auto; padding: 6px 2px; display: inline-flex; align-items: center; gap: 5px; }
+.nc-staffnotes-preview { margin-top: 2px; white-space: pre-line; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.nc-staffnotes textarea { width: 100%; margin-top: 6px; background: #fff; border: 1px solid var(--line);
+  border-radius: 2px; padding: 11px 12px; color: var(--ink); font-family: 'Archivo', sans-serif;
+  font-size: 14px; line-height: 20px; resize: vertical; min-height: 88px; }
+.nc-staffnotes textarea::placeholder { color: var(--stone); }
+.nc-staffnotes-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; }
+
 /* el contador como marcador: número gigante con subrayado celeste de resaltador */
 .nc-count { display: flex; align-items: baseline; gap: 7px; margin-top: 16px; }
 .nc-count .n { font-family: 'Archivo Black', sans-serif; font-size: 38px; line-height: 1; font-style: italic;

@@ -506,5 +506,9 @@
     "predict.draw_l": "egal",
     "predict.lose_l": "pierdem",
     "predict.carrot": "Confirmă și urcăm la :p% 🔥",
-    "predict.carrot_doubt": "Nehotărât? Cu Da-ul tău urcăm la :p% 🔥"
+    "predict.carrot_doubt": "Nehotărât? Cu Da-ul tău urcăm la :p% 🔥",
+    "notes.title": "Notițele staffului",
+    "notes.placeholder": "Ce s-a întâmplat, ce încercăm, cine a jucat bine…",
+    "notes.edited_by": "Editat de :name",
+    "notes.saved": "Salvat ✓"
 }

@@ -490,5 +490,9 @@
     "predict.draw_l": "تعادل",
     "predict.lose_l": "نخسر",
     "predict.carrot": "أكّد حضورك ونرتفع إلى :p% 🔥",
-    "predict.carrot_doubt": "متردد؟ بتأكيدك نرتفع إلى :p% 🔥"
+    "predict.carrot_doubt": "متردد؟ بتأكيدك نرتفع إلى :p% 🔥",
+    "notes.title": "ملاحظات الجهاز الفني",
+    "notes.placeholder": "ماذا حدث، ماذا نجرّب، من كان جيدًا…",
+    "notes.edited_by": "حرّرها :name",
+    "notes.saved": "حُفظت ✓"
 }

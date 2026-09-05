@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { Check, ChevronDown, ChevronUp, Copy, HelpCircle, MessageCircle, Pencil, Plus, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Copy, HelpCircle, MessageCircle, NotebookPen, Pencil, Plus, X } from 'lucide-react';
 import { IconUbicacion, IconBell } from '../Components/TabIcons';
 import { useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
@@ -466,6 +466,8 @@ function EventCard({ ev, onEdit }) {
                 </>
             )}
 
+            {ev.staff_notes !== undefined && !ev.cancelled && <StaffNotes ev={ev} />}
+
             {isManager && !ev.cancelled && (
                 <div className="nc-admin">
                     <div className="nc-label">{t('agenda.convocation')}</div>
@@ -506,6 +508,57 @@ function EventCard({ ev, onEdit }) {
     );
 }
 
+// El bloc compartido del cuerpo técnico. El prop staff_notes solo viaja si sos
+// manager o coach: un jugador jamás renderiza (ni sabe que existe) este bloque.
+function StaffNotes({ ev }) {
+    const { t } = useTranslations();
+    const { day } = useDates();
+    const [open, setOpen] = useState(false);
+    const [body, setBody] = useState(ev.staff_notes?.body ?? '');
+    const [saved, setSaved] = useState(false);
+
+    const save = () => {
+        router.put(route('eventos.notas', ev.id), { body }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setSaved(true);
+                setTimeout(() => setSaved(false), 1600);
+            },
+        });
+    };
+
+    return (
+        <div className="nc-staffnotes">
+            <button type="button" className="nc-skip nc-staffnotes-toggle" onClick={() => setOpen(!open)}>
+                <NotebookPen size={13} /> {t('notes.title')} {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            </button>
+            {!open && ev.staff_notes?.body && (
+                <div className="nc-meta nc-staffnotes-preview">{ev.staff_notes.body}</div>
+            )}
+            {open && (
+                <>
+                    <textarea
+                        rows={4}
+                        value={body}
+                        maxLength={5000}
+                        placeholder={t('notes.placeholder')}
+                        onChange={(e) => setBody(e.target.value)}
+                    />
+                    <div className="nc-staffnotes-foot">
+                        <span className="nc-meta">
+                            {ev.staff_notes?.updated_by
+                                && `${t('notes.edited_by', { name: ev.staff_notes.updated_by })} · ${day(ev.staff_notes.updated_at)}`}
+                        </span>
+                        <button type="button" className="nc-mini" style={{ flex: 'none' }} onClick={save}>
+                            {saved ? t('notes.saved') : t('agenda.save')}
+                        </button>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
 function RecentResults({ recent, onLoadResult, onLoadPresence }) {
     const { t } = useTranslations();
     const { member, club } = usePage().props;
@@ -519,7 +572,8 @@ function RecentResults({ recent, onLoadResult, onLoadPresence }) {
             <div className="nc-label">{t('agenda.recent')}</div>
             <div style={{ marginTop: 6 }}>
                 {recent.map((m) => (
-                    <div key={m.id} className="nc-row" style={{ alignItems: 'center' }}>
+                    <div key={m.id}>
+                    <div className="nc-row" style={{ alignItems: 'center' }}>
                         <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 14, fontWeight: 600 }}>
                                 {m.is_home ? `${club?.name ?? ''} – ${m.opponent}` : `${m.opponent} – ${club?.name ?? ''}`}
@@ -550,6 +604,8 @@ function RecentResults({ recent, onLoadResult, onLoadPresence }) {
                                 <span className="nc-meta">—</span>
                             )}
                         </div>
+                    </div>
+                    {m.staff_notes !== undefined && <StaffNotes ev={m} />}
                     </div>
                 ))}
             </div>
