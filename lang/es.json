@@ -510,5 +510,12 @@
     "notes.title": "Notas del cuerpo técnico",
     "notes.placeholder": "Qué pasó, qué probar, quién anduvo bien…",
     "notes.edited_by": "Editó :name",
-    "notes.saved": "Guardado ✓"
+    "notes.saved": "Guardado ✓",
+    "agenda.meet_label": "Encuentro",
+    "agenda.kickoff_label": "Kick-off (opcional)",
+    "agenda.venue_url_label": "Link de Maps (opcional)",
+    "agenda.meet_l": "Nos encontramos",
+    "agenda.kickoff_l": "Kick-off",
+    "agenda.how_to_get": "Cómo llegar",
+    "agenda.kickoff_before_meet": "El kick-off no puede ser antes de la hora de encuentro."
 }

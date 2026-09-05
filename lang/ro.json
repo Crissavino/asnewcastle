@@ -510,5 +510,12 @@
     "notes.title": "Notițele staffului",
     "notes.placeholder": "Ce s-a întâmplat, ce încercăm, cine a jucat bine…",
     "notes.edited_by": "Editat de :name",
-    "notes.saved": "Salvat ✓"
+    "notes.saved": "Salvat ✓",
+    "agenda.meet_label": "Întâlnirea",
+    "agenda.kickoff_label": "Kick-off (opțional)",
+    "agenda.venue_url_label": "Link Maps (opțional)",
+    "agenda.meet_l": "Ne întâlnim",
+    "agenda.kickoff_l": "Kick-off",
+    "agenda.how_to_get": "Cum ajungi",
+    "agenda.kickoff_before_meet": "Kick-off-ul nu poate fi înaintea orei de întâlnire."
 }

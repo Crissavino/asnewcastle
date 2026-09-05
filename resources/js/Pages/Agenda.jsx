@@ -49,7 +49,9 @@ function EventForm({ event, rosterCount, onClose }) {
         is_home: event.is_home ? '1' : '0',
         date: event.starts_at.slice(0, 10),
         time: new Date(event.starts_at).toTimeString().slice(0, 5),
+        kickoff_time: event.kickoff_at ? new Date(event.kickoff_at).toTimeString().slice(0, 5) : '',
         venue: event.venue,
+        venue_url: event.venue_url ?? '',
         kit: event.kit,
         notes: event.notes ?? '',
     } : {
@@ -58,7 +60,9 @@ function EventForm({ event, rosterCount, onClose }) {
         is_home: '1',
         date: nextSaturday(),
         time: '11:00',
+        kickoff_time: '',
         venue: '',
+        venue_url: '',
         kit: 'home',
         notes: '',
     });
@@ -81,7 +85,9 @@ function EventForm({ event, rosterCount, onClose }) {
             opponent: isMatch ? data.opponent : null,
             is_home: isMatch ? data.is_home === '1' : null,
             starts_at: `${data.date} ${data.time}`,
+            kickoff_time: isMatch ? data.kickoff_time || null : null,
             venue: data.venue,
+            venue_url: data.venue_url || null,
             kit: isMatch ? data.kit : null,
             notes: data.notes || null,
         };
@@ -132,13 +138,25 @@ function EventForm({ event, rosterCount, onClose }) {
                 </label>
 
                 <label className="nc-field-l">
-                    <span className="nc-label">{t('agenda.time')}</span>
+                    <span className="nc-label">{isMatch ? t('agenda.meet_label') : t('agenda.time')}</span>
                     <input type="time" value={data.time} onChange={(e) => setData('time', e.target.value)} />
                 </label>
+
+                {isMatch && (
+                    <label className="nc-field-l">
+                        <span className="nc-label">{t('agenda.kickoff_label')}</span>
+                        <input type="time" value={data.kickoff_time} onChange={(e) => setData('kickoff_time', e.target.value)} />
+                    </label>
+                )}
 
                 <label className="nc-field-l">
                     <span className="nc-label">{t('agenda.venue')}</span>
                     <input value={data.venue} onChange={(e) => setData('venue', e.target.value)} placeholder="Teren Voluntari" />
+                </label>
+
+                <label className="nc-field-l">
+                    <span className="nc-label">{t('agenda.venue_url_label')}</span>
+                    <input inputMode="url" value={data.venue_url} onChange={(e) => setData('venue_url', e.target.value)} placeholder="https://maps.app.goo.gl/…" />
                 </label>
 
                 {isMatch && (
@@ -328,8 +346,10 @@ function EventCard({ ev, onEdit }) {
             : t('wa.training_title') + (ev.notes ? ` — ${ev.notes}` : '');
 
         const lines = [`🔴⚫ *${title}*`, ''];
-        lines.push(`📅 ${day(ev.starts_at)} · ${time(ev.starts_at)}`);
-        if (ev.venue) lines.push(`📍 ${ev.venue}`);
+        lines.push(ev.kickoff_at
+            ? `📅 ${day(ev.starts_at)} · 🕘 ${time(ev.starts_at)} · ⚽ ${time(ev.kickoff_at)}`
+            : `📅 ${day(ev.starts_at)} · ${time(ev.starts_at)}`);
+        if (ev.venue) lines.push(`📍 ${ev.venue}${ev.venue_url ? `\n${ev.venue_url}` : ''}`);
         lines.push('');
         lines.push(`✅ *${t('agenda.going_l')} (${ev.going.length})*`);
         ev.going.forEach((p, i) => lines.push(`${i + 1}. ${p.name}`));
@@ -365,7 +385,8 @@ function EventCard({ ev, onEdit }) {
                     {ev.opponent && <div className="nc-meta">{day(ev.starts_at)}</div>}
                 </div>
                 <div style={{ textAlign: 'end' }}>
-                    <div className="nc-num nc-time" style={{ fontSize: 21, fontWeight: 700 }}>{time(ev.starts_at)}</div>
+                    {/* En partidos las horas viven en el itinerario; el reloj grande queda para entrenos */}
+                    {!isMatch && <div className="nc-num nc-time" style={{ fontSize: 21, fontWeight: 700 }}>{time(ev.starts_at)}</div>}
                     {isMatch && !ev.cancelled && !isCoach && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 5, marginTop: 6 }}>
                             {ev.kit === 'both' ? (
@@ -381,10 +402,37 @@ function EventCard({ ev, onEdit }) {
                 </div>
             </div>
 
-            <div className="nc-meta" style={{ marginTop: 10, display: 'flex', gap: 6 }}>
-                <IconUbicacion size={13} style={{ marginTop: 3, flexShrink: 0 }} />
-                <span>{ev.venue}</span>
-            </div>
+            {isMatch ? (
+                /* El plan del día: encuentro → kick-off → cómo llegar */
+                <div className="nc-itin">
+                    <div className="nc-itin-step">
+                        <b className="nc-num">{time(ev.starts_at)}</b>
+                        <span className="nc-meta">{t('agenda.meet_l')}</span>
+                    </div>
+                    {ev.kickoff_at && (
+                        <div className="nc-itin-step kick">
+                            <b className="nc-num">{time(ev.kickoff_at)}</b>
+                            <span className="nc-meta">{t('agenda.kickoff_l')} ⚽</span>
+                        </div>
+                    )}
+                    <div className="nc-itin-step">
+                        {ev.venue_url ? (
+                            <button type="button" className="nc-itin-go" onClick={() => openExternal(ev.venue_url)}>
+                                <IconUbicacion size={13} style={{ flexShrink: 0 }} /> {ev.venue} · {t('agenda.how_to_get')} →
+                            </button>
+                        ) : (
+                            <span className="nc-meta" style={{ display: 'inline-flex', gap: 5, alignItems: 'center' }}>
+                                <IconUbicacion size={13} style={{ flexShrink: 0 }} /> {ev.venue}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            ) : (
+                <div className="nc-meta" style={{ marginTop: 10, display: 'flex', gap: 6 }}>
+                    <IconUbicacion size={13} style={{ marginTop: 3, flexShrink: 0 }} />
+                    <span>{ev.venue}</span>
+                </div>
+            )}
             {ev.notes && <div className="nc-meta" style={{ marginTop: 3 }}>{linkify(ev.notes)}</div>}
 
             {!ev.cancelled && (

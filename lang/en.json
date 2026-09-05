@@ -510,5 +510,12 @@
     "notes.title": "Staff notes",
     "notes.placeholder": "What happened, what to try, who played well…",
     "notes.edited_by": "Edited by :name",
-    "notes.saved": "Saved ✓"
+    "notes.saved": "Saved ✓",
+    "agenda.meet_label": "Meet-up",
+    "agenda.kickoff_label": "Kick-off (optional)",
+    "agenda.venue_url_label": "Maps link (optional)",
+    "agenda.meet_l": "We meet",
+    "agenda.kickoff_l": "Kick-off",
+    "agenda.how_to_get": "Directions",
+    "agenda.kickoff_before_meet": "Kick-off can't be before the meet-up time."
 }

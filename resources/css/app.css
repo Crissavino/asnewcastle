@@ -157,6 +157,20 @@ body { overscroll-behavior-y: none; }
   box-shadow: 2px 2px 0 var(--ink); }
 .nc-predict-cta.duda:hover { background: var(--red-dk); border-color: var(--red-dk); }
 
+/* Itinerario del partido: encuentro → kick-off → cómo llegar, como plan del
+   día. El punto del kick-off va en rojo; la cancha con link es tocable. */
+.nc-itin { margin-top: 12px; border-inline-start: 2px solid var(--line);
+  padding-inline-start: 14px; display: grid; gap: 8px; }
+.nc-itin-step { position: relative; font-size: 14px; }
+.nc-itin-step::before { content: ""; position: absolute; inset-inline-start: -20px; top: 5px;
+  width: 9px; height: 9px; border-radius: 50%; background: #fff; border: 2px solid var(--stone); }
+.nc-itin-step.kick::before { background: var(--red); border-color: var(--red); }
+.nc-itin-step b { font-weight: 800; margin-inline-end: 7px; font-size: 15px; }
+.nc-itin-go { background: none; border: none; padding: 10px 0; margin: -10px 0; cursor: pointer;
+  color: var(--red); font-weight: 700; font-size: 13.5px; font-family: 'Archivo', sans-serif;
+  display: inline-flex; align-items: center; gap: 5px; min-height: 44px; text-align: start; }
+.nc-itin-go:hover { text-decoration: underline; }
+
 /* Bloc del cuerpo técnico: solo lo renderizan manager y coach (el prop no
    viaja para el resto). Colapsado muestra la última nota como vista previa. */
 .nc-staffnotes { margin-top: 12px; padding-top: 10px; border-top: 2px dashed var(--line); }

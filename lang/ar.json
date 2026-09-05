@@ -494,5 +494,12 @@
     "notes.title": "ملاحظات الجهاز الفني",
     "notes.placeholder": "ماذا حدث، ماذا نجرّب، من كان جيدًا…",
     "notes.edited_by": "حرّرها :name",
-    "notes.saved": "حُفظت ✓"
+    "notes.saved": "حُفظت ✓",
+    "agenda.meet_label": "اللقاء",
+    "agenda.kickoff_label": "ضربة البداية (اختياري)",
+    "agenda.venue_url_label": "رابط الخرائط (اختياري)",
+    "agenda.meet_l": "نلتقي",
+    "agenda.kickoff_l": "ضربة البداية",
+    "agenda.how_to_get": "الاتجاهات",
+    "agenda.kickoff_before_meet": "لا يمكن أن تكون ضربة البداية قبل موعد اللقاء."
 }

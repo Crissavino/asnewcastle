@@ -20,7 +20,9 @@ class Event extends Model
         'opponent',
         'is_home',
         'starts_at',
+        'kickoff_at',
         'venue',
+        'venue_url',
         'kit',
         'notes',
         'staff_notes',
@@ -39,6 +41,7 @@ class Event extends Model
         return [
             'is_home' => 'boolean',
             'starts_at' => 'datetime',
+            'kickoff_at' => 'datetime',
             'notified_at' => 'datetime',
             'reminded_at' => 'datetime',
             'mvp_opened_at' => 'datetime',
@@ -98,10 +101,13 @@ class Event extends Model
         return $this->hasMany(PlayerRating::class);
     }
 
-    /** Un partido se considera terminado 2 horas después del arranque. */
+    /**
+     * Un partido se considera terminado 2 horas después del kick-off (si está
+     * cargado) o del encuentro. starts_at es "nos juntamos", no "se juega".
+     */
     public function isFinished(): bool
     {
-        return $this->starts_at->copy()->addHours(2)->isPast();
+        return ($this->kickoff_at ?? $this->starts_at)->copy()->addHours(2)->isPast();
     }
 
     public function isCancelled(): bool

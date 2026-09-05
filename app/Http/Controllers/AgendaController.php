@@ -75,7 +75,9 @@ class AgendaController extends Controller
                     'opponent' => $event->opponent,
                     'is_home' => $event->is_home,
                     'starts_at' => $event->starts_at->toIso8601String(),
+                    'kickoff_at' => $event->kickoff_at?->toIso8601String(),
                     'venue' => $event->venue,
+                    'venue_url' => $event->venue_url,
                     'kit' => $event->kit,
                     'notes' => $event->notes,
                     'cancelled' => $event->isCancelled(),
@@ -259,18 +261,38 @@ class AgendaController extends Controller
             'opponent' => ['required_if:kind,match', 'nullable', 'string', 'max:80'],
             'is_home' => ['required_if:kind,match', 'nullable', 'boolean'],
             'starts_at' => ['required', 'date', 'after:now'],
+            // Kick-off: hora del partido, el mismo día del encuentro (starts_at)
+            'kickoff_time' => ['nullable', 'date_format:H:i'],
             'venue' => ['required', 'string', 'max:120'],
+            'venue_url' => ['nullable', 'url', 'max:255'],
             // La casaca es cosa de partidos ("both" = llevar las dos por las dudas);
             // en los entrenamientos no se aclara
             'kit' => ['required_if:kind,match', 'nullable', Rule::in(['home', 'away', 'both'])],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
+        $kickoff = null;
+
+        if ($validated['kind'] === 'match' && ! empty($validated['kickoff_time'])) {
+            $kickoff = \Illuminate\Support\Carbon::parse($validated['starts_at'])
+                ->setTimeFromTimeString($validated['kickoff_time']);
+
+            if ($kickoff->lt($validated['starts_at'])) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'kickoff_time' => __('agenda.kickoff_before_meet'),
+                ]);
+            }
+        }
+
+        unset($validated['kickoff_time']);
+
         return [
             ...$validated,
             'opponent' => $validated['kind'] === 'match' ? $validated['opponent'] : null,
             'is_home' => (bool) ($validated['is_home'] ?? true),
             'kit' => $validated['kit'] ?? 'home',
+            'kickoff_at' => $kickoff,
+            'venue_url' => $validated['venue_url'] ?? null,
         ];
     }
 
