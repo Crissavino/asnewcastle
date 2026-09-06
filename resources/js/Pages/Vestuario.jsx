@@ -32,7 +32,7 @@ function MvpPoll({ mvp, onClose }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                     <div className="nc-label">{t('vestuario.mvp_title')}</div>
                     <button type="button" className="nc-sheet-close" onClick={onClose} aria-label={t('common.done')}>
-                        <X size={19} />
+                        <X size={26} />
                     </button>
                 </div>
                 <p className="nc-meta" style={{ marginTop: 6 }}>{t('vestuario.mvp_hint', { opponent: mvp.opponent })}</p>
