@@ -501,5 +501,6 @@
     "agenda.meet_l": "نلتقي",
     "agenda.kickoff_l": "ضربة البداية",
     "agenda.how_to_get": "الاتجاهات",
-    "agenda.kickoff_before_meet": "لا يمكن أن تكون ضربة البداية قبل موعد اللقاء."
+    "agenda.kickoff_before_meet": "لا يمكن أن تكون ضربة البداية قبل موعد اللقاء.",
+    "common.done": "تم"
 }

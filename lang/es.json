@@ -517,5 +517,6 @@
     "agenda.meet_l": "Nos encontramos",
     "agenda.kickoff_l": "Kick-off",
     "agenda.how_to_get": "Cómo llegar",
-    "agenda.kickoff_before_meet": "El kick-off no puede ser antes de la hora de encuentro."
+    "agenda.kickoff_before_meet": "El kick-off no puede ser antes de la hora de encuentro.",
+    "common.done": "Listo"
 }

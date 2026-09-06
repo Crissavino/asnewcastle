@@ -157,6 +157,12 @@ body { overscroll-behavior-y: none; }
   box-shadow: 2px 2px 0 var(--ink); }
 .nc-predict-cta.duda:hover { background: var(--red-dk); border-color: var(--red-dk); }
 
+/* Cerrar una sábana desde adentro: la cruz arriba a la derecha, tocable de verdad */
+.nc-sheet-close { background: none; border: none; cursor: pointer; color: var(--stone);
+  min-width: 44px; min-height: 44px; margin: -12px -12px -12px 0;
+  display: grid; place-items: center; }
+.nc-sheet-close:hover { color: var(--ink); }
+
 /* Itinerario del partido: encuentro → kick-off → cómo llegar, como plan del
    día. El punto del kick-off va en rojo; la cancha con link es tocable. */
 .nc-itin { margin-top: 12px; border-inline-start: 2px solid var(--line);

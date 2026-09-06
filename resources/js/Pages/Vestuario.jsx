@@ -28,7 +28,13 @@ function MvpPoll({ mvp, onClose }) {
     return (
         <div className="nc-sheet" onClick={onClose}>
             <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
-                <div className="nc-label">{t('vestuario.mvp_title')}</div>
+                {/* Salida visible: en el celu la sábana tapa todo y el tap-afuera no alcanza */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                    <div className="nc-label">{t('vestuario.mvp_title')}</div>
+                    <button type="button" className="nc-sheet-close" onClick={onClose} aria-label={t('common.done')}>
+                        <X size={19} />
+                    </button>
+                </div>
                 <p className="nc-meta" style={{ marginTop: 6 }}>{t('vestuario.mvp_hint', { opponent: mvp.opponent })}</p>
 
                 <div style={{ marginTop: 10 }}>
@@ -69,6 +75,10 @@ function MvpPoll({ mvp, onClose }) {
                         </div>
                     ))}
                 </div>
+
+                <button type="button" className="nc-btn" style={{ marginTop: 14 }} onClick={onClose}>
+                    {t('common.done')}
+                </button>
             </div>
         </div>
     );
