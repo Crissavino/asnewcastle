@@ -9,6 +9,7 @@ use App\Models\Event;
 use App\Models\Expense;
 use App\Jobs\CancelMollieSubscription;
 use App\Models\Member;
+use App\Models\Payment;
 use App\Services\Mollie\MollieGateway;
 use App\Services\Stripe\StripeGateway;
 use App\Services\WhatsApp\WhatsAppChannel;
@@ -138,6 +139,13 @@ class CuotaController extends Controller
             $monthDues = $dues->keyBy('member_id'); // las del período, ya cargadas arriba
             $dueAudit = AuditLog::latestFor('due.status.set', Due::class, $monthDues->pluck('id'));
 
+            // Pago online de la cuota del mes (entró por webhook), por due_id
+            $paidOnline = Payment::query()
+                ->whereIn('due_id', $monthDues->pluck('id'))
+                ->where('status', 'succeeded')
+                ->get()
+                ->keyBy('due_id');
+
             $props['config'] = [
                 'monthly_fee_cents' => $club->monthly_fee_cents,
                 'subscription_discount_cents' => $club->subscription_discount_cents,
@@ -152,6 +160,10 @@ class CuotaController extends Controller
                     'fee_by' => $this->auditLine($feeAudit->get($m->id)),
                     // Marca a mano de su cuota del mes (efectivo/condonada), si la hubo
                     'due_mark' => $this->auditLine($dueAudit->get($monthDues->get($m->id)?->id)),
+                    // Pago online del mes (suelto o débito), si lo hubo
+                    'paid_online' => ($p = $paidOnline->get($monthDues->get($m->id)?->id))
+                        ? ['at' => ($p->paid_at ?? $p->created_at)->toDateString()]
+                        : null,
                 ]),
             ];
 

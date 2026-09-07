@@ -166,6 +166,8 @@
     "cuota.autopay_pitch": "Se debitează :amount :currency pe lună, automat. Fără să mai intri să plătești.",
     "cuota.autopay_cta": "Activează plata automată",
     "cuota.autopay_cta_save": "Abonează-te și economisește :amount :currency/an",
+    "cuota.manual_nudge": "Cu plata automată economisești :save :currency pe an.",
+    "cuota.paid_online_line": "A plătit online · :at",
     "cuota.autopay_becado": "Nu ai cotizație luna asta, deci nu e nevoie să te abonezi.",
     "cuota.autopay_cancel": "oprește plata automată",
     "cuota.sub_discount": "Reducere pentru plata automată (:currency)",

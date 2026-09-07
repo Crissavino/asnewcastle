@@ -280,8 +280,13 @@ function FeeSettings({ config, currency }) {
                             <ConfirmMini onConfirm={() => cancelSub(m.id)}>{t('cuota.autopay_cancel')}</ConfirmMini>
                         </div>
                     )}
-                    {(m.fee_by || m.due_mark) && (
+                    {(m.fee_by || m.due_mark || m.paid_online) && (
                         <div style={{ paddingInlineStart: 34, marginTop: -1, marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            {m.paid_online && (
+                                <span className="nc-meta" style={{ fontSize: 11, color: 'var(--aqua-tx)' }}>
+                                    {t('cuota.paid_online_line', { at: auditDate(m.paid_online.at) })}
+                                </span>
+                            )}
                             {m.fee_by && (
                                 <span className="nc-meta" style={{ fontSize: 11 }}>
                                     {t('cuota.audit_fee', { by: auditWho(m.fee_by.by), at: auditDate(m.fee_by.at) })}
@@ -377,7 +382,11 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                                 <span className="nc-num nc-meta" style={{ fontSize: 14, fontWeight: 600 }}>{t('cuota.per_month', { currency })}</span>
                             </div>
                             <p className="nc-meta" style={{ marginTop: 10 }}>{t('cuota.autopay_pitch_short')}</p>
-                            <button className="nc-btn" style={{ marginTop: 14 }} onClick={subscribe}>{t('cuota.autopay_cta')}</button>
+                            <button className="nc-btn" style={{ marginTop: 14 }} onClick={subscribe}>
+                                {hasDiscount
+                                    ? t('cuota.autopay_cta_save', { amount: money(annualSurcharge), currency })
+                                    : t('cuota.autopay_cta')}
+                            </button>
                             {hasDiscount && (
                                 <p className="nc-meta" style={{ marginTop: 10 }}>
                                     {t('cuota.manual_surcharge', { base: money(baseFee), annual: money(annualSurcharge), currency })}
@@ -418,6 +427,12 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                                 <button className={`nc-btn${canSubscribe ? ' dark' : ''}`} style={{ marginTop: 16 }} onClick={pay}>
                                     {t('cuota.pay', { amount: money(my_due.amount_cents), currency })}
                                 </button>
+                            )}
+                            {/* Recordatorio del ahorro justo donde elige pagar suelto */}
+                            {canSubscribe && hasDiscount && (
+                                <p className="nc-meta" style={{ marginTop: 10 }}>
+                                    {t('cuota.manual_nudge', { save: money(annualSurcharge), currency })}
+                                </p>
                             )}
                             {/* Transferencia como alternativa (siempre que haya IBAN) */}
                             {bank?.iban ? (

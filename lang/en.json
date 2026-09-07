@@ -166,6 +166,8 @@
     "cuota.autopay_pitch": ":amount :currency is charged every month, automatically. No need to come in and pay.",
     "cuota.autopay_cta": "Turn on auto-pay",
     "cuota.autopay_cta_save": "Subscribe and save :amount :currency/year",
+    "cuota.manual_nudge": "With auto-pay you save :save :currency a year.",
+    "cuota.paid_online_line": "Paid online · :at",
     "cuota.autopay_becado": "You have no dues this month, so there's nothing to subscribe to.",
     "cuota.autopay_cancel": "stop auto-pay",
     "cuota.sub_discount": "Auto-pay discount (:currency)",

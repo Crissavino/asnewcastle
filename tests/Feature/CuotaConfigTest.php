@@ -103,3 +103,23 @@ it('el tipo de cuota es privado: el plantel ve al becado al día y sin tipo', fu
         ->post("/plantel/{$ajeno->id}/cuota", ['fee_type' => 'becado'])
         ->assertNotFound();
 });
+
+it('el manager ve cuándo un jugador pagó online la cuota del mes', function () {
+    $manager = Member::factory()->manager()->create();
+    $player = Member::factory()->for($manager->club)->create();
+    $due = Due::factory()->forMember($player)->paid()->create();
+    \App\Models\Payment::create([
+        'due_id' => $due->id,
+        'provider' => 'mollie',
+        'mollie_payment_id' => 'tr_test_1',
+        'amount_cents' => $due->amount_cents,
+        'application_fee_cents' => 0,
+        'status' => 'succeeded',
+        'paid_at' => now(),
+    ]);
+
+    $this->actingAs($manager->user)->get('/cuota')->assertInertia(fn (Assert $page) => $page
+        ->where('config.members', fn ($members) => collect($members)
+            ->firstWhere('id', $player->id)['paid_online']['at'] === now()->toDateString()
+            && collect($members)->firstWhere('id', $manager->id)['paid_online'] === null));
+});

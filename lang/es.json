@@ -166,6 +166,8 @@
     "cuota.autopay_pitch": "Se te debita :amount :currency por mes, automático. Sin tener que entrar a pagar.",
     "cuota.autopay_cta": "Activar débito automático",
     "cuota.autopay_cta_save": "Suscribirme y ahorrar :amount :currency/año",
+    "cuota.manual_nudge": "Con el débito automático ahorrás :save :currency por año.",
+    "cuota.paid_online_line": "Pagó online · :at",
     "cuota.autopay_becado": "Como no tenés cuota este mes, no hace falta suscribirte.",
     "cuota.autopay_cancel": "cortar débito",
     "cuota.sub_discount": "Descuento por débito automático (:currency)",
