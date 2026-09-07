@@ -109,7 +109,34 @@ class MollieWebhookController extends Controller
             $member->update(['mollie_customer_id' => $payment->customerId]);
         }
 
+        // Reintento del webhook: el pago ya está imputado, no recalcular el
+        // período (el "primer mes impago" ya avanzó y correría la cuota).
+        $recorded = Payment::where('mollie_payment_id', $payment->id)->first();
+
+        if ($recorded) {
+            $coveredPeriod = Due::withoutGlobalScopes()->find($recorded->due_id)?->period;
+            $mollie->startSubscription(
+                $member->fresh(),
+                route('webhooks.mollie'),
+                $coveredPeriod?->copy()->addMonthNoOverflow()->toDateString(),
+            );
+
+            return;
+        }
+
+        // El alta cubre el PRIMER mes impago: si el mes en curso ya está pago
+        // (p. ej. se resuscribió tras una baja), cuenta para el que viene —
+        // nada de cobrarle dos veces el mismo mes.
         $period = now()->startOfMonth();
+
+        while (Due::withoutGlobalScopes()
+            ->where('club_id', $member->club_id)
+            ->where('member_id', $member->id)
+            ->whereDate('period', $period)
+            ->whereIn('status', ['paid', 'waived'])
+            ->exists()) {
+            $period = $period->copy()->addMonthNoOverflow();
+        }
 
         $isNew = DB::transaction(function () use ($member, $period, $payment, $amountCents) {
             $due = Due::withoutGlobalScopes()->updateOrCreate(
@@ -122,8 +149,13 @@ class MollieWebhookController extends Controller
             return $record->wasRecentlyCreated ? $due : false;
         });
 
-        // El mandato ya es válido: arrancamos el débito automático (idempotente)
-        $mollie->startSubscription($member->fresh(), route('webhooks.mollie'));
+        // El mandato ya es válido: arrancamos el débito un mes después del
+        // período que cubrió el alta (idempotente)
+        $mollie->startSubscription(
+            $member->fresh(),
+            route('webhooks.mollie'),
+            $period->copy()->addMonthNoOverflow()->toDateString(),
+        );
 
         if ($isNew) {
             $this->notify($isNew);

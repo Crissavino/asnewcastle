@@ -160,3 +160,57 @@ it('un cobro recurrente fallido deja la suscripción en past_due', function () {
 
     expect($member->fresh()->subscription_status)->toBe('past_due');
 });
+
+it('si el mes en curso ya está pago, el alta cubre el mes siguiente (nada de cobrar doble)', function () {
+    $member = Member::factory()->create(['mollie_customer_id' => 'cst_re']);
+
+    // Septiembre ya lo pagó (p. ej. con la suscripción que le cancelaron)
+    Due::factory()->create([
+        'club_id' => $member->club_id,
+        'member_id' => $member->id,
+        'period' => now()->startOfMonth(),
+        'status' => 'paid',
+    ]);
+
+    $startDates = [];
+    fakeMollie(
+        molliePayment([
+            'id' => 'tr_re', 'value' => '120.00', 'customerId' => 'cst_re',
+            'metadata' => ['member_id' => (string) $member->id, 'purpose' => 'subscription_first'],
+        ]),
+        onStart: function ($m, $url, $startDate = null) use (&$startDates) {
+            $startDates[] = $startDate;
+        },
+    );
+
+    $this->post('/webhooks/mollie', ['id' => 'tr_re'])->assertOk();
+
+    // El alta se imputó al mes que viene, no al que ya estaba pago
+    $next = now()->addMonthNoOverflow()->startOfMonth();
+    $due = Due::where('member_id', $member->id)->whereDate('period', $next)->first();
+    expect($due)->not->toBeNull()->and($due->status)->toBe('paid')
+        // Y el pago quedó colgado del mes nuevo, no del viejo
+        ->and(Payment::where('mollie_payment_id', 'tr_re')->first()->due_id)->toBe($due->id)
+        // El débito arranca un mes después del que cubrió el alta
+        ->and($startDates)->toBe([$next->copy()->addMonthNoOverflow()->toDateString()]);
+});
+
+it('el reintento del webhook del alta no corre la cuota a otro mes', function () {
+    $member = Member::factory()->create(['mollie_customer_id' => 'cst_rt']);
+
+    $payload = molliePayment([
+        'id' => 'tr_retry', 'value' => '120.00', 'customerId' => 'cst_rt',
+        'metadata' => ['member_id' => (string) $member->id, 'purpose' => 'subscription_first'],
+    ]);
+
+    fakeMollie($payload);
+    $this->post('/webhooks/mollie', ['id' => 'tr_retry'])->assertOk();
+    fakeMollie($payload);
+    $this->post('/webhooks/mollie', ['id' => 'tr_retry'])->assertOk();
+
+    // Una sola cuota (la del mes en curso) y un solo pago: el reintento no
+    // "avanza" al mes siguiente aunque el mes en curso ya figure pago
+    expect(Due::where('member_id', $member->id)->count())->toBe(1)
+        ->and(Due::where('member_id', $member->id)->first()->period->isSameMonth(now()))->toBeTrue()
+        ->and(Payment::where('mollie_payment_id', 'tr_retry')->count())->toBe(1);
+});

@@ -70,10 +70,11 @@ class MollieGateway
 
     /**
      * Crea la suscripción mensual una vez que el mandato quedó válido. El primer
-     * cobro automático arranca el 1° del mes que viene (el mes actual ya lo cubrió
-     * el primer pago). Idempotente: si ya hay subscription, no duplica.
+     * cobro automático arranca en $startDate o, por defecto, el 1° del mes que
+     * viene (el mes que cubrió el primer pago no se vuelve a cobrar).
+     * Idempotente: si ya hay subscription, no duplica.
      */
-    public function startSubscription(Member $member, string $webhookUrl): void
+    public function startSubscription(Member $member, string $webhookUrl, ?string $startDate = null): void
     {
         if ($member->mollie_subscription_id || ! $member->mollie_customer_id) {
             return;
@@ -90,7 +91,7 @@ class MollieGateway
             $this->withProfile([
                 'amount' => $this->money($amount, $member->club->currency),
                 'interval' => '1 month',
-                'startDate' => now()->addMonthNoOverflow()->startOfMonth()->toDateString(),
+                'startDate' => $startDate ?? now()->addMonthNoOverflow()->startOfMonth()->toDateString(),
                 'description' => $member->club->name.' · Cuota mensual · #'.$member->id,
                 'webhookUrl' => $webhookUrl,
                 'metadata' => ['member_id' => (string) $member->id],
