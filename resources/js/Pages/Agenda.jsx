@@ -427,6 +427,12 @@ function EventCard({ ev, onEdit }) {
                         )}
                     </div>
                 </div>
+            ) : ev.venue_url ? (
+                <div style={{ marginTop: 10 }}>
+                    <button type="button" className="nc-itin-go" onClick={() => openExternal(ev.venue_url)}>
+                        <IconUbicacion size={13} style={{ flexShrink: 0 }} /> {ev.venue} · {t('agenda.how_to_get')} →
+                    </button>
+                </div>
             ) : (
                 <div className="nc-meta" style={{ marginTop: 10, display: 'flex', gap: 6 }}>
                     <IconUbicacion size={13} style={{ marginTop: 3, flexShrink: 0 }} />
