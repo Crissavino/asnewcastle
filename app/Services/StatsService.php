@@ -41,6 +41,24 @@ class StatsService
             $streak++;
         }
 
+        // El equipo con él y sin él: solo partidos con resultado cargado.
+        // Ningún dato nuevo — presentes + marcador que ya estaban.
+        $decided = $matches->filter(fn (Event $e) => $e->hasResult());
+        $recordOf = function ($subset) {
+            return [
+                'played' => $subset->count(),
+                'won' => $subset->filter(fn (Event $e) => $e->goals_for > $e->goals_against)->count(),
+                'drawn' => $subset->filter(fn (Event $e) => $e->goals_for === $e->goals_against)->count(),
+                'lost' => $subset->filter(fn (Event $e) => $e->goals_for < $e->goals_against)->count(),
+                'gf_avg' => $subset->isNotEmpty() ? round($subset->avg('goals_for'), 1) : null,
+                'ga_avg' => $subset->isNotEmpty() ? round($subset->avg('goals_against'), 1) : null,
+            ];
+        };
+        $teamRecord = [
+            'with' => $recordOf($decided->filter($played)),
+            'without' => $recordOf($decided->reject($played)),
+        ];
+
         // Faltazos: dijo "Voy" y el manager lo marcó ausente
         $absences = $events
             ->filter(fn (Event $e) => $e->attendance_confirmed_at && $e->attendances->contains(
@@ -117,6 +135,7 @@ class StatsService
             'attendance_pct' => $events->count() > 0 ? (int) round($presentTotal / $events->count() * 100) : null,
             'streak' => $streak,
             'absences' => $absences,
+            'team_record' => $teamRecord,
             'mvps' => $mvps,
             'mvp_votes' => $mvpVotes,
             'ratings' => $distribution,

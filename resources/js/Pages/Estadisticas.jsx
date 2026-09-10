@@ -83,6 +83,32 @@ export default function Estadisticas({ stats }) {
                 </div>
             </div>
 
+            {(stats.team_record.with.played > 0 || stats.team_record.without.played > 0) && (
+                <div className="nc-card">
+                    <div className="nc-label">{t('stats.impact')}</div>
+                    <p className="nc-meta" style={{ marginTop: 6 }}>{t('stats.impact_hint')}</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 12 }}>
+                        {[['with', t('stats.impact_with')], ['without', t('stats.impact_without')]].map(([k, label]) => {
+                            const r = stats.team_record[k];
+                            return (
+                                <div key={k}>
+                                    <div className="nc-label">{label} · {r.played}</div>
+                                    <div className="nc-display nc-num" style={{ fontSize: 24, lineHeight: 1, marginTop: 6 }}>
+                                        {r.won}-{r.drawn}-{r.lost}
+                                    </div>
+                                    <div className="nc-meta" style={{ fontSize: 11, marginTop: 3 }}>{t('stats.impact_legend')}</div>
+                                    {r.played > 0 && (
+                                        <div className="nc-meta nc-num" style={{ marginTop: 6 }}>
+                                            {t('stats.gf')} {r.gf_avg} · {t('stats.ga')} {r.ga_avg}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
             <div className="nc-card">
                 <div className="nc-label">{t('stats.rating')}</div>
                 <p className="nc-meta" style={{ marginTop: 6 }}>{t('stats.rating_hint')}</p>

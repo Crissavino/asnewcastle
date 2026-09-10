@@ -76,6 +76,33 @@ it('las estadísticas propias salen de presentes, votos y calificaciones', funct
         );
 });
 
+it('el récord del equipo se parte entre partidos con él y sin él', function () {
+    $manager = Member::factory()->manager()->create();
+    $p = Member::factory()->for($manager->club)->create(['joined_at' => now()->subYear()]);
+
+    // Jugó: victoria 3-1 y empate 1-1
+    $m1 = partidoDe($manager, ['starts_at' => now()->subDays(20), 'attendance_confirmed_at' => now()->subDays(19), 'goals_for' => 3, 'goals_against' => 1]);
+    asistencia($m1, $p, 'in', true);
+    $m2 = partidoDe($manager, ['starts_at' => now()->subDays(15), 'attendance_confirmed_at' => now()->subDays(14), 'goals_for' => 1, 'goals_against' => 1]);
+    asistencia($m2, $p, 'in', true);
+
+    // No jugó: derrota 0-2
+    $m3 = partidoDe($manager, ['starts_at' => now()->subDays(10), 'attendance_confirmed_at' => now()->subDays(9), 'goals_for' => 0, 'goals_against' => 2]);
+    asistencia($m3, $p, 'out');
+
+    // Sin resultado cargado: no cuenta para el récord
+    $m4 = partidoDe($manager, ['starts_at' => now()->subDays(5), 'attendance_confirmed_at' => now()->subDays(4)]);
+    asistencia($m4, $p, 'in', true);
+
+    $this->actingAs($p->user)
+        ->get('/estadisticas')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('stats.team_record.with', ['played' => 2, 'won' => 1, 'drawn' => 1, 'lost' => 0, 'gf_avg' => 2, 'ga_avg' => 1])
+            ->where('stats.team_record.without', ['played' => 1, 'won' => 0, 'drawn' => 0, 'lost' => 1, 'gf_avg' => 0, 'ga_avg' => 2])
+        );
+});
+
 it('un player no ve las estadísticas de un compañero; el manager sí', function () {
     $manager = Member::factory()->manager()->create();
     $a = Member::factory()->for($manager->club)->create();
