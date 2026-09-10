@@ -75,6 +75,7 @@ clubs
 
 users
   id, name, phone (E.164, unique), phone_verified_at
+  birth_date (nullable)   -- se pide en el alta desde el 10.09.2026
   timestamps
   -- sin password, sin email obligatorio
 
@@ -83,8 +84,10 @@ members            -- pivot user <-> club
   role: player | manager
   shirt_number (unique por club, nullable)
   position: ARQ | DEF | MED | DEL (nullable)
+  position_secondary (nullable)  -- segundo puesto, opcional
   preferred_foot (nullable)
   availability json    -- slots elegidos en el alta
+  injured_since (nullable)  -- lesión declarada por el propio jugador
   joined_at, left_at (nullable)
   timestamps
 
@@ -102,7 +105,10 @@ events
 attendances
   id, event_id, member_id
   status: in | maybe | out (nullable: el manager puede marcar presente a quien nunca contestó)
+  absence_reason: work | injury | travel | other (nullable, opcional del jugador al "No voy")
   attended (bool nullable)   -- lo que PASÓ, confirmado por el manager; status es lo que DIJO
+  participation: starter | sub | bench (nullable, lo carga el manager)
+  goals, assists (tinyint, default 0, los carga el manager)
   responded_at (nullable), source: app | whatsapp
   unique(event_id, member_id)
 
@@ -207,7 +213,8 @@ Chat simple del equipo.
 - Fotos en el chat (disco público, sin galería aparte). Sin reacciones, sin hilos, sin edición
 - Post-partido (2hs después, ventana de 48hs): votación de figura entre los que estuvieron,
   y calificación ternaria anónima de cada compañero (le costó / cumplió / crack —
-  la más baja nunca es hiriente). Vota y califica solo el que estuvo; autovoto bloqueado.
+  la más baja nunca es hiriente). Vota y califica solo el que estuvo; el autovoto de
+  figura sigue bloqueado (la autoevaluación ternaria sí va, desde el 10.09.2026).
 
 ### Estadísticas personales y presentes (agregado aprobado el 23.08.2026)
 
@@ -225,13 +232,33 @@ pero salen SOLO de datos que la app ya registra — nada de carga manual de gole
   (rol real) ve las de todos. Las calificaciones siempre agregadas y anónimas:
   nunca se muestra quién puso qué.
 
+### Datos extra para estadísticas (agregado aprobado el 10.09.2026)
+
+Decisión del dueño: se amplía qué datos alimentan las estadísticas. Esto
+levanta parcialmente el "nada de carga manual de goles" del 23.08: los goles y
+asistencias por jugador SÍ van, pero los carga SOLO el manager, post-partido.
+
+- **Del jugador, una vez** (alta/perfil): fecha de nacimiento (obligatoria en el
+  wizard, opcional al editar) y segundo puesto.
+- **Del jugador, un tap**: motivo opcional del "No voy" (trabajo/lesión/viaje/otro);
+  toggle "estoy lesionado" en el perfil — badge 🤕 en plantel y convocatoria, y su
+  "Voy" no suma al pronóstico (el lesionado que confirma para bancar desde afuera);
+  autoevaluación post-partido (la misma ternaria sobre uno mismo, NUNCA entra en
+  los totales públicos ni en el promedio; se muestra aparte en sus estadísticas).
+- **Del manager, al confirmar presentes**: titular / entró / banco, goles y
+  asistencias por jugador. Sin minutos ni cronología. Topes: máximo 11 titulares,
+  y ni la suma de goles ni la de asistencias puede superar el `goals_for` del
+  resultado (menos sí: un gol en contra del rival no tiene autor nuestro).
+- **Derivada sin datos nuevos**: récord del equipo (G-E-P y GF/GC promedio) en
+  los partidos con resultado, partido en "jugó" / "no jugó" por cada jugador.
+
 ## Lo que NO va en v1
 
 Escrito para que no aparezca por inercia:
 
 - Crowdfunding y donaciones
 - Notificaciones push web
-- Estadísticas de goles, tarjetas y minutos (las personales de asistencia/votos SÍ van, ver Fase 5)
+- Estadísticas de tarjetas y minutos (goles y asistencias SÍ van desde el 10.09.2026, cargados por el manager; ver Fase 5)
 - Formación táctica / pizarra
 - WebSockets
 - Panel de administración de la plataforma (Filament u otro)
