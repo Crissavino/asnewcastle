@@ -132,6 +132,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/plantel/{member}/estadisticas', [StatsController::class, 'member'])->name('plantel.estadisticas');
             Route::patch('/perfil', [PerfilController::class, 'update'])->name('perfil.actualizar');
             Route::post('/perfil/disponibilidad', [PerfilController::class, 'updateAvailability'])->name('perfil.disponibilidad');
+            Route::post('/perfil/lesion', [PerfilController::class, 'toggleInjured'])->name('perfil.lesion');
             Route::post('/plantel/{member}/baja', [PerfilController::class, 'removeMember'])->name('plantel.baja');
             Route::post('/plantel/{member}/rol', [PerfilController::class, 'setRole'])->name('plantel.rol');
             Route::post('/gastos', [ExpenseController::class, 'store'])->name('gastos.crear');

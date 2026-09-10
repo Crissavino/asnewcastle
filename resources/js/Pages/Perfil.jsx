@@ -199,6 +199,22 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
                         </div>
                     </div>
                 )}
+                {!isCoach && (
+                    <div className="nc-row" style={{ marginTop: 4 }}>
+                        <span className="nc-meta" style={{ minWidth: 0 }}>
+                            {t('perfil.injured')}
+                            <span style={{ display: 'block', fontSize: 11, opacity: 0.7 }}>{t('perfil.injured_hint')}</span>
+                        </span>
+                        <button
+                            type="button"
+                            className={`nc-mini${me.injured ? ' solid' : ''}`}
+                            style={{ flex: 'none', minWidth: 0 }}
+                            onClick={() => router.post(route('perfil.lesion'), {}, { preserveScroll: true })}
+                        >
+                            {me.injured ? `🤕 ${t('perfil.injured_on')}` : t('perfil.injured_off')}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {isCoach ? (
@@ -272,6 +288,7 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
                                 <Kit n={p.shirt_number ?? '–'} size="sm" />
                                 <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name ?? '—'}</span>
                                 {p.role === 'manager' && <span className="nc-pill ok" style={{ flexShrink: 0 }}>{t('perfil.admin')}</span>}
+                                {p.injured && <span className="nc-pill no" style={{ flexShrink: 0 }}>🤕 {t('perfil.injured_short')}</span>}
                                 {p.due_status === 'pending' && <span className="nc-pill no" style={{ flexShrink: 0 }}>{t('pill.due_owing')}</span>}
                                 {p.due_status === 'paid' && <span className="nc-pill ok" style={{ flexShrink: 0, opacity: 0.7 }}>{t('pill.due_ok')}</span>}
                             </div>

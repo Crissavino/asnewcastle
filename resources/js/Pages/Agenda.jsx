@@ -374,7 +374,7 @@ function EventCard({ ev, onEdit }) {
         <div style={{ marginTop: 8 }}>
             <div className="nc-label">{label}</div>
             <div className="nc-namelist" style={{ opacity: ghost ? 0.6 : 1 }}>
-                {list.map((p) => `${p.shirt_number} ${p.name}${p.reason ? ` (${t(`reason.${p.reason}`)})` : ''}`).join(' · ')}
+                {list.map((p) => `${p.shirt_number} ${p.name}${p.injured ? ' 🤕' : ''}${p.reason ? ` (${t(`reason.${p.reason}`)})` : ''}`).join(' · ')}
             </div>
         </div>
     );

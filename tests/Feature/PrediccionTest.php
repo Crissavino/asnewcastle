@@ -353,6 +353,25 @@ it('al que no confirmó le muestra cuánto subiría su Voy; al confirmado no', f
     expect(pronostico($event, $confirmado)['if_you_confirm'])->toBeNull();
 });
 
+it('el Voy de un lesionado no infla el pronóstico ni le muestra la zanahoria', function () {
+    $event = partidoFuturo(clubConTabla());
+    confirman($event, 4);
+
+    $sano = pronostico($event)['win'];
+
+    // Un crack lesionado confirma igual (caso Joeri): no mueve la aguja
+    $lesionado = confirman($event)->first();
+    $conLesionado = pronostico($event)['win'];
+    $lesionado->update(['injured_since' => now()]);
+
+    expect(pronostico($event)['win'])->toBeLessThanOrEqual($conLesionado)
+        ->and(pronostico($event)['win'])->toBe($sano);
+
+    // Y al lesionado que no confirmó no se lo tienta a jugar
+    $otroLesionado = Member::factory()->for($event->club)->create(['injured_since' => now()]);
+    expect(pronostico($event, $otroLesionado)['if_you_confirm'])->toBeNull();
+});
+
 it('la agenda muestra el pronóstico del partido a todo el plantel', function () {
     $club = clubConTabla();
     $player = Member::factory()->for($club)->create();

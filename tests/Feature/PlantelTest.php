@@ -114,3 +114,16 @@ it('el perfil trae las estadísticas de la temporada', function () {
             ->has('season.mvps')
         );
 });
+
+it('el jugador marca y saca su propia lesión; el técnico no tiene lesión', function () {
+    $member = Member::factory()->create();
+
+    $this->actingAs($member->user)->post('/perfil/lesion')->assertRedirect();
+    expect($member->fresh()->isInjured())->toBeTrue();
+
+    $this->actingAs($member->user)->post('/perfil/lesion')->assertRedirect();
+    expect($member->fresh()->isInjured())->toBeFalse();
+
+    $coach = Member::factory()->create(['role' => 'coach', 'shirt_number' => null]);
+    $this->actingAs($coach->user)->post('/perfil/lesion')->assertForbidden();
+});

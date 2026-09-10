@@ -38,14 +38,19 @@ class PredictionService
             ->get();
         $confirmedIds = $attendances->pluck('member_id');
 
+        // El "Voy" de un lesionado no infla el pronóstico (el que confirma
+        // igual para bancar desde afuera cuenta cero en cancha).
+        $injuredIds = $event->club->activeMembers()->whereNotNull('injured_since')->pluck('members.id');
+        $fitIds = $confirmedIds->diff($injuredIds)->values();
+
         $rivalRow = $this->rivalRow($event);
 
         $diff = $this->standingsDiff($event, $rivalRow)
             + ($event->is_home ? 0.15 : -0.15)
             + $this->headToHead($event)
             + $this->streak($event)
-            + $this->confirmedBoost($event, $confirmedIds)
-            + $this->trainingBoost($event, $confirmedIds);
+            + $this->confirmedBoost($event, $fitIds)
+            + $this->trainingBoost($event, $fitIds);
 
         $prediction = [
             ...$this->probabilities($diff),
@@ -54,10 +59,11 @@ class PredictionService
             'if_you_confirm' => null,
         ];
 
-        // La zanahoria: al que no confirmó, cuánto subirían las chances con su Voy
-        if ($viewer && ! $confirmedIds->contains($viewer->id)) {
-            $boost = $this->confirmedBoost($event, $confirmedIds->concat([$viewer->id]))
-                - $this->confirmedBoost($event, $confirmedIds);
+        // La zanahoria: al que no confirmó, cuánto subirían las chances con su
+        // Voy. A un lesionado no se lo tienta a jugar.
+        if ($viewer && ! $confirmedIds->contains($viewer->id) && ! $injuredIds->contains($viewer->id)) {
+            $boost = $this->confirmedBoost($event, $fitIds->concat([$viewer->id]))
+                - $this->confirmedBoost($event, $fitIds);
 
             $prediction['if_you_confirm'] = $this->probabilities($diff + $boost)['win'];
         }

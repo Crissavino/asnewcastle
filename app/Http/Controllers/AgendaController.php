@@ -54,6 +54,7 @@ class AgendaController extends Controller
                         'position' => $a->member->position,
                         'name' => $a->member->user->name,
                         'reason' => $a->absence_reason,
+                        'injured' => $a->member->isInjured(),
                     ])->values();
 
                 $going = $names('in');
@@ -109,7 +110,7 @@ class AgendaController extends Controller
                         ->map(function ($position) use ($going) {
                             $line = $going->where('position', $position)
                                 ->sortBy('shirt_number')
-                                ->map(fn ($p) => trim($p['shirt_number'].' '.$p['name']))
+                                ->map(fn ($p) => trim($p['shirt_number'].' '.$p['name']).($p['injured'] ? ' 🤕' : ''))
                                 ->implode(' · ');
 
                             return $line === '' ? null : ($position ?? 'S/P').': '.$line;

@@ -38,6 +38,7 @@ class PerfilController extends Controller
                 'shirt_number' => $m->shirt_number,
                 'position' => $m->position,
                 'role' => $m->role,
+                'injured' => $m->isInjured(),
                 // Hacia afuera solo "al día" o "debe": becados/condonados van al día
                 'due_status' => $dues->get($m->id)?->status === 'pending' ? 'pending' : 'paid',
             ]);
@@ -154,6 +155,20 @@ class PerfilController extends Controller
 
             throw $e;
         }
+
+        return back();
+    }
+
+    /**
+     * El propio jugador marca si está lesionado. Su "Voy" deja de sumar al
+     * pronóstico y el delegado lo ve con badge en la convocatoria.
+     */
+    public function toggleInjured(): RedirectResponse
+    {
+        $member = app(CurrentClub::class)->member();
+        abort_if($member->isCoach(), 403);
+
+        $member->update(['injured_since' => $member->isInjured() ? null : now()]);
 
         return back();
     }
