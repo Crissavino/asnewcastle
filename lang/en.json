@@ -554,5 +554,6 @@
     "agenda.kickoff_l": "Kick-off",
     "agenda.how_to_get": "Directions",
     "agenda.kickoff_before_meet": "Kick-off can't be before the meet-up time.",
-    "common.done": "Done"
+    "common.done": "Done",
+    "common.close": "Close"
 }

@@ -1,5 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
-import { Check, Copy, Shield } from 'lucide-react';
+import { Check, Copy, Shield, X } from 'lucide-react';
 import { IconBell } from '../Components/TabIcons';
 import { useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
@@ -106,7 +106,13 @@ function ExpenseSheet({ categorias, eventos, currency, onClose }) {
     return (
         <div className="nc-sheet" onClick={onClose}>
             <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
-                <h3 className="nc-display" style={{ fontSize: 21, margin: '5px 0 16px' }}>{t('cuota.expense_title')}</h3>
+                {/* Salida visible: en el celu la sábana tapa todo y el tap-afuera no alcanza */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, margin: '5px 0 16px' }}>
+                    <h3 className="nc-display" style={{ fontSize: 21, margin: 0 }}>{t('cuota.expense_title')}</h3>
+                    <button type="button" className="nc-sheet-close" onClick={onClose} aria-label={t('common.close')}>
+                        <X size={26} />
+                    </button>
+                </div>
 
                 <label className="nc-field-l">
                     <span className="nc-label">{t('cuota.category')}</span>

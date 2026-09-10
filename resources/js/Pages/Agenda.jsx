@@ -103,9 +103,15 @@ function EventForm({ event, rosterCount, onClose }) {
     return (
         <div className="nc-sheet" onClick={onClose}>
             <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
-                <h3 className="nc-display" style={{ fontSize: 21, margin: '5px 0 16px' }}>
-                    {editing ? t('agenda.edit_title') : t('agenda.new_event')}
-                </h3>
+                {/* Salida visible: en el celu la sábana tapa todo y el tap-afuera no alcanza */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, margin: '5px 0 16px' }}>
+                    <h3 className="nc-display" style={{ fontSize: 21, margin: 0 }}>
+                        {editing ? t('agenda.edit_title') : t('agenda.new_event')}
+                    </h3>
+                    <button type="button" className="nc-sheet-close" onClick={onClose} aria-label={t('common.close')}>
+                        <X size={26} />
+                    </button>
+                </div>
 
                 <label className="nc-field-l">
                     <span className="nc-label">{t('agenda.kind')}</span>
@@ -228,7 +234,12 @@ function ResultSheet({ ev, onClose }) {
     return (
         <div className="nc-sheet" onClick={onClose}>
             <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
-                <h3 className="nc-display" style={{ fontSize: 21, margin: '5px 0 16px' }}>{t('agenda.result_title')}</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, margin: '5px 0 16px' }}>
+                    <h3 className="nc-display" style={{ fontSize: 21, margin: 0 }}>{t('agenda.result_title')}</h3>
+                    <button type="button" className="nc-sheet-close" onClick={onClose} aria-label={t('common.close')}>
+                        <X size={26} />
+                    </button>
+                </div>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
                     <label className="nc-field-l" style={{ flex: 1 }}>
                         <span className="nc-label">{club?.name ?? t('agenda.us')}</span>
@@ -300,7 +311,12 @@ function PresentesSheet({ ev, onClose }) {
     return (
         <div className="nc-sheet" onClick={onClose}>
             <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
-                <h3 className="nc-display" style={{ fontSize: 21, margin: '5px 0 4px' }}>{t('agenda.presence_title')}</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, margin: '5px 0 4px' }}>
+                    <h3 className="nc-display" style={{ fontSize: 21, margin: 0 }}>{t('agenda.presence_title')}</h3>
+                    <button type="button" className="nc-sheet-close" onClick={onClose} aria-label={t('common.close')}>
+                        <X size={26} />
+                    </button>
+                </div>
                 <p className="nc-meta" style={{ margin: '0 0 8px' }}>{t('agenda.presence_hint')} {t('agenda.presence_detail_hint')}</p>
                 <div style={{ maxHeight: '55vh', overflowY: 'auto' }}>
                     {ev.presence.players.map((p) => {
