@@ -313,6 +313,14 @@ function EventCard({ ev, onEdit }) {
         router.post(route('asistencia', ev.id), { status }, { preserveScroll: true });
     };
 
+    // Un tap más al "No voy": el porqué, opcional. Tocar el mismo lo saca.
+    const setReason = (reason) => {
+        router.post(route('asistencia', ev.id), {
+            status: 'out',
+            reason: ev.my_reason === reason ? null : reason,
+        }, { preserveScroll: true });
+    };
+
     // Se recuerda a los que no definieron: sin contestar + en duda. Los que
     // dijeron Voy / No voy quedan afuera.
     const toRemind = ev.counts.pending + ev.counts.maybe;
@@ -366,7 +374,7 @@ function EventCard({ ev, onEdit }) {
         <div style={{ marginTop: 8 }}>
             <div className="nc-label">{label}</div>
             <div className="nc-namelist" style={{ opacity: ghost ? 0.6 : 1 }}>
-                {list.map((p) => `${p.shirt_number} ${p.name}`).join(' · ')}
+                {list.map((p) => `${p.shirt_number} ${p.name}${p.reason ? ` (${t(`reason.${p.reason}`)})` : ''}`).join(' · ')}
             </div>
         </div>
     );
@@ -456,6 +464,25 @@ function EventCard({ ev, onEdit }) {
                                     <Icon size={13} /> {label}
                                 </button>
                             ))}
+                        </div>
+                    )}
+
+                    {ev.my_status === 'out' && (
+                        <div style={{ marginTop: 8 }}>
+                            <div className="nc-meta" style={{ fontSize: 11 }}>{t('agenda.reason_hint')}</div>
+                            <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                                {['work', 'injury', 'travel', 'other'].map((r) => (
+                                    <button
+                                        key={r}
+                                        type="button"
+                                        className={`nc-mini${ev.my_reason === r ? ' solid' : ''}`}
+                                        style={{ flex: 'none', minWidth: 0 }}
+                                        onClick={() => setReason(r)}
+                                    >
+                                        {t(`reason.${r}`)}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     )}
 

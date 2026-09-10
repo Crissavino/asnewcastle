@@ -66,6 +66,12 @@ class StatsService
             ))
             ->count();
 
+        // Los "No voy" avisados, por motivo (sin motivo no suma acá)
+        $outReasons = $events
+            ->flatMap(fn (Event $e) => $e->attendances)
+            ->filter(fn ($a) => $a->member_id === $member->id && $a->status === 'out' && $a->absence_reason)
+            ->countBy('absence_reason');
+
         // Figuras y votos: sobre todos los partidos del club (un voto solo
         // puede existir si estuvo, así que no hace falta filtrar por fecha)
         $mvps = Event::query()
@@ -137,6 +143,7 @@ class StatsService
             'attendance_pct' => $events->count() > 0 ? (int) round($presentTotal / $events->count() * 100) : null,
             'streak' => $streak,
             'absences' => $absences,
+            'out_reasons' => $outReasons,
             'team_record' => $teamRecord,
             'mvps' => $mvps,
             'mvp_votes' => $mvpVotes,

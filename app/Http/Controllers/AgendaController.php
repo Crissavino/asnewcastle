@@ -53,6 +53,7 @@ class AgendaController extends Controller
                         'shirt_number' => $a->member->shirt_number,
                         'position' => $a->member->position,
                         'name' => $a->member->user->name,
+                        'reason' => $a->absence_reason,
                     ])->values();
 
                 $going = $names('in');
@@ -82,6 +83,7 @@ class AgendaController extends Controller
                     'notes' => $event->notes,
                     'cancelled' => $event->isCancelled(),
                     'my_status' => $event->attendances->firstWhere('member_id', $member->id)?->status,
+                    'my_reason' => $event->attendances->firstWhere('member_id', $member->id)?->absence_reason,
                     'counts' => [
                         'in' => $going->count(),
                         'maybe' => $maybe->count(),

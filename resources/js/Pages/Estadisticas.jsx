@@ -85,6 +85,14 @@ export default function Estadisticas({ stats }) {
                         {stats.training_pct !== null && <span style={{ opacity: 0.55 }}> · {stats.training_pct}%</span>}
                     </span>
                 </div>
+                {Object.keys(stats.out_reasons ?? {}).length > 0 && (
+                    <div className="nc-row" style={{ marginTop: 4 }}>
+                        <span className="nc-meta">{t('stats.reasons')}</span>
+                        <span className="nc-meta" style={{ textAlign: 'end' }}>
+                            {Object.entries(stats.out_reasons).map(([r, n]) => `${t(`reason.${r}`)} ${n}`).join(' · ')}
+                        </span>
+                    </div>
+                )}
             </div>
 
             {(stats.team_record.with.played > 0 || stats.team_record.without.played > 0) && (

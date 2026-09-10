@@ -90,6 +90,25 @@ it('responde Voy y si cambia de opinión se actualiza la misma fila', function (
         ->and($rows->first()->source)->toBe('app');
 });
 
+it('el "No voy" puede llevar motivo, y volver a "Voy" lo limpia', function () {
+    $member = Member::factory()->create();
+    $event = Event::factory()->by($member)->create();
+
+    $this->actingAs($member->user)->post("/eventos/{$event->id}/asistencia", ['status' => 'out', 'reason' => 'injury']);
+
+    $row = fn () => Attendance::where('event_id', $event->id)->where('member_id', $member->id)->first();
+    expect($row()->absence_reason)->toBe('injury');
+
+    // El motivo solo tiene sentido con "No voy": al confirmar se limpia
+    $this->actingAs($member->user)->post("/eventos/{$event->id}/asistencia", ['status' => 'in', 'reason' => 'injury']);
+    expect($row()->absence_reason)->toBeNull();
+
+    // Motivo inventado: rechazado
+    $this->actingAs($member->user)
+        ->post("/eventos/{$event->id}/asistencia", ['status' => 'out', 'reason' => 'lluvia'])
+        ->assertSessionHasErrors('reason');
+});
+
 it('no se puede responder a un evento de otro club', function () {
     $member = Member::factory()->create();
     $ajeno = Event::factory()->create(); // otro club

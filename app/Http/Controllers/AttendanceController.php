@@ -25,6 +25,8 @@ class AttendanceController extends Controller
 
         $validated = $request->validate([
             'status' => ['required', Rule::in(['in', 'maybe', 'out'])],
+            // El porqué del "No voy", opcional: un tap más y el manager sabe si es recuperable
+            'reason' => ['nullable', Rule::in(['work', 'injury', 'travel', 'other'])],
         ]);
 
         $member = app(CurrentClub::class)->member();
@@ -33,6 +35,7 @@ class AttendanceController extends Controller
             ['member_id' => $member->id],
             [
                 'status' => $validated['status'],
+                'absence_reason' => $validated['status'] === 'out' ? ($validated['reason'] ?? null) : null,
                 'responded_at' => now(),
                 'source' => 'app',
             ],
