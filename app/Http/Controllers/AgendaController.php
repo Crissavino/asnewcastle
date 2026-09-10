@@ -126,6 +126,9 @@ class AgendaController extends Controller
             'events' => $events,
             'recent' => $this->recentMatches(),
             'roster_count' => $rosterCount,
+            // Modal "completá tu ficha": insiste en cada visita hasta que cargue
+            // la fecha de nacimiento (los del wizard nuevo ya la traen)
+            'ficha_pendiente' => ! $member->isCoach() && $member->user->birth_date === null,
             // Link firmado del club (rol jugador) para el mensaje de WhatsApp que
             // el manager pega en el grupo. Con la app: cae en la agenda; sin la
             // app: pantalla de descarga. Vence a los 7 días. Solo para el manager.

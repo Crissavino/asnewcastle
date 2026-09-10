@@ -272,6 +272,47 @@ function MiniCount({ icon, value, onChange }) {
     );
 }
 
+/* El dato que falta de los que hicieron el alta viejo: la fecha de nacimiento.
+   Con cruz para salir, pero reaparece en cada visita hasta que la carguen. */
+function FichaSheet({ onClose }) {
+    const { t } = useTranslations();
+    const [birthDate, setBirthDate] = useState('');
+    const [errors, setErrors] = useState({});
+
+    const save = () => {
+        router.post(route('perfil.nacimiento'), { birth_date: birthDate }, {
+            onSuccess: onClose,
+            onError: setErrors,
+            preserveScroll: true,
+        });
+    };
+
+    return (
+        <div className="nc-sheet" onClick={onClose}>
+            <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, margin: '5px 0 4px' }}>
+                    <h3 className="nc-display" style={{ fontSize: 21, margin: 0 }}>{t('ficha.title')}</h3>
+                    <button type="button" className="nc-sheet-close" onClick={onClose} aria-label={t('common.close')}>
+                        <X size={26} />
+                    </button>
+                </div>
+                <p className="nc-meta" style={{ margin: '0 0 12px' }}>{t('ficha.hint')}</p>
+
+                <label className="nc-field-l">
+                    <span className="nc-label">{t('alta.birth_label')}</span>
+                    <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+                </label>
+
+                {errors.birth_date && <div className="nc-error">{errors.birth_date}</div>}
+
+                <button className="nc-btn" style={{ marginTop: 12 }} onClick={save} disabled={birthDate === ''}>
+                    {t('agenda.save')}
+                </button>
+            </div>
+        </div>
+    );
+}
+
 function PresentesSheet({ ev, onClose }) {
     const { t } = useTranslations();
     const [rows, setRows] = useState(() => Object.fromEntries(
@@ -780,12 +821,13 @@ function RecentResults({ recent, onLoadResult, onLoadPresence }) {
     );
 }
 
-export default function Agenda({ events, recent, roster_count }) {
+export default function Agenda({ events, recent, roster_count, ficha_pendiente }) {
     const { t } = useTranslations();
     const { member, dues_banner } = usePage().props;
     const [formEvent, setFormEvent] = useState(null); // null cerrado · false alta · {ev} edición
     const [resultFor, setResultFor] = useState(null);
     const [presenceFor, setPresenceFor] = useState(null);
+    const [showFicha, setShowFicha] = useState(Boolean(ficha_pendiente));
     const isManager = member?.role === 'manager';
 
     return (
@@ -826,6 +868,7 @@ export default function Agenda({ events, recent, roster_count }) {
             )}
             {resultFor && <ResultSheet ev={resultFor} onClose={() => setResultFor(null)} />}
             {presenceFor && <PresentesSheet ev={presenceFor} onClose={() => setPresenceFor(null)} />}
+            {showFicha && <FichaSheet onClose={() => setShowFicha(false)} />}
         </AppLayout>
     );
 }

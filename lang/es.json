@@ -410,6 +410,8 @@
     "stats.started": "De titular",
     "stats.self": "Autoevaluación",
     "vestuario.self_rate": "¿Y vos cómo te viste?",
+    "ficha.title": "Completá tu ficha",
+    "ficha.hint": "Nos falta tu fecha de nacimiento para la ficha del club y la legitimación en la Federación. Un segundo y listo.",
     "tabs.legitimacion": "Legitimación",
     "headers.legitimacion_eyebrow": "Federación",
     "common.yes": "Sí",

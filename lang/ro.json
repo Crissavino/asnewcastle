@@ -410,6 +410,8 @@
     "stats.started": "Titular",
     "stats.self": "Autoevaluare",
     "vestuario.self_rate": "Și tu cum te-ai văzut?",
+    "ficha.title": "Completează-ți fișa",
+    "ficha.hint": "Ne lipsește data ta de naștere pentru fișa clubului și legitimarea la Federație. Durează o secundă.",
     "tabs.legitimacion": "Legitimare",
     "headers.legitimacion_eyebrow": "Federație",
     "common.yes": "Da",

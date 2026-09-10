@@ -410,6 +410,8 @@
     "stats.started": "Starts",
     "stats.self": "Self-rating",
     "vestuario.self_rate": "And how did you see yourself?",
+    "ficha.title": "Complete your file",
+    "ficha.hint": "We're missing your date of birth for the club file and the Federation registration. Takes a second.",
     "tabs.legitimacion": "Registration",
     "headers.legitimacion_eyebrow": "Federation",
     "common.yes": "Yes",

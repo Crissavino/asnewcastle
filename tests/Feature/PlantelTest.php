@@ -127,3 +127,40 @@ it('el jugador marca y saca su propia lesión; el técnico no tiene lesión', fu
     $coach = Member::factory()->create(['role' => 'coach', 'shirt_number' => null]);
     $this->actingAs($coach->user)->post('/perfil/lesion')->assertForbidden();
 });
+
+it('la agenda pide completar la ficha hasta que se cargue la fecha de nacimiento', function () {
+    $member = Member::factory()->create();
+
+    $this->actingAs($member->user)
+        ->get('/agenda')
+        ->assertInertia(fn (Assert $page) => $page->where('ficha_pendiente', true));
+
+    $this->actingAs($member->user)
+        ->post('/perfil/nacimiento', ['birth_date' => '1995-06-20'])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    expect($member->user->fresh()->birth_date->toDateString())->toBe('1995-06-20');
+
+    $this->actingAs($member->user)
+        ->get('/agenda')
+        ->assertInertia(fn (Assert $page) => $page->where('ficha_pendiente', false));
+});
+
+it('la fecha de nacimiento del modal se valida y el técnico no la carga', function () {
+    $member = Member::factory()->create();
+
+    $this->actingAs($member->user)
+        ->post('/perfil/nacimiento', ['birth_date' => now()->addYear()->toDateString()])
+        ->assertSessionHasErrors('birth_date');
+
+    $coach = Member::factory()->create(['role' => 'coach', 'shirt_number' => null]);
+    $this->actingAs($coach->user)
+        ->post('/perfil/nacimiento', ['birth_date' => '1980-01-01'])
+        ->assertForbidden();
+
+    // Y al técnico la agenda no le pide ficha
+    $this->actingAs($coach->user)
+        ->get('/agenda')
+        ->assertInertia(fn (Assert $page) => $page->where('ficha_pendiente', false));
+});

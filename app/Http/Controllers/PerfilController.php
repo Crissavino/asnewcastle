@@ -173,6 +173,24 @@ class PerfilController extends Controller
         return back();
     }
 
+    /**
+     * El modal "completá tu ficha" de la agenda: solo la fecha de nacimiento,
+     * para los que hicieron el alta antes de que se pidiera.
+     */
+    public function saveBirthDate(Request $request): RedirectResponse
+    {
+        $member = app(CurrentClub::class)->member();
+        abort_if($member->isCoach(), 403);
+
+        $validated = $request->validate([
+            'birth_date' => ['required', 'date', 'before:today', 'after:1940-01-01'],
+        ]);
+
+        $member->user->update(['birth_date' => $validated['birth_date']]);
+
+        return back();
+    }
+
     /** La disponibilidad se edita desde el perfil, sin repetir el wizard. */
     public function updateAvailability(Request $request): RedirectResponse
     {
