@@ -191,6 +191,8 @@ class PredictionService
 
         $ratingAvgs = PlayerRating::query()
             ->whereIn('rated_member_id', $confirmedIds)
+            // Solo lo que pusieron los compañeros: la autoevaluación no infla
+            ->whereColumn('rater_member_id', '!=', 'rated_member_id')
             ->selectRaw('rated_member_id, avg(rating) as avg_rating')
             ->groupBy('rated_member_id')
             ->pluck('avg_rating', 'rated_member_id');

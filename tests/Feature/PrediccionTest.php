@@ -372,6 +372,25 @@ it('el Voy de un lesionado no infla el pronóstico ni le muestra la zanahoria', 
     expect(pronostico($event, $otroLesionado)['if_you_confirm'])->toBeNull();
 });
 
+it('la autoevaluación no infla el peso del jugador en el pronóstico', function () {
+    $event = partidoFuturo(clubConTabla());
+    $confirmado = confirman($event)->first();
+    confirman($event, 4);
+
+    $antes = pronostico($event)['win'];
+
+    // Se puso "crack" a sí mismo en un partido anterior: no mueve las chances
+    $pasado = partidoFuturo($event->club, ['starts_at' => now()->subWeek()]);
+    PlayerRating::create([
+        'event_id' => $pasado->id,
+        'rater_member_id' => $confirmado->id,
+        'rated_member_id' => $confirmado->id,
+        'rating' => PlayerRating::STAR,
+    ]);
+
+    expect(pronostico($event)['win'])->toBe($antes);
+});
+
 it('la agenda muestra el pronóstico del partido a todo el plantel', function () {
     $club = clubConTabla();
     $player = Member::factory()->for($club)->create();
