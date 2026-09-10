@@ -361,14 +361,21 @@ class AgendaController extends Controller
                 if ($isManager) {
                     $data['presence'] = [
                         'confirmed' => $event->attendance_confirmed_at !== null,
-                        'players' => $roster->map(fn ($m) => [
-                            'id' => $m->id,
-                            'name' => $m->user->name,
-                            'shirt_number' => $m->shirt_number,
-                            'present' => $event->attendance_confirmed_at
-                                ? (bool) $event->attendances->firstWhere('member_id', $m->id)?->attended
-                                : $event->attendances->firstWhere('member_id', $m->id)?->status === 'in',
-                        ])->values(),
+                        'players' => $roster->map(function ($m) use ($event) {
+                            $a = $event->attendances->firstWhere('member_id', $m->id);
+
+                            return [
+                                'id' => $m->id,
+                                'name' => $m->user->name,
+                                'shirt_number' => $m->shirt_number,
+                                'present' => $event->attendance_confirmed_at
+                                    ? (bool) $a?->attended
+                                    : $a?->status === 'in',
+                                'participation' => $a?->participation,
+                                'goals' => $a?->goals ?? 0,
+                                'assists' => $a?->assists ?? 0,
+                            ];
+                        })->values(),
                     ];
                 }
 

@@ -103,6 +103,30 @@ it('el récord del equipo se parte entre partidos con él y sin él', function (
         );
 });
 
+it('los goles, asistencias y titularidades cargados por el manager entran a las estadísticas', function () {
+    $manager = Member::factory()->manager()->create();
+    $p = Member::factory()->for($manager->club)->create(['joined_at' => now()->subYear()]);
+
+    $m1 = partidoDe($manager, ['starts_at' => now()->subDays(10), 'attendance_confirmed_at' => now()->subDays(9), 'goals_for' => 3, 'goals_against' => 0]);
+    Attendance::create(['event_id' => $m1->id, 'member_id' => $p->id, 'status' => 'in', 'attended' => true, 'participation' => 'starter', 'goals' => 2, 'assists' => 1]);
+
+    $m2 = partidoDe($manager, ['starts_at' => now()->subDays(5), 'attendance_confirmed_at' => now()->subDays(4), 'goals_for' => 1, 'goals_against' => 1]);
+    Attendance::create(['event_id' => $m2->id, 'member_id' => $p->id, 'status' => 'in', 'attended' => true, 'participation' => 'sub', 'goals' => 1, 'assists' => 0]);
+
+    $this->actingAs($p->user)
+        ->get('/estadisticas')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('stats.goals', 3)
+            ->where('stats.assists', 1)
+            ->where('stats.started', 1)
+            ->where('stats.came_on', 1)
+            ->where('stats.timeline.0.goals', 1)
+            ->where('stats.timeline.0.participation', 'sub')
+            ->where('stats.timeline.1.goals', 2)
+        );
+});
+
 it('un player no ve las estadísticas de un compañero; el manager sí', function () {
     $manager = Member::factory()->manager()->create();
     $a = Member::factory()->for($manager->club)->create();

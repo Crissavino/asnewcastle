@@ -77,6 +77,9 @@ export default function Estadisticas({ stats }) {
                     <Tile label={t('stats.mvps')} value={stats.mvps} />
                     <Tile label={t('stats.mvp_votes')} value={stats.mvp_votes} />
                     <Tile label={t('stats.absences')} value={stats.absences} />
+                    <Tile label={t('stats.goals')} value={stats.goals} />
+                    <Tile label={t('stats.assists')} value={stats.assists} />
+                    <Tile label={t('stats.started')} value={stats.started} sub={stats.came_on > 0 ? ` +${stats.came_on}` : undefined} />
                 </div>
                 <div className="nc-row" style={{ marginTop: 16 }}>
                     <span className="nc-meta">{t('stats.trainings')}</span>
@@ -180,6 +183,9 @@ export default function Estadisticas({ stats }) {
                                 <div className="nc-meta" style={{ fontSize: 11 }}>
                                     {day(m.starts_at)}
                                     {m.result && ` · ${m.is_home ? `${m.result.gf}–${m.result.ga}` : `${m.result.ga}–${m.result.gf}`}`}
+                                    {m.goals > 0 && ` · ⚽${m.goals}`}
+                                    {m.assists > 0 && ` · 🅰️${m.assists}`}
+                                    {m.participation === 'sub' && ` · ${t('part.sub')}`}
                                     {m.mvp && ` · ${t('stats.mvp_pill')}`}
                                 </div>
                             </div>

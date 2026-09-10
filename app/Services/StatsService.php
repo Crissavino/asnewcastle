@@ -66,6 +66,16 @@ class StatsService
             ))
             ->count();
 
+        // Lo que cargó el manager al confirmar presentes: goles, asistencias
+        // y cuántas veces arrancó de titular o entró desde el banco
+        $myMatchRows = $matches
+            ->map(fn (Event $e) => $e->attendances->firstWhere('member_id', $member->id))
+            ->filter();
+        $goals = (int) $myMatchRows->sum('goals');
+        $assists = (int) $myMatchRows->sum('assists');
+        $started = $myMatchRows->where('participation', 'starter')->count();
+        $cameOn = $myMatchRows->where('participation', 'sub')->count();
+
         // Los "No voy" avisados, por motivo (sin motivo no suma acá)
         $outReasons = $events
             ->flatMap(fn (Event $e) => $e->attendances)
@@ -109,8 +119,12 @@ class StatsService
         $timeline = $matches->map(function (Event $e) use ($member, $played, $votesByEvent, $allVotesByEvent, $ratingsByEvent) {
             $counts = ($allVotesByEvent->get($e->id) ?? collect())->countBy('voted_member_id');
             $eventRatings = ($ratingsByEvent->get($e->id) ?? collect())->countBy('rating');
+            $mine = $e->attendances->firstWhere('member_id', $member->id);
 
             return [
+                'goals' => (int) ($mine->goals ?? 0),
+                'assists' => (int) ($mine->assists ?? 0),
+                'participation' => $mine->participation ?? null,
                 'id' => $e->id,
                 'opponent' => $e->opponent,
                 'is_home' => $e->is_home,
@@ -143,6 +157,10 @@ class StatsService
             'attendance_pct' => $events->count() > 0 ? (int) round($presentTotal / $events->count() * 100) : null,
             'streak' => $streak,
             'absences' => $absences,
+            'goals' => $goals,
+            'assists' => $assists,
+            'started' => $started,
+            'came_on' => $cameOn,
             'out_reasons' => $outReasons,
             'team_record' => $teamRecord,
             'mvps' => $mvps,

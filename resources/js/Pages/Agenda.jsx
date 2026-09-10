@@ -248,14 +248,50 @@ function ResultSheet({ ev, onClose }) {
     );
 }
 
+/* Contador chico de goles/asistencias por jugador presente. */
+function MiniCount({ icon, value, onChange }) {
+    const btn = { flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 12 };
+
+    return (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+            <button type="button" className="nc-mini" style={btn} onClick={() => onChange(Math.max(0, value - 1))} aria-label="−">−</button>
+            <span className="nc-num" style={{ fontSize: 12, minWidth: 30, textAlign: 'center' }}>{icon} {value}</span>
+            <button type="button" className="nc-mini" style={btn} onClick={() => onChange(Math.min(20, value + 1))} aria-label="+">+</button>
+        </span>
+    );
+}
+
 function PresentesSheet({ ev, onClose }) {
     const { t } = useTranslations();
-    const [ids, setIds] = useState(ev.presence.players.filter((p) => p.present).map((p) => p.id));
+    const [rows, setRows] = useState(() => Object.fromEntries(
+        ev.presence.players.map((p) => [p.id, {
+            present: p.present,
+            participation: p.participation,
+            goals: p.goals ?? 0,
+            assists: p.assists ?? 0,
+        }]),
+    ));
 
-    const toggle = (id) => setIds(ids.includes(id) ? ids.filter((i) => i !== id) : [...ids, id]);
+    const patch = (id, changes) => setRows((r) => ({ ...r, [id]: { ...r[id], ...changes } }));
+
+    const presentIds = ev.presence.players.filter((p) => rows[p.id].present).map((p) => p.id);
+    const presentRows = presentIds.map((id) => rows[id]);
+    const starters = presentRows.filter((r) => r.participation === 'starter').length;
+    const goalsSum = presentRows.reduce((a, r) => a + r.goals, 0);
+    const assistsSum = presentRows.reduce((a, r) => a + r.assists, 0);
+    const gf = ev.result?.gf ?? null;
+    const overGoals = gf !== null && (goalsSum > gf || assistsSum > gf);
 
     const save = () => {
-        router.post(route('eventos.presentes', ev.id), { present_ids: ids }, {
+        router.post(route('eventos.presentes', ev.id), {
+            present_ids: presentIds,
+            detail: presentIds.map((id) => ({
+                id,
+                participation: rows[id].participation,
+                goals: rows[id].goals,
+                assists: rows[id].assists,
+            })),
+        }, {
             onSuccess: onClose,
             preserveScroll: true,
         });
@@ -265,28 +301,62 @@ function PresentesSheet({ ev, onClose }) {
         <div className="nc-sheet" onClick={onClose}>
             <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
                 <h3 className="nc-display" style={{ fontSize: 21, margin: '5px 0 4px' }}>{t('agenda.presence_title')}</h3>
-                <p className="nc-meta" style={{ margin: '0 0 8px' }}>{t('agenda.presence_hint')}</p>
+                <p className="nc-meta" style={{ margin: '0 0 8px' }}>{t('agenda.presence_hint')} {t('agenda.presence_detail_hint')}</p>
                 <div style={{ maxHeight: '55vh', overflowY: 'auto' }}>
                     {ev.presence.players.map((p) => {
-                        const on = ids.includes(p.id);
+                        const row = rows[p.id];
                         return (
-                            <button
-                                key={p.id}
-                                type="button"
-                                className="nc-row nc-day"
-                                onClick={() => toggle(p.id)}
-                                style={{ opacity: on ? 1 : 0.45 }}
-                            >
-                                <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                                    <Kit n={p.shirt_number ?? '–'} size="sm" />
-                                    <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name ?? '—'}</span>
-                                </span>
-                                {on ? <Check size={15} color="var(--aqua-tx)" /> : <X size={15} style={{ opacity: 0.5 }} />}
-                            </button>
+                            <div key={p.id}>
+                                <button
+                                    type="button"
+                                    className="nc-row nc-day"
+                                    onClick={() => patch(p.id, { present: !row.present })}
+                                    style={{ opacity: row.present ? 1 : 0.45 }}
+                                >
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                                        <Kit n={p.shirt_number ?? '–'} size="sm" />
+                                        <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name ?? '—'}</span>
+                                    </span>
+                                    {row.present ? <Check size={15} color="var(--aqua-tx)" /> : <X size={15} style={{ opacity: 0.5 }} />}
+                                </button>
+                                {row.present && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', margin: '2px 0 10px 40px' }}>
+                                        {['starter', 'sub', 'bench'].map((pp) => (
+                                            <button
+                                                key={pp}
+                                                type="button"
+                                                className={`nc-mini${row.participation === pp ? ' solid' : ''}`}
+                                                style={{ flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 10 }}
+                                                onClick={() => {
+                                                    const next = row.participation === pp ? null : pp;
+                                                    // El del banco no jugó: no puede tener goles
+                                                    patch(p.id, { participation: next, ...(next === 'bench' ? { goals: 0, assists: 0 } : {}) });
+                                                }}
+                                            >
+                                                {t(`part.${pp}`)}
+                                            </button>
+                                        ))}
+                                        {row.participation !== 'bench' && (
+                                            <>
+                                                <MiniCount icon="⚽" value={row.goals} onChange={(v) => patch(p.id, { goals: v })} />
+                                                <MiniCount icon="🅰️" value={row.assists} onChange={(v) => patch(p.id, { assists: v })} />
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         );
                     })}
                 </div>
-                <button className="nc-btn" style={{ marginTop: 12 }} onClick={save}>
+                <div className="nc-meta" style={{ marginTop: 10, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                    <span style={starters > 11 ? { color: 'var(--red-dk)' } : undefined}>
+                        {t('part.starters_n', { count: starters })}
+                    </span>
+                    <span style={overGoals ? { color: 'var(--red-dk)' } : undefined}>
+                        ⚽ {goalsSum}{gf !== null && `/${gf}`} · 🅰️ {assistsSum}{gf !== null && `/${gf}`}
+                    </span>
+                </div>
+                <button className="nc-btn" style={{ marginTop: 10 }} onClick={save} disabled={starters > 11 || overGoals}>
                     {t('agenda.save')}
                 </button>
             </div>

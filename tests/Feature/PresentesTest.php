@@ -84,3 +84,87 @@ it('la confirmación se puede corregir y no duplica filas', function () {
     expect($rows)->toHaveCount(1)
         ->and($rows->first()->attended)->toBeTrue();
 });
+
+it('el manager carga el detalle del partido: titulares, cambios, goles y asistencias', function () {
+    $manager = Member::factory()->manager()->create();
+    $titular = Member::factory()->for($manager->club)->create();
+    $suplente = Member::factory()->for($manager->club)->create();
+    $banco = Member::factory()->for($manager->club)->create();
+    $event = eventoJugado($manager, ['goals_for' => 3, 'goals_against' => 1]);
+    dijoQueIba($event, $titular, $suplente, $banco);
+
+    $this->actingAs($manager->user)
+        ->post("/eventos/{$event->id}/presentes", [
+            'present_ids' => [$titular->id, $suplente->id, $banco->id],
+            'detail' => [
+                ['id' => $titular->id, 'participation' => 'starter', 'goals' => 2, 'assists' => 1],
+                ['id' => $suplente->id, 'participation' => 'sub', 'goals' => 1, 'assists' => 0],
+                ['id' => $banco->id, 'participation' => 'bench', 'goals' => 0, 'assists' => 0],
+            ],
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    $row = fn (Member $m) => Attendance::where('event_id', $event->id)->where('member_id', $m->id)->first();
+
+    expect($row($titular)->participation)->toBe('starter')
+        ->and($row($titular)->goals)->toBe(2)
+        ->and($row($titular)->assists)->toBe(1)
+        ->and($row($suplente)->participation)->toBe('sub')
+        ->and($row($suplente)->goals)->toBe(1)
+        ->and($row($banco)->participation)->toBe('bench');
+});
+
+it('el detalle no puede superar el marcador ni los 11 titulares', function () {
+    $manager = Member::factory()->manager()->create();
+    $p = Member::factory()->for($manager->club)->create();
+    $event = eventoJugado($manager, ['goals_for' => 1, 'goals_against' => 0]);
+    dijoQueIba($event, $p);
+
+    // Más goles asignados que los del resultado
+    $this->actingAs($manager->user)
+        ->post("/eventos/{$event->id}/presentes", [
+            'present_ids' => [$p->id],
+            'detail' => [['id' => $p->id, 'participation' => 'starter', 'goals' => 2, 'assists' => 0]],
+        ])
+        ->assertSessionHasErrors('detail');
+
+    // Más asistencias que goles del resultado
+    $this->actingAs($manager->user)
+        ->post("/eventos/{$event->id}/presentes", [
+            'present_ids' => [$p->id],
+            'detail' => [['id' => $p->id, 'participation' => 'starter', 'goals' => 0, 'assists' => 2]],
+        ])
+        ->assertSessionHasErrors('detail');
+
+    // Doce titulares
+    $doce = Member::factory()->count(12)->for($manager->club)->create();
+    dijoQueIba($event, ...$doce->all());
+    $this->actingAs($manager->user)
+        ->post("/eventos/{$event->id}/presentes", [
+            'present_ids' => $doce->pluck('id')->all(),
+            'detail' => $doce->map(fn ($m) => ['id' => $m->id, 'participation' => 'starter'])->all(),
+        ])
+        ->assertSessionHasErrors('detail');
+});
+
+it('marcar ausente a alguien limpia su detalle del partido', function () {
+    $manager = Member::factory()->manager()->create();
+    $p = Member::factory()->for($manager->club)->create();
+    $event = eventoJugado($manager, ['goals_for' => 2, 'goals_against' => 0]);
+    dijoQueIba($event, $p);
+
+    $this->actingAs($manager->user)->post("/eventos/{$event->id}/presentes", [
+        'present_ids' => [$p->id],
+        'detail' => [['id' => $p->id, 'participation' => 'starter', 'goals' => 2, 'assists' => 0]],
+    ]);
+
+    // Se corrige: en realidad no estuvo
+    $this->actingAs($manager->user)->post("/eventos/{$event->id}/presentes", ['present_ids' => []]);
+
+    $row = Attendance::where('event_id', $event->id)->where('member_id', $p->id)->first();
+    expect($row->attended)->toBeFalse()
+        ->and($row->participation)->toBeNull()
+        ->and($row->goals)->toBe(0)
+        ->and($row->assists)->toBe(0);
+});
