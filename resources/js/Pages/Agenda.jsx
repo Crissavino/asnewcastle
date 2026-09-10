@@ -103,8 +103,8 @@ function EventForm({ event, rosterCount, onClose }) {
     return (
         <div className="nc-sheet" onClick={onClose}>
             <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
-                {/* Salida visible: en el celu la sábana tapa todo y el tap-afuera no alcanza */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, margin: '5px 0 16px' }}>
+                {/* Salida visible y pegada arriba: en el celu la sábana tapa todo */}
+                <div className="nc-sheet-head">
                     <h3 className="nc-display" style={{ fontSize: 21, margin: 0 }}>
                         {editing ? t('agenda.edit_title') : t('agenda.new_event')}
                     </h3>
@@ -234,7 +234,7 @@ function ResultSheet({ ev, onClose }) {
     return (
         <div className="nc-sheet" onClick={onClose}>
             <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, margin: '5px 0 16px' }}>
+                <div className="nc-sheet-head">
                     <h3 className="nc-display" style={{ fontSize: 21, margin: 0 }}>{t('agenda.result_title')}</h3>
                     <button type="button" className="nc-sheet-close" onClick={onClose} aria-label={t('common.close')}>
                         <X size={26} />
@@ -290,7 +290,7 @@ function FichaSheet({ onClose }) {
     return (
         <div className="nc-sheet" onClick={onClose}>
             <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, margin: '5px 0 4px' }}>
+                <div className="nc-sheet-head" style={{ marginBottom: 4 }}>
                     <h3 className="nc-display" style={{ fontSize: 21, margin: 0 }}>{t('ficha.title')}</h3>
                     <button type="button" className="nc-sheet-close" onClick={onClose} aria-label={t('common.close')}>
                         <X size={26} />
@@ -352,7 +352,7 @@ function PresentesSheet({ ev, onClose }) {
     return (
         <div className="nc-sheet" onClick={onClose}>
             <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, margin: '5px 0 4px' }}>
+                <div className="nc-sheet-head" style={{ marginBottom: 4 }}>
                     <h3 className="nc-display" style={{ fontSize: 21, margin: 0 }}>{t('agenda.presence_title')}</h3>
                     <button type="button" className="nc-sheet-close" onClick={onClose} aria-label={t('common.close')}>
                         <X size={26} />

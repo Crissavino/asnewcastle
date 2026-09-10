@@ -403,6 +403,11 @@ a.nc-btn { text-decoration: none; }
 .nc-sheet-inner:not(.plain)::before { content: ''; display: block; width: 44px; height: 4px;
   background: var(--line); border-radius: 2px; margin: -8px auto 14px; }
 .nc-sheet-inner.plain { border-top-color: var(--ink); padding: 0; }
+/* El título del sheet con la cruz de salida queda pegado arriba al scrollear:
+   en fichas largas (la grilla de dorsales) la salida no puede desaparecer. */
+.nc-sheet-head { position: sticky; top: 0; z-index: 2; background: #fff;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  margin: 0 -20px 12px; padding: 6px 20px; }
 @keyframes nc-up { from { transform: translateY(16px); opacity: 0 } to { transform: none; opacity: 1 } }
 .nc-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-top: 1px solid var(--line); }
 .nc-bar { height: 8px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 12px; }

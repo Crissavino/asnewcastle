@@ -106,8 +106,8 @@ function ExpenseSheet({ categorias, eventos, currency, onClose }) {
     return (
         <div className="nc-sheet" onClick={onClose}>
             <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
-                {/* Salida visible: en el celu la sábana tapa todo y el tap-afuera no alcanza */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, margin: '5px 0 16px' }}>
+                {/* Salida visible y pegada arriba: en el celu la sábana tapa todo */}
+                <div className="nc-sheet-head">
                     <h3 className="nc-display" style={{ fontSize: 21, margin: 0 }}>{t('cuota.expense_title')}</h3>
                     <button type="button" className="nc-sheet-close" onClick={onClose} aria-label={t('common.close')}>
                         <X size={26} />
