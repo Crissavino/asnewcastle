@@ -372,6 +372,32 @@ it('el Voy de un lesionado no infla el pronóstico ni le muestra la zanahoria', 
     expect(pronostico($event, $otroLesionado)['if_you_confirm'])->toBeNull();
 });
 
+it('los goleadores confirmados empujan el pronóstico', function () {
+    $event = partidoFuturo(clubConTabla());
+    $confirmados = confirman($event, 6);
+
+    // Partido pasado con presentes confirmados pero sin goles cargados: la
+    // base incluye racha/historial idénticos, así el después mide SOLO los goles
+    $pasado = partidoFuturo($event->club, [
+        'starts_at' => now()->subWeek(),
+        'attendance_confirmed_at' => now()->subWeek(),
+    ]);
+    $confirmados->each(fn ($m) => Attendance::create([
+        'event_id' => $pasado->id,
+        'member_id' => $m->id,
+        'status' => 'in',
+        'attended' => true,
+        'participation' => 'starter',
+    ]));
+
+    $antes = pronostico($event)['win'];
+
+    // El manager carga los goles: los seis vienen convirtiendo uno por partido
+    Attendance::where('event_id', $pasado->id)->update(['goals' => 1]);
+
+    expect(pronostico($event)['win'])->toBeGreaterThan($antes);
+});
+
 it('la autoevaluación no infla el peso del jugador en el pronóstico', function () {
     $event = partidoFuturo(clubConTabla());
     $confirmado = confirman($event)->first();

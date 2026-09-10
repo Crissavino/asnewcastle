@@ -180,8 +180,10 @@ class PredictionService
 
     /**
      * Confirmados: cada Voy suma sobre una base pesimista. La calificación
-     * acumulada del jugador (le costó/cumplió/crack) modula cuánto suma:
-     * de 0.7 a 1.3, nunca negativo.
+     * acumulada del jugador (le costó/cumplió/crack) modula cuánto suma —
+     * de 0.7 a 1.3 — y su promedio de goles+asistencias por partido jugado
+     * agrega hasta +0.25 más (un goleador confirmado empuja las chances;
+     * no convertir no resta: el defensor no marca y no es peor por eso).
      */
     protected function confirmedBoost(Event $event, Collection $confirmedIds): float
     {
@@ -197,13 +199,35 @@ class PredictionService
             ->groupBy('rated_member_id')
             ->pluck('avg_rating', 'rated_member_id');
 
-        $weighted = $confirmedIds->sum(function ($memberId) use ($ratingAvgs) {
-            $avg = (float) ($ratingAvgs[$memberId] ?? PlayerRating::SOLID);
+        $contributionRates = $this->contributionRates($event, $confirmedIds);
 
-            return 1 + 0.3 * ($avg - PlayerRating::SOLID);
+        $weighted = $confirmedIds->sum(function ($memberId) use ($ratingAvgs, $contributionRates) {
+            $avg = (float) ($ratingAvgs[$memberId] ?? PlayerRating::SOLID);
+            $rate = (float) ($contributionRates[$memberId] ?? 0.0);
+
+            return 1 + 0.3 * ($avg - PlayerRating::SOLID) + min(0.25, 0.25 * $rate);
         });
 
         return 1.2 * ($weighted / self::IDEAL_SQUAD - 0.6);
+    }
+
+    /**
+     * Goles + asistencias por partido jugado de cada confirmado, sobre los
+     * partidos con presentes confirmados (ahí es donde el manager carga goles).
+     * Uno por partido llega al máximo del bonus.
+     */
+    protected function contributionRates(Event $event, Collection $confirmedIds): Collection
+    {
+        return Attendance::query()
+            ->whereIn('member_id', $confirmedIds)
+            ->where('attended', true)
+            ->whereIn('event_id', Event::withoutGlobalScopes()
+                ->where('club_id', $event->club_id)
+                ->where('kind', 'match')
+                ->select('id'))
+            ->get(['member_id', 'goals', 'assists'])
+            ->groupBy('member_id')
+            ->map(fn ($rows) => $rows->sum(fn ($a) => $a->goals + $a->assists) / $rows->count());
     }
 
     /**
