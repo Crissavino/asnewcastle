@@ -17,7 +17,11 @@ class Attendance extends Model
         'event_id',
         'member_id',
         'status',
+        'absence_reason',
         'attended',
+        'participation',
+        'goals',
+        'assists',
         'responded_at',
         'source',
     ];
@@ -26,6 +30,8 @@ class Attendance extends Model
     {
         return [
             'attended' => 'boolean',
+            'goals' => 'integer',
+            'assists' => 'integer',
             'responded_at' => 'datetime',
         ];
     }

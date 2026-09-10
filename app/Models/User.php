@@ -18,6 +18,7 @@ class User extends Authenticatable
         'phone',
         'phone_verified_at',
         'locale',
+        'birth_date',
     ];
 
     protected $hidden = [
@@ -29,6 +30,7 @@ class User extends Authenticatable
     {
         return [
             'phone_verified_at' => 'datetime',
+            'birth_date' => 'date',
         ];
     }
 

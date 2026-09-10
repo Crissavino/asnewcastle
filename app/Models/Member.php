@@ -19,8 +19,10 @@ class Member extends Model
         'hidden',
         'shirt_number',
         'position',
+        'position_secondary',
         'preferred_foot',
         'availability',
+        'injured_since',
         'fee_type',
         'custom_fee_cents',
         'stripe_customer_id',
@@ -41,6 +43,7 @@ class Member extends Model
             'joined_at' => 'datetime',
             'left_at' => 'datetime',
             'vestuario_read_at' => 'datetime',
+            'injured_since' => 'datetime',
             'shirt_number' => 'integer',
         ];
     }
@@ -64,6 +67,12 @@ class Member extends Model
     public function isCoach(): bool
     {
         return $this->role === 'coach';
+    }
+
+    /** Lesionado: su "Voy" no suma al pronóstico y lleva badge en la convocatoria. */
+    public function isInjured(): bool
+    {
+        return $this->injured_since !== null;
     }
 
     public const FEE_TYPES = ['normal', 'becado', 'custom'];
