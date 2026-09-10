@@ -116,7 +116,10 @@ class VestuarioController extends Controller
         }
 
         $votes = $event->mvpVotes->countBy('voted_member_id');
-        $ratingsByPlayer = $event->playerRatings->groupBy('rated_member_id');
+        // Los totales públicos son solo de compañeros: la autoevaluación no infla
+        $ratingsByPlayer = $event->playerRatings
+            ->filter(fn ($r) => $r->rater_member_id !== $r->rated_member_id)
+            ->groupBy('rated_member_id');
         $myRatings = $event->playerRatings->where('rater_member_id', $myMemberId);
 
         $presentIds = $event->presentMemberIds();

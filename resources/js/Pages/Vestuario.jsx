@@ -57,20 +57,26 @@ function MvpPoll({ mvp, onClose }) {
                             <div className="nc-poll-bar">
                                 <i style={{ width: `${(c.votes / maxVotes) * 100}%` }} />
                             </div>
-                            {canVote && c.id !== member?.id && (
-                                <div className="nc-rate">
-                                    {[1, 2, 3].map((r) => (
-                                        <button
-                                            key={r}
-                                            type="button"
-                                            className={c.my_rating === r ? 'on' : ''}
-                                            onClick={() => rate(c.id, r)}
-                                        >
-                                            {t(`rate.${r}`)}
-                                            {c.ratings[r - 1] > 0 && <b className="nc-num">{c.ratings[r - 1]}</b>}
-                                        </button>
-                                    ))}
-                                </div>
+                            {canVote && (
+                                <>
+                                    {c.id === member?.id && (
+                                        <div className="nc-meta" style={{ fontSize: 11, marginTop: 6 }}>{t('vestuario.self_rate')}</div>
+                                    )}
+                                    <div className="nc-rate">
+                                        {[1, 2, 3].map((r) => (
+                                            <button
+                                                key={r}
+                                                type="button"
+                                                className={c.my_rating === r ? 'on' : ''}
+                                                onClick={() => rate(c.id, r)}
+                                            >
+                                                {t(`rate.${r}`)}
+                                                {/* En la fila propia no se muestran los totales: la autoevaluación no infla */}
+                                                {c.id !== member?.id && c.ratings[r - 1] > 0 && <b className="nc-num">{c.ratings[r - 1]}</b>}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
                             )}
                         </div>
                     ))}

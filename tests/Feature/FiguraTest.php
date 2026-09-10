@@ -106,16 +106,11 @@ it('no se puede votar la figura de un partido de otro club', function () {
         ->assertNotFound();
 });
 
-it('la calificación ternaria se guarda, se cambia y no permite autobombo', function () {
+it('la calificación ternaria se guarda y se cambia sin duplicar filas', function () {
     $manager = Member::factory()->manager()->create();
     $a = Member::factory()->for($manager->club)->create();
     $event = partidoTerminado($manager);
     fueron($event, $manager, $a);
-
-    // A uno mismo no
-    $this->actingAs($manager->user)
-        ->post("/eventos/{$event->id}/puntaje", ['member_id' => $manager->id, 'rating' => 3])
-        ->assertForbidden();
 
     $this->actingAs($manager->user)->post("/eventos/{$event->id}/puntaje", ['member_id' => $a->id, 'rating' => 1]);
     $this->actingAs($manager->user)->post("/eventos/{$event->id}/puntaje", ['member_id' => $a->id, 'rating' => 3]);
@@ -213,6 +208,39 @@ it('nadie puede votarse figura a sí mismo', function () {
     $this->actingAs($a->user)
         ->post("/eventos/{$event->id}/figura", ['member_id' => $a->id])
         ->assertForbidden();
+});
+
+it('la autoevaluación se guarda pero no entra en los totales públicos', function () {
+    $manager = Member::factory()->manager()->create();
+    $a = Member::factory()->for($manager->club)->create();
+    $event = partidoTerminado($manager);
+    fueron($event, $manager, $a);
+
+    // Se califica a sí mismo: permitido
+    $this->actingAs($a->user)
+        ->post("/eventos/{$event->id}/puntaje", ['member_id' => $a->id, 'rating' => 3])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    // Y un compañero lo califica distinto
+    $this->actingAs($manager->user)
+        ->post("/eventos/{$event->id}/puntaje", ['member_id' => $a->id, 'rating' => 1]);
+
+    // En el vestuario, los totales de su fila cuentan solo al compañero
+    $this->actingAs($manager->user)
+        ->get('/vestuario')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('mvp.candidates', fn ($candidates) => collect($candidates)->firstWhere('id', $a->id)['ratings'] === [1, 0, 0])
+        );
+
+    // En sus estadísticas: el grupo por un lado, la autoevaluación por otro
+    $this->actingAs($a->user)
+        ->get('/estadisticas')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('stats.ratings', [1, 0, 0])
+            ->where('stats.rating_avg', 1)
+            ->where('stats.self_ratings', [0, 0, 1])
+        );
 });
 
 it('con presentes confirmados, el que no estuvo deja de ser candidato aunque haya dicho Voy', function () {

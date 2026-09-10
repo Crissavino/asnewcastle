@@ -148,6 +148,16 @@ export default function Estadisticas({ stats }) {
                         </div>
                     </>
                 )}
+                {(stats.self_ratings ?? []).some((n) => n > 0) && (
+                    <div className="nc-row" style={{ marginTop: 12 }}>
+                        <span className="nc-meta">{t('stats.self')}</span>
+                        <span className="nc-meta" style={{ textAlign: 'end' }}>
+                            {[1, 2, 3].filter((r) => stats.self_ratings[r - 1] > 0)
+                                .map((r) => `${t(`rate.${r}`)} ${stats.self_ratings[r - 1]}`)
+                                .join(' · ')}
+                        </span>
+                    </div>
+                )}
                 {form.length > 0 && (
                     <div className="nc-row" style={{ marginTop: 14 }}>
                         <span className="nc-meta">{t('stats.form')}</span>

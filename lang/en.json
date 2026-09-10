@@ -408,6 +408,8 @@
     "stats.goals": "Goals",
     "stats.assists": "Assists",
     "stats.started": "Starts",
+    "stats.self": "Self-rating",
+    "vestuario.self_rate": "And how did you see yourself?",
     "tabs.legitimacion": "Registration",
     "headers.legitimacion_eyebrow": "Federation",
     "common.yes": "Yes",

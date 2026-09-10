@@ -24,9 +24,9 @@ class PlayerRatingController extends Controller
             'rating' => ['required', Rule::in([1, 2, 3])],
         ]);
 
-        // Califica solo el que estuvo, y a uno mismo no: sería inflarse el promedio
+        // Califica solo el que estuvo. A uno mismo también se puede
+        // (autoevaluación), pero esa fila nunca entra en los totales públicos.
         abort_unless($event->wasPresent($current->member()->id), 403);
-        abort_if((int) $validated['member_id'] === $current->member()->id, 403);
 
         if (! $event->wasPresent((int) $validated['member_id'])) {
             throw ValidationException::withMessages([

@@ -99,7 +99,12 @@ class StatsService
 
         $mvpVotes = MvpVote::query()->where('voted_member_id', $member->id)->count();
 
-        $ratings = PlayerRating::query()->where('rated_member_id', $member->id)->get();
+        // La calificación pública es solo de compañeros; la autoevaluación
+        // (rater == rated) se muestra aparte, comparada contra el grupo.
+        $allRatings = PlayerRating::query()->where('rated_member_id', $member->id)->get();
+        $ratings = $allRatings->filter(fn ($r) => $r->rater_member_id !== $member->id)->values();
+        $selfByLevel = $allRatings->filter(fn ($r) => $r->rater_member_id === $member->id)->countBy('rating');
+        $selfDistribution = [$selfByLevel->get(1, 0), $selfByLevel->get(2, 0), $selfByLevel->get(3, 0)];
         $byLevel = $ratings->countBy('rating');
         $distribution = [$byLevel->get(1, 0), $byLevel->get(2, 0), $byLevel->get(3, 0)];
 
@@ -167,6 +172,7 @@ class StatsService
             'mvp_votes' => $mvpVotes,
             'ratings' => $distribution,
             'rating_avg' => $ratings->isNotEmpty() ? round($ratings->avg('rating'), 1) : null,
+            'self_ratings' => $selfDistribution,
             'timeline' => $timeline,
         ];
     }
