@@ -33,7 +33,9 @@ function EditSheet({ me, positions, feet, taken, maxNumber, onClose }) {
     const [data, setData] = useState({
         first_name: me.first_name ?? '',
         last_name: me.last_name ?? '',
+        birth_date: me.birth_date ?? '',
         position: me.position,
+        position_secondary: me.position_secondary,
         preferred_foot: me.preferred_foot,
         shirt_number: me.shirt_number,
     });
@@ -65,9 +67,32 @@ function EditSheet({ me, positions, feet, taken, maxNumber, onClose }) {
                 {!isCoach && (
                     <>
                         <label className="nc-field-l">
+                            <span className="nc-label">{t('alta.birth_label')}</span>
+                            <input type="date" value={data.birth_date} onChange={(e) => setData({ ...data, birth_date: e.target.value })} />
+                        </label>
+
+                        <label className="nc-field-l">
                             <span className="nc-label">{t('alta.pos_q')}</span>
-                            <select value={data.position} onChange={(e) => setData({ ...data, position: e.target.value })}>
+                            <select
+                                value={data.position}
+                                onChange={(e) => setData({
+                                    ...data,
+                                    position: e.target.value,
+                                    position_secondary: data.position_secondary === e.target.value ? null : data.position_secondary,
+                                })}
+                            >
                                 {positions.map((p) => <option key={p} value={p}>{t(`pos.${p}`)}</option>)}
+                            </select>
+                        </label>
+
+                        <label className="nc-field-l">
+                            <span className="nc-label">{t('alta.pos2_label')}</span>
+                            <select
+                                value={data.position_secondary ?? ''}
+                                onChange={(e) => setData({ ...data, position_secondary: e.target.value || null })}
+                            >
+                                <option value="">—</option>
+                                {positions.filter((p) => p !== data.position).map((p) => <option key={p} value={p}>{t(`pos.${p}`)}</option>)}
                             </select>
                         </label>
 
@@ -156,7 +181,9 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
                     <div style={{ flex: 1 }}>
                         <h2 className="nc-display" style={{ fontSize: 21, lineHeight: 1 }}>{me.name}</h2>
                         <div className="nc-meta" style={{ marginTop: 5 }}>
-                            {isCoach ? t('perfil.coach') : `${t(`pos.${me.position}`)} · ${t(`foot.${me.preferred_foot}`).toLowerCase()}`}
+                            {isCoach
+                                ? t('perfil.coach')
+                                : `${t(`pos.${me.position}`)}${me.position_secondary ? ` / ${t(`pos.${me.position_secondary}`)}` : ''} · ${t(`foot.${me.preferred_foot}`).toLowerCase()}`}
                         </div>
                     </div>
                     <button type="button" className="nc-mini" style={{ flex: 'none', minWidth: 0 }} onClick={() => setEditing(true)} aria-label={t('perfil.edit')}>

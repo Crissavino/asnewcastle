@@ -59,8 +59,11 @@ class PerfilController extends Controller
                 'last_name' => $member->user->lastName(),
                 'role' => $member->role,
                 'shirt_number' => $member->shirt_number,
+                'birth_date' => $member->user->birth_date?->toDateString(),
                 'position' => $member->position,
+                'position_secondary' => $member->position_secondary,
                 'preferred_foot' => $member->preferred_foot,
+                'injured' => $member->isInjured(),
                 'availability' => $member->availability ?? [],
                 // El técnico no tiene stats de jugador: muestra el récord del equipo.
                 'record' => $member->isCoach() ? $this->coachRecord($member) : null,
@@ -118,7 +121,10 @@ class PerfilController extends Controller
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'min:2', 'max:40'],
             'last_name' => ['required', 'string', 'min:2', 'max:40'],
+            // Nullable: los que ya hicieron el wizard viejo la completan cuando quieran
+            'birth_date' => ['nullable', 'date', 'before:today', 'after:1940-01-01'],
             'position' => ['required', Rule::in(AltaController::POSITIONS)],
+            'position_secondary' => ['nullable', Rule::in(AltaController::POSITIONS), 'different:position'],
             'preferred_foot' => ['required', Rule::in(AltaController::FEET)],
             'shirt_number' => [
                 'required', 'integer', 'min:1', 'max:'.AltaController::MAX_NUMBER,
@@ -132,9 +138,11 @@ class PerfilController extends Controller
             DB::transaction(function () use ($validated, $member) {
                 $member->user->update([
                     'name' => \App\Models\User::properCase($validated['first_name'].' '.$validated['last_name']),
+                    ...($validated['birth_date'] ?? null) ? ['birth_date' => $validated['birth_date']] : [],
                 ]);
                 $member->update([
                     'position' => $validated['position'],
+                    'position_secondary' => $validated['position_secondary'] ?? null,
                     'preferred_foot' => $validated['preferred_foot'],
                     'shirt_number' => $validated['shirt_number'],
                 ]);

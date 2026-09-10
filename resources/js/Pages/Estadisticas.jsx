@@ -58,7 +58,11 @@ export default function Estadisticas({ stats }) {
                             {stats.member.name}
                         </h2>
                         {stats.member.position && (
-                            <div className="nc-meta" style={{ marginTop: 4 }}>{t(`pos.${stats.member.position}`)}</div>
+                            <div className="nc-meta" style={{ marginTop: 4 }}>
+                                {t(`pos.${stats.member.position}`)}
+                                {stats.member.position_secondary && ` / ${t(`pos.${stats.member.position_secondary}`)}`}
+                                {stats.member.age !== null && ` · ${t('stats.age', { age: stats.member.age })}`}
+                            </div>
                         )}
                     </div>
                 </div>

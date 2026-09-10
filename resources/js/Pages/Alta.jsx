@@ -11,7 +11,9 @@ export default function Alta({ taken, positions, feet, slots, max_number, first_
     const { data, setData, post, processing, errors } = useForm({
         first_name: first_name ?? '',
         last_name: last_name ?? '',
+        birth_date: '',
         position: '',
+        position_secondary: null,
         preferred_foot: '',
         shirt_number: null,
         availability: [],
@@ -26,8 +28,9 @@ export default function Alta({ taken, positions, feet, slots, max_number, first_
         {
             q: t('alta.name_q'),
             hint: t('alta.name_hint'),
-            ok: data.first_name.trim().length > 1 && data.last_name.trim().length > 1,
-            error: errors.first_name || errors.last_name,
+            ok: data.first_name.trim().length > 1 && data.last_name.trim().length > 1
+                && (role === 'coach' || data.birth_date !== ''),
+            error: errors.first_name || errors.last_name || errors.birth_date,
             body: (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <input
@@ -43,6 +46,17 @@ export default function Alta({ taken, positions, feet, slots, max_number, first_
                         value={data.last_name}
                         onChange={(e) => setData('last_name', e.target.value)}
                     />
+                    {role !== 'coach' && (
+                        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            <span className="nc-label">{t('alta.birth_label')}</span>
+                            <input
+                                className="nc-input"
+                                type="date"
+                                value={data.birth_date}
+                                onChange={(e) => setData('birth_date', e.target.value)}
+                            />
+                        </label>
+                    )}
                 </div>
             ),
         },
@@ -50,13 +64,38 @@ export default function Alta({ taken, positions, feet, slots, max_number, first_
             q: t('alta.pos_q'),
             hint: t('alta.pos_hint'),
             ok: !!data.position,
-            error: errors.position,
-            body: positions.map((p) => (
-                <button key={p} type="button" className={`nc-opt ${data.position === p ? 'on' : ''}`} onClick={() => setData('position', p)}>
-                    {t(`pos.${p}`)}
-                    <span className="nc-num" style={{ fontSize: 11, opacity: 0.55 }}>{p}</span>
-                </button>
-            )),
+            error: errors.position || errors.position_secondary,
+            body: (
+                <>
+                    {positions.map((p) => (
+                        <button
+                            key={p}
+                            type="button"
+                            className={`nc-opt ${data.position === p ? 'on' : ''}`}
+                            onClick={() => setData((d) => ({ ...d, position: p, position_secondary: d.position_secondary === p ? null : d.position_secondary }))}
+                        >
+                            {t(`pos.${p}`)}
+                            <span className="nc-num" style={{ fontSize: 11, opacity: 0.55 }}>{p}</span>
+                        </button>
+                    ))}
+                    {data.position && (
+                        <>
+                            <div className="nc-label" style={{ margin: '16px 0 8px' }}>{t('alta.pos2_label')}</div>
+                            {positions.filter((p) => p !== data.position).map((p) => (
+                                <button
+                                    key={p}
+                                    type="button"
+                                    className={`nc-opt ${data.position_secondary === p ? 'on' : ''}`}
+                                    onClick={() => setData('position_secondary', data.position_secondary === p ? null : p)}
+                                >
+                                    {t(`pos.${p}`)}
+                                    <span className="nc-num" style={{ fontSize: 11, opacity: 0.55 }}>{p}</span>
+                                </button>
+                            ))}
+                        </>
+                    )}
+                </>
+            ),
         },
         {
             q: t('alta.foot_q'),

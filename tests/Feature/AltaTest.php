@@ -11,6 +11,7 @@ function altaPayload(array $overrides = []): array
     return array_merge([
         'first_name' => 'Marius',
         'last_name' => 'Ilie',
+        'birth_date' => '1998-04-12',
         'position' => 'MED',
         'preferred_foot' => 'right',
         'shirt_number' => 21,
@@ -46,9 +47,32 @@ it('completa el alta y entra a la app', function () {
         ->and($member->position)->toBe('MED')
         ->and($member->preferred_foot)->toBe('right')
         ->and($member->shirt_number)->toBe(21)
-        ->and($member->availability)->toBe(['tue', 'sat']);
+        ->and($member->availability)->toBe(['tue', 'sat'])
+        ->and($member->user->birth_date->toDateString())->toBe('1998-04-12');
 
     $this->actingAs($member->user)->get('/agenda')->assertOk();
+});
+
+it('el segundo puesto es opcional y no puede repetir el principal', function () {
+    $member = Member::factory()->incomplete()->create();
+
+    $this->actingAs($member->user)
+        ->post('/alta', altaPayload(['position_secondary' => 'MED']))
+        ->assertSessionHasErrors('position_secondary');
+
+    $this->actingAs($member->user)
+        ->post('/alta', altaPayload(['position_secondary' => 'DEF']))
+        ->assertRedirect(route('agenda'));
+
+    expect($member->fresh()->position_secondary)->toBe('DEF');
+});
+
+it('sin fecha de nacimiento no se completa el alta', function () {
+    $member = Member::factory()->incomplete()->create();
+
+    $this->actingAs($member->user)
+        ->post('/alta', altaPayload(['birth_date' => null]))
+        ->assertSessionHasErrors('birth_date');
 });
 
 it('capitaliza cada palabra del nombre, respetando guiones (rumano)', function () {

@@ -58,7 +58,9 @@ class AltaController extends Controller
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'min:2', 'max:40'],
             'last_name' => ['required', 'string', 'min:2', 'max:40'],
+            'birth_date' => ['required', 'date', 'before:today', 'after:1940-01-01'],
             'position' => ['required', Rule::in(self::POSITIONS)],
+            'position_secondary' => ['nullable', Rule::in(self::POSITIONS), 'different:position'],
             'preferred_foot' => ['required', Rule::in(self::FEET)],
             'shirt_number' => [
                 'required', 'integer', 'min:1', 'max:'.self::MAX_NUMBER,
@@ -76,9 +78,11 @@ class AltaController extends Controller
                 // mayúscula (incluye apellidos con guion, típico rumano).
                 $member->user->update([
                     'name' => \App\Models\User::properCase($validated['first_name'].' '.$validated['last_name']),
+                    'birth_date' => $validated['birth_date'],
                 ]);
                 $member->update([
                     'position' => $validated['position'],
+                    'position_secondary' => $validated['position_secondary'] ?? null,
                     'preferred_foot' => $validated['preferred_foot'],
                     'shirt_number' => $validated['shirt_number'],
                     'availability' => array_values($validated['availability']),

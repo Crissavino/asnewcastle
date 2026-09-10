@@ -125,6 +125,8 @@ class StatsService
                 'name' => $member->user->name,
                 'shirt_number' => $member->shirt_number,
                 'position' => $member->position,
+                'position_secondary' => $member->position_secondary,
+                'age' => $member->user->birth_date?->age,
             ],
             'matches_played' => $matchesPlayed,
             'matches_total' => $matches->count(),
