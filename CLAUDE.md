@@ -252,6 +252,19 @@ asistencias por jugador SÍ van, pero los carga SOLO el manager, post-partido.
 - **Derivada sin datos nuevos**: récord del equipo (G-E-P y GF/GC promedio) en
   los partidos con resultado, partido en "jugó" / "no jugó" por cada jugador.
 
+### Ranking del plantel y avisos automáticos (agregado aprobado el 11.09.2026)
+
+- **Ranking público del plantel** (pestaña Tabla, lo ven todos): goleadores,
+  asistencias, figuras y % de presencia en partidos (mínimo 3 posibles). Matiza
+  la regla de visibilidad: estas cuatro métricas celebrables son públicas; las
+  calificaciones del vestuario y los faltazos SIGUEN siendo privados — el
+  ranking celebra, no escracha.
+- **Resumen post-partido al vestuario**: mensaje del sistema con goleadores y
+  asistencias cuando se juntan presentes confirmados y resultado (en cualquier
+  orden, una sola vez). La figura ya la anuncia figura:cerrar aparte.
+- **Cumpleaños**: `cumples:anunciar` (diario 08:30) publica en el vestuario
+  quién cumple, con la edad, usando el birth_date del alta.
+
 ## Lo que NO va en v1
 
 Escrito para que no aparezca por inercia:
