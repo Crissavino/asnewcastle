@@ -279,6 +279,7 @@
     "system.result": "Final cu :opponent: :gf–:ga",
     "system.match_summary": "⚽ Goluri cu :opponent: :goals",
     "system.match_summary_full": "⚽ Goluri cu :opponent: :goals · 🅰️ Pase decisive: :assists",
+    "system.birthday": "🎂 Azi e ziua lui :name — :age de ani. Lasă-i un mesaj!",
     "system.mvp_winner": "Omul meciului cu :opponent: :name, cu :votes voturi",
     "wa.updated_match": "🔁 SCHIMBARE: Meci cu :opponent",
     "wa.updated_training": "🔁 SCHIMBARE: Antrenament",

@@ -279,6 +279,7 @@
     "system.result": "Full time vs :opponent: :gf–:ga",
     "system.match_summary": "⚽ Goals vs :opponent: :goals",
     "system.match_summary_full": "⚽ Goals vs :opponent: :goals · 🅰️ Assists: :assists",
+    "system.birthday": "🎂 It's :name's birthday — turning :age. Leave them a message!",
     "system.mvp_winner": "Man of the match vs :opponent: :name, with :votes votes",
     "wa.updated_match": "🔁 CHANGED: Match vs :opponent",
     "wa.updated_training": "🔁 CHANGED: Training",
