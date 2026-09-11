@@ -168,3 +168,72 @@ it('marcar ausente a alguien limpia su detalle del partido', function () {
         ->and($row->goals)->toBe(0)
         ->and($row->assists)->toBe(0);
 });
+
+it('al confirmar presentes con goles y resultado sale el resumen al vestuario, una sola vez', function () {
+    $manager = Member::factory()->manager()->create();
+    $a = Member::factory()->for($manager->club)->create();
+    $event = eventoJugado($manager, ['goals_for' => 3, 'goals_against' => 1]);
+    dijoQueIba($event, $manager, $a);
+
+    $payload = [
+        'present_ids' => [$manager->id, $a->id],
+        'detail' => [
+            ['id' => $a->id, 'participation' => 'starter', 'goals' => 2, 'assists' => 0],
+            ['id' => $manager->id, 'participation' => 'starter', 'goals' => 1, 'assists' => 2],
+        ],
+    ];
+
+    $this->actingAs($manager->user)->post("/eventos/{$event->id}/presentes", $payload);
+    // Corrige y vuelve a guardar: el resumen no se repite
+    $this->actingAs($manager->user)->post("/eventos/{$event->id}/presentes", $payload);
+
+    $summaries = \App\Models\Message::withoutGlobalScopes()
+        ->where('club_id', $event->club_id)
+        ->where('is_system', true)
+        ->get()
+        ->filter(fn ($m) => str_contains($m->body, 'match_summary'));
+
+    expect($summaries)->toHaveCount(1);
+
+    $body = json_decode($summaries->first()->body, true);
+    $primerNombre = strtok($a->user->name, ' ');
+    expect($body['key'])->toBe('system.match_summary_full')
+        ->and($body['params']['goals'])->toContain("{$primerNombre} x2")
+        ->and($body['params']['assists'])->toContain('x2');
+});
+
+it('si el resultado se carga después de los presentes, el resumen sale con el resultado', function () {
+    $manager = Member::factory()->manager()->create();
+    $a = Member::factory()->for($manager->club)->create();
+    $event = eventoJugado($manager); // sin resultado todavía
+    dijoQueIba($event, $a);
+
+    $this->actingAs($manager->user)->post("/eventos/{$event->id}/presentes", [
+        'present_ids' => [$a->id],
+        'detail' => [['id' => $a->id, 'participation' => 'starter', 'goals' => 1, 'assists' => 0]],
+    ]);
+
+    $hayResumen = fn () => \App\Models\Message::withoutGlobalScopes()
+        ->where('club_id', $event->club_id)->where('is_system', true)->get()
+        ->contains(fn ($m) => str_contains($m->body, 'match_summary'));
+
+    expect($hayResumen())->toBeFalse(); // sin resultado no hay resumen
+
+    $this->actingAs($manager->user)->post("/eventos/{$event->id}/resultado", ['goals_for' => 1, 'goals_against' => 0]);
+    expect($hayResumen())->toBeTrue();
+});
+
+it('sin goles cargados no hay resumen aunque haya resultado', function () {
+    $manager = Member::factory()->manager()->create();
+    $a = Member::factory()->for($manager->club)->create();
+    $event = eventoJugado($manager, ['goals_for' => 1, 'goals_against' => 0]);
+    dijoQueIba($event, $a);
+
+    $this->actingAs($manager->user)->post("/eventos/{$event->id}/presentes", ['present_ids' => [$a->id]]);
+
+    $hayResumen = \App\Models\Message::withoutGlobalScopes()
+        ->where('club_id', $event->club_id)->where('is_system', true)->get()
+        ->contains(fn ($m) => str_contains($m->body, 'match_summary'));
+
+    expect($hayResumen)->toBeFalse();
+});

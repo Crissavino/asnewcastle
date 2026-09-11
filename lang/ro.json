@@ -277,6 +277,8 @@
     "system.event_cancelled_match": "S-a anulat meciul cu :opponent",
     "system.event_cancelled_training": "S-a anulat antrenamentul din :date",
     "system.result": "Final cu :opponent: :gf–:ga",
+    "system.match_summary": "⚽ Goluri cu :opponent: :goals",
+    "system.match_summary_full": "⚽ Goluri cu :opponent: :goals · 🅰️ Pase decisive: :assists",
     "system.mvp_winner": "Omul meciului cu :opponent: :name, cu :votes voturi",
     "wa.updated_match": "🔁 SCHIMBARE: Meci cu :opponent",
     "wa.updated_training": "🔁 SCHIMBARE: Antrenament",

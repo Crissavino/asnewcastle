@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Member;
+use App\Services\SystemMessages;
 use App\Support\CurrentClub;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -59,6 +60,9 @@ class PresenceController extends Controller
             }
         }
 
+        // ¿Primera confirmación? El resumen al vestuario sale una sola vez
+        $firstConfirm = $event->attendance_confirmed_at === null;
+
         DB::transaction(function () use ($event, $present, $detail) {
             $fields = function (int $memberId) use ($present, $detail) {
                 if (! $present->contains($memberId)) {
@@ -88,6 +92,12 @@ class PresenceController extends Controller
 
             $event->forceFill(['attendance_confirmed_at' => now()])->save();
         });
+
+        // Resumen al vestuario (goleadores/asistencias) recién cuando hay
+        // resultado; si el resultado llega después, lo publica result()
+        if ($firstConfirm && $event->isMatch() && $event->hasResult()) {
+            app(SystemMessages::class)->matchSummary($event);
+        }
 
         return back();
     }

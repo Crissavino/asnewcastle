@@ -225,9 +225,17 @@ class AgendaController extends Controller
             'goals_against' => ['required', 'integer', 'min:0', 'max:99'],
         ]);
 
+        $firstResult = ! $event->hasResult();
+
         $event->update($validated);
 
         app(SystemMessages::class)->result($event);
+
+        // Si los presentes (con goleadores) ya estaban confirmados, el resumen
+        // sale acá; en el orden inverso lo publica PresenceController
+        if ($firstResult && $event->attendance_confirmed_at !== null) {
+            app(SystemMessages::class)->matchSummary($event);
+        }
 
         return back();
     }

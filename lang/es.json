@@ -277,6 +277,8 @@
     "system.event_cancelled_match": "Se canceló el partido vs :opponent",
     "system.event_cancelled_training": "Se canceló el entrenamiento del :date",
     "system.result": "Final vs :opponent: :gf–:ga",
+    "system.match_summary": "⚽ Goles vs :opponent: :goals",
+    "system.match_summary_full": "⚽ Goles vs :opponent: :goals · 🅰️ Asistencias: :assists",
     "system.mvp_winner": "La figura vs :opponent: :name, con :votes votos",
     "wa.updated_match": "🔁 CAMBIO: Partido vs :opponent",
     "wa.updated_training": "🔁 CAMBIO: Entrenamiento",

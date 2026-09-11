@@ -92,6 +92,49 @@ class SystemMessages
         ]);
     }
 
+    /**
+     * Goleadores y asistencias del partido, cuando el manager cargó el detalle.
+     * Se publica una sola vez, cuando se juntan presentes confirmados y
+     * resultado (los llama PresenceController y AgendaController::result).
+     */
+    public function matchSummary(Event $event): void
+    {
+        $rows = $event->attendances()
+            ->where('attended', true)
+            ->with('member.user:id,name')
+            ->get();
+
+        $names = fn (string $field) => $rows
+            ->filter(fn ($a) => $a->{$field} > 0)
+            ->sortByDesc($field)
+            ->map(function ($a) use ($field) {
+                $first = strtok($a->member->user->name ?? '', ' ') ?: $a->member->user->name;
+
+                return $a->{$field} > 1 ? "{$first} x{$a->{$field}}" : $first;
+            })
+            ->implode(', ');
+
+        $goals = $names('goals');
+        $assists = $names('assists');
+
+        if ($goals === '') {
+            return;
+        }
+
+        Message::create([
+            'club_id' => $event->club_id,
+            'is_system' => true,
+            'body' => json_encode([
+                'key' => $assists !== '' ? 'system.match_summary_full' : 'system.match_summary',
+                'params' => array_filter([
+                    'opponent' => $event->opponent,
+                    'goals' => $goals,
+                    'assists' => $assists,
+                ]),
+            ]),
+        ]);
+    }
+
     public function confirmed(Member $member, Event $event): void
     {
         Message::create([
