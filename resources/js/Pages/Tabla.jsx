@@ -6,7 +6,14 @@ import { useTranslations } from '../i18n';
 const INTL_LOCALES = { es: 'es-AR', ro: 'ro-RO', en: 'en-GB', ar: 'ar-u-nu-latn' };
 const OUTCOME = { 1: 'w', 0: 'd', '-1': 'l' };
 
-export default function Tabla({ standings, fixture, us, form, next }) {
+const RANKINGS = [
+    ['goals', 'rank.goals', ''],
+    ['assists', 'rank.assists', ''],
+    ['mvps', 'rank.mvps', ''],
+    ['attendance', 'rank.attendance', '%'],
+];
+
+export default function Tabla({ standings, fixture, us, form, next, ranking }) {
     const { t, locale } = useTranslations();
     const { club, member } = usePage().props;
     const intl = INTL_LOCALES[locale] ?? 'en-GB';
@@ -124,6 +131,31 @@ export default function Tabla({ standings, fixture, us, form, next }) {
                     </table>
                 )}
             </div>
+
+            {/* Los números del plantel: solo lo celebrable — las calificaciones
+                del vestuario y los faltazos siguen siendo privados */}
+            {RANKINGS.some(([key]) => (ranking?.[key] ?? []).length > 0) && (
+                <div className="nc-card">
+                    <div className="nc-label">{t('rank.title')}</div>
+                    {RANKINGS.map(([key, label, suffix]) => (ranking[key] ?? []).length > 0 && (
+                        <div key={key} style={{ marginTop: 14 }}>
+                            <div className="nc-label" style={{ opacity: 0.65 }}>{t(label)}</div>
+                            <div style={{ marginTop: 2 }}>
+                                {ranking[key].map((r, i) => (
+                                    <div key={r.id} className="nc-row">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                                            <span className="nc-num nc-meta" style={{ width: 14, flexShrink: 0, textAlign: 'center' }}>{i + 1}</span>
+                                            <Kit n={r.shirt_number} size="sm" />
+                                            <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
+                                        </div>
+                                        <b className="nc-num" style={{ fontSize: 14, flexShrink: 0 }}>{r.value}{suffix}</b>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </AppLayout>
     );
 }
