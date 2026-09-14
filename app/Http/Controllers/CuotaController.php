@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\AuditLog;
 use App\Models\Club;
 use App\Models\Due;
+use App\Models\DuePromise;
 use App\Models\Event;
 use App\Models\Expense;
 use App\Jobs\CancelMollieSubscription;
 use App\Models\Member;
 use App\Models\Payment;
 use App\Services\Mollie\MollieGateway;
+use App\Services\Notifications;
+use App\Services\Push\Notifier;
 use App\Services\Stripe\StripeGateway;
 use App\Services\WhatsApp\WhatsAppChannel;
 use App\Support\CurrentClub;
@@ -101,6 +104,7 @@ class CuotaController extends Controller
             'owed_all_cents' => (int) Due::query()->where('status', 'pending')->sum('amount_cents'),
             'debtors' => $pending->values()->map(fn ($d) => [
                 'due_id' => $d->id,
+                'member_id' => $d->member_id,
                 'name' => $d->member->user->name,
                 'shirt_number' => $d->member->shirt_number,
                 'amount_cents' => $d->amount_cents,
@@ -166,6 +170,10 @@ class CuotaController extends Controller
                         : null,
                 ]),
             ];
+
+            // Cobranza: compromisos, incumplimientos y motivos de cada deudor
+            // del mes. SOLO manager — el plantel ve quién debe, nada más.
+            $props['cobranza'] = $this->collectionStatus($pending);
 
             // Eventos recientes para atar un gasto (el árbitro del partido vs X)
             $props['eventos'] = Event::query()
@@ -483,6 +491,138 @@ class CuotaController extends Controller
         ]);
 
         return back();
+    }
+
+    /**
+     * Estado de cobranza por deudor del mes, para la vista del manager:
+     * compromiso vigente o roto, promesas rotas acumuladas, motivo del
+     * "no puedo pagar" y cuántas veces vio el popup sin elegir nada.
+     */
+    protected function collectionStatus($pendingDues): array
+    {
+        DuePromise::settle();
+
+        $promises = DuePromise::query()
+            ->whereIn('member_id', $pendingDues->pluck('member_id'))
+            ->orderByDesc('id')
+            ->get()
+            ->groupBy('member_id');
+
+        return $pendingDues->mapWithKeys(function ($due) use ($promises) {
+            $mine = $promises->get($due->member_id, collect());
+            $last = $mine->first(fn ($p) => $p->kind === DuePromise::KIND_PROMISE
+                && in_array($p->status, ['active', 'broken'], true));
+            $cantPay = $mine->firstWhere('kind', DuePromise::KIND_CANT_PAY);
+
+            return [$due->member_id => [
+                'promised_for' => $last?->promised_for->toDateString(),
+                'status' => $last?->status,
+                'broken_count' => $mine->where('kind', DuePromise::KIND_PROMISE)
+                    ->where('status', 'broken')->count(),
+                'cant_pay' => $cantPay ? [
+                    'reason' => $cantPay->reason,
+                    'at' => $cantPay->created_at->toDateString(),
+                ] : null,
+                'seen_count' => $due->member->due_popup_seen_count,
+            ]];
+        })->all();
+    }
+
+    /**
+     * El deudor se compromete a una fecha de pago. Le compra la tregua:
+     * el popup no vuelve hasta esa fecha. Solo puede haber una promesa
+     * activa; si había otra vigente, queda reemplazada por la nueva.
+     */
+    public function promise(Request $request, Notifications $inApp): BaseResponse
+    {
+        $member = app(CurrentClub::class)->member();
+
+        $validated = $request->validate([
+            'promised_for' => ['required', 'date', 'after:today',
+                'before_or_equal:'.now()->addDays(30)->toDateString()],
+        ]);
+
+        $debt = $this->pendingDebtCents($member);
+        abort_if($debt === 0, 400);
+
+        DuePromise::settle($member->id);
+        DuePromise::query()
+            ->where('member_id', $member->id)
+            ->where('kind', DuePromise::KIND_PROMISE)
+            ->where('status', 'active')
+            ->update(['status' => 'replaced']);
+
+        $promise = DuePromise::create([
+            'member_id' => $member->id,
+            'kind' => DuePromise::KIND_PROMISE,
+            'promised_for' => $validated['promised_for'],
+            'debt_cents' => $debt,
+            'status' => 'active',
+        ]);
+
+        $inApp->promiseMade($member, $promise);
+
+        return back();
+    }
+
+    /**
+     * El deudor avisa en privado que no puede pagar, con el motivo.
+     * Le llega solo al manager (campanita + push); no da tregua.
+     */
+    public function cantPay(Request $request, Notifications $inApp, Notifier $push): BaseResponse
+    {
+        $current = app(CurrentClub::class);
+        $member = $current->member();
+
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $debt = $this->pendingDebtCents($member);
+        abort_if($debt === 0, 400);
+
+        DuePromise::create([
+            'member_id' => $member->id,
+            'kind' => DuePromise::KIND_CANT_PAY,
+            'debt_cents' => $debt,
+            'reason' => $validated['reason'],
+        ]);
+
+        $managers = $current->club()->activeMembers()
+            ->where('role', 'manager')
+            ->where('members.id', '!=', $member->id)
+            ->with('user')
+            ->get();
+
+        $member->loadMissing('user');
+        $inApp->cantPay($member, $managers);
+        $push->cantPay($managers, strtok($member->user->name ?? '', ' ') ?: (string) $member->user?->name, $validated['reason']);
+
+        return back();
+    }
+
+    /** El popup se mostró hoy: no volver a mostrarlo hasta mañana. */
+    public function popupSeen(): BaseResponse
+    {
+        $member = app(CurrentClub::class)->member();
+
+        if (! $member->due_popup_seen_on?->isToday()) {
+            $member->update([
+                'due_popup_seen_on' => today(),
+                'due_popup_seen_count' => $member->due_popup_seen_count + 1,
+            ]);
+        }
+
+        return back();
+    }
+
+    /** Deuda total pendiente del jugador, todos los meses. */
+    protected function pendingDebtCents(Member $member): int
+    {
+        return (int) Due::query()
+            ->where('member_id', $member->id)
+            ->where('status', 'pending')
+            ->sum('amount_cents');
     }
 
     public function claim(WhatsAppChannel $whatsapp): BaseResponse

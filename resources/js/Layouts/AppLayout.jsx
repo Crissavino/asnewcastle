@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { IconAgenda, IconTabla, IconVestuario, IconCuota, IconPerfil } from '../Components/TabIcons';
 import AndroidUpdate from '../Components/AndroidUpdate';
 import Crest from '../Components/Crest';
+import DebtPopup from '../Components/DebtPopup';
 import Kit from '../Components/Kit';
 import NotificationBell from '../Components/NotificationBell';
 import { useTranslations } from '../i18n';
@@ -38,6 +39,7 @@ export default function AppLayout({ tab, eyebrow, hideNav = false, children }) {
         <div className="nc-root">
             <Head title={title} />
             <AndroidUpdate />
+            {!hideNav && <DebtPopup />}
             <div className="nc-shell">
                 {/* Riel / sidebar: solo tablet y desktop */}
                 <aside className="nc-side">

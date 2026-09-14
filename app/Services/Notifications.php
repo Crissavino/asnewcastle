@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Due;
+use App\Models\DuePromise;
 use App\Models\Event;
 use App\Models\Member;
 use App\Models\Notification;
@@ -143,6 +144,38 @@ class Notifications
 
         $this->deliver($due->club_id, $managerIds, 'payment', 'notifications.payment',
             array_filter(['name' => $this->firstName($due->member)]), '/cuota');
+    }
+
+    /** Extra del manager: un deudor se comprometió a una fecha de pago. */
+    public function promiseMade(Member $debtor, DuePromise $promise): void
+    {
+        $this->deliver($debtor->club_id, $this->managerIds($debtor), 'dues', 'notifications.promise_made', [
+            'name' => $this->firstName($debtor),
+            'date' => $promise->promised_for->toIso8601String(),
+        ], '/cuota');
+    }
+
+    /**
+     * Extra del manager: un deudor avisó que no puede pagar.
+     *
+     * @param  Collection<int, Member>  $managers
+     */
+    public function cantPay(Member $debtor, Collection $managers): void
+    {
+        $this->deliver($debtor->club_id, $managers->pluck('id'), 'dues', 'notifications.cant_pay', [
+            'name' => $this->firstName($debtor),
+        ], '/cuota');
+    }
+
+    /** Los managers activos del club del member, sin él mismo. */
+    private function managerIds(Member $member): Collection
+    {
+        return Member::query()
+            ->where('club_id', $member->club_id)
+            ->whereNull('left_at')
+            ->where('role', 'manager')
+            ->where('id', '!=', $member->id)
+            ->pluck('id');
     }
 
     /** Solo el nombre de pila, como en SystemMessages. */

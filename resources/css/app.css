@@ -417,6 +417,11 @@ a.nc-btn { text-decoration: none; }
 .nc-pill.ok { background: rgba(46,130,136,.14); color: var(--aqua-tx); }
 .nc-pill.no { background: rgba(210,34,51,.11); color: var(--red-dk); }
 
+/* Banner de tregua: compromiso de pago vigente, en la pestaña Cuota */
+.nc-truce { display: flex; gap: 10px; align-items: flex-start; background: rgba(46,130,136,.12);
+  border: 1px solid rgba(46,130,136,.35); border-inline-start: 4px solid var(--aqua-dk);
+  border-radius: 2px; padding: 11px 12px; margin-bottom: 12px; font-size: 13px; line-height: 1.45; color: var(--ink); }
+
 /* formulario */
 .nc-field-l { display: block; margin-bottom: 12px; }
 .nc-field-l input, .nc-field-l select { width: 100%; padding: 11px 12px; border: 1px solid var(--line);

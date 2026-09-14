@@ -312,9 +312,9 @@ function FeeSettings({ config, currency }) {
     );
 }
 
-export default function Cuota({ currency, online_ready, bank, my_due, caja, plantel, resumen, subscription, gastos, categorias, eventos, config }) {
+export default function Cuota({ currency, online_ready, bank, my_due, caja, plantel, resumen, subscription, gastos, categorias, eventos, config, cobranza }) {
     const { t, locale } = useTranslations();
-    const { auth, member, flash, errors } = usePage().props;
+    const { auth, member, flash, errors, debt } = usePage().props;
     const [claimed, setClaimed] = useState(false);
     const [addingExpense, setAddingExpense] = useState(false);
     const isManager = member?.role === 'manager';
@@ -357,6 +357,17 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
 
     return (
         <AppLayout tab="cuota" eyebrow={periodLabel}>
+            {/* Tregua vigente: el jugador se comprometió a una fecha de pago */}
+            {debt?.promise?.active && (
+                <div className="nc-truce">
+                    <span style={{ color: 'var(--aqua-tx)', fontWeight: 700 }}>✓</span>
+                    <span>{t('debt.truce_banner', {
+                        amount: `${money(debt.total_cents)} ${currency}`,
+                        date: new Date(`${debt.promise.promised_for}T12:00:00`).toLocaleDateString(intl, { day: 'numeric', month: 'long' }),
+                    })}</span>
+                </div>
+            )}
+
             {/* HERO: el débito automático es el camino principal */}
             {subscription && (isSub || isPastDue || justSubscribed || canSubscribe) && (
                 <div className="nc-card">
@@ -600,36 +611,58 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                     {caja.debtors.length > 0 && (
                         <div style={{ marginTop: 16 }}>
                             <div className="nc-label" style={{ marginBottom: 2 }}>{t('cuota.owe')}</div>
-                            {caja.debtors.map((d) => (
-                                <div key={d.due_id} className="nc-row">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                                        <Kit n={d.shirt_number} size="sm" />
-                                        <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
-                                    </div>
-                                    {isManager ? (
-                                        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                                            <button
-                                                className="nc-mini"
-                                                style={{ flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 10 }}
-                                                onClick={() => router.post(route('cuota.estado', d.due_id), { status: 'paid' }, { preserveScroll: true })}
-                                            >
-                                                {t('cuota.mark_cash')}
-                                            </button>
-                                            <button
-                                                className="nc-mini"
-                                                style={{ flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 10, opacity: 0.65 }}
-                                                onClick={() => router.post(route('cuota.estado', d.due_id), { status: 'waived' }, { preserveScroll: true })}
-                                            >
-                                                {t('cuota.waive')}
-                                            </button>
+                            {caja.debtors.map((d) => {
+                                const c = isManager ? cobranza?.[d.member_id] : null;
+                                return (
+                                <div key={d.due_id}>
+                                    <div className="nc-row">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                                            <Kit n={d.shirt_number} size="sm" />
+                                            <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
                                         </div>
-                                    ) : (
-                                        <span className="nc-num nc-meta" style={{ fontSize: 13, flexShrink: 0 }}>
-                                            {money(d.amount_cents)} {currency}
-                                        </span>
+                                        {isManager ? (
+                                            <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                                                <button
+                                                    className="nc-mini"
+                                                    style={{ flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 10 }}
+                                                    onClick={() => router.post(route('cuota.estado', d.due_id), { status: 'paid' }, { preserveScroll: true })}
+                                                >
+                                                    {t('cuota.mark_cash')}
+                                                </button>
+                                                <button
+                                                    className="nc-mini"
+                                                    style={{ flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 10, opacity: 0.65 }}
+                                                    onClick={() => router.post(route('cuota.estado', d.due_id), { status: 'waived' }, { preserveScroll: true })}
+                                                >
+                                                    {t('cuota.waive')}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <span className="nc-num nc-meta" style={{ fontSize: 13, flexShrink: 0 }}>
+                                                {money(d.amount_cents)} {currency}
+                                            </span>
+                                        )}
+                                    </div>
+                                    {/* Cobranza (solo manager): compromiso, incumplimiento, motivo */}
+                                    {c && (c.status || c.cant_pay || c.seen_count > 0) && (
+                                        <div className="nc-meta" style={{ fontSize: 11.5, margin: '-4px 0 8px 34px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                            {c.status && (
+                                                <span>
+                                                    <span className={`nc-pill ${c.status === 'active' ? 'ok' : 'no'}`}>
+                                                        {c.status === 'active'
+                                                            ? t('cobranza.promised', { date: new Date(`${c.promised_for}T12:00:00`).toLocaleDateString(intl, { day: 'numeric', month: 'short' }) })
+                                                            : t('cobranza.broken', { date: new Date(`${c.promised_for}T12:00:00`).toLocaleDateString(intl, { day: 'numeric', month: 'short' }) })}
+                                                    </span>
+                                                    {c.broken_count > 1 && <span> · {t('cobranza.broken_count', { count: c.broken_count })}</span>}
+                                                </span>
+                                            )}
+                                            {c.cant_pay && <span>{t('cobranza.cant', { reason: c.cant_pay.reason })}</span>}
+                                            {!c.status && !c.cant_pay && c.seen_count > 0 && <span>{t('cobranza.seen', { count: c.seen_count })}</span>}
+                                        </div>
                                     )}
                                 </div>
-                            ))}
+                                );
+                            })}
 
                             {isManager && (
                                 <div className="nc-admin">

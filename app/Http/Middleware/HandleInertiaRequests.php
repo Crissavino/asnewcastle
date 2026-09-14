@@ -2,6 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Due;
+use App\Models\DuePromise;
+use App\Models\Event;
 use App\Models\Notification;
 use App\Support\CurrentClub;
 use Illuminate\Http\Request;
@@ -56,6 +59,10 @@ class HandleInertiaRequests extends Middleware
             // La campanita: contador de no-leídas + las últimas para el panel.
             'notifications' => fn () => $current->member() ? $this->notifications($current) : null,
 
+            // Deuda de cuota del jugador activo (null si está al día): alimenta
+            // el popup de cobranza y el banner de tregua en Cuota.
+            'debt' => fn () => $current->member() ? $this->debt($current) : null,
+
             // Solo el dueño ve el toggle admin/jugador, y en qué modo está.
             'is_owner' => fn () => $current->isOwner(),
             'viewing_as_player' => fn () => $current->viewingAsPlayer(),
@@ -96,6 +103,56 @@ class HandleInertiaRequests extends Middleware
                     'at' => $n->created_at->toIso8601String(),
                 ])
                 ->all(),
+        ];
+    }
+
+    /**
+     * Deuda acumulada del jugador y estado de su compromiso de pago.
+     * Null si está al día — el popup ni aparece. El estado de las promesas
+     * vencidas se resuelve acá (settle perezoso, sin cron).
+     */
+    protected function debt(CurrentClub $current): ?array
+    {
+        $member = $current->member();
+
+        $pending = Due::query()
+            ->where('member_id', $member->id)
+            ->where('status', 'pending')
+            ->get(['amount_cents']);
+
+        if ($pending->isEmpty()) {
+            return null;
+        }
+
+        DuePromise::settle($member->id);
+
+        // La última promesa que importa: vigente (tregua) o rota (reproche).
+        // Las cumplidas y reemplazadas no se muestran.
+        $promise = DuePromise::query()
+            ->where('member_id', $member->id)
+            ->where('kind', DuePromise::KIND_PROMISE)
+            ->whereIn('status', ['active', 'broken'])
+            ->orderByDesc('id')
+            ->first();
+
+        $active = $promise?->status === 'active';
+
+        return [
+            'total_cents' => (int) $pending->sum('amount_cents'),
+            'months' => $pending->count(),
+            'currency' => $current->club()->currency,
+            // Para la opción rápida "el día del partido" al elegir fecha
+            'next_match_on' => Event::query()
+                ->where('kind', 'match')
+                ->where('starts_at', '>', now())
+                ->orderBy('starts_at')
+                ->value('starts_at')?->toDateString(),
+            'promise' => $promise ? [
+                'promised_for' => $promise->promised_for->toDateString(),
+                'active' => $active,
+                'broken' => $promise->status === 'broken',
+            ] : null,
+            'show_popup' => ! $active && ! $member->due_popup_seen_on?->isToday(),
         ];
     }
 

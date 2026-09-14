@@ -122,6 +122,35 @@ class Notifier
         }
     }
 
+    /**
+     * Push al manager: un deudor avisó que no puede pagar la cuota.
+     * El cuerpo es el motivo tal cual lo escribió — no se traduce.
+     *
+     * @param  Collection<int, \App\Models\Member>  $managers
+     */
+    public function cantPay(Collection $managers, string $debtorName, string $reason): void
+    {
+        $byLocale = $managers
+            ->filter(fn ($m) => $m->user !== null)
+            ->groupBy(fn ($m) => in_array($m->user->locale, ['es', 'ro', 'en'], true) ? $m->user->locale : 'es');
+
+        foreach ($byLocale as $locale => $members) {
+            $title = __('push.cant_pay_title', ['name' => $debtorName], $locale);
+
+            $tokens = DeviceToken::whereIn('user_id', $members->pluck('user.id')->all())->pluck('token')->all();
+
+            if (empty($tokens)) {
+                continue;
+            }
+
+            $invalid = $this->sender->send($tokens, $title, $reason, ['url' => '/cuota']);
+
+            if ($invalid) {
+                DeviceToken::whereIn('token', $invalid)->delete();
+            }
+        }
+    }
+
     /** @return array{0: string, 1: string}  [titleKey, bodyKey] */
     private function keysFor(string $notice, bool $isReminder, bool $isMatch): array
     {

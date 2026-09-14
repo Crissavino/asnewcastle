@@ -31,6 +31,8 @@ class Member extends Model
         'mollie_customer_id',
         'mollie_subscription_id',
         'vestuario_read_at',
+        'due_popup_seen_on',
+        'due_popup_seen_count',
         'joined_at',
         'left_at',
     ];
@@ -43,6 +45,8 @@ class Member extends Model
             'joined_at' => 'datetime',
             'left_at' => 'datetime',
             'vestuario_read_at' => 'datetime',
+            'due_popup_seen_on' => 'date',
+            'due_popup_seen_count' => 'integer',
             'injured_since' => 'datetime',
             'shirt_number' => 'integer',
         ];

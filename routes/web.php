@@ -122,6 +122,9 @@ Route::middleware('auth')->group(function () {
             Route::post('/cuota/suscribir', [CuotaController::class, 'subscribe'])->name('cuota.suscribir');
             Route::post('/plantel/{member}/suscripcion/cancelar', [CuotaController::class, 'cancelSubscription'])->name('cuota.suscripcion.cancelar');
             Route::post('/cuota/reclamar', [CuotaController::class, 'claim'])->name('cuota.reclamar');
+            Route::post('/cuota/compromiso', [CuotaController::class, 'promise'])->name('cuota.compromiso');
+            Route::post('/cuota/no-puedo', [CuotaController::class, 'cantPay'])->name('cuota.nopuedo');
+            Route::post('/cuota/aviso-visto', [CuotaController::class, 'popupSeen'])->name('cuota.avisovisto');
             Route::post('/cuota/{due}/estado', [CuotaController::class, 'setStatus'])->name('cuota.estado');
             Route::patch('/cuota/config', [CuotaController::class, 'updateConfig'])->name('cuota.config');
             Route::post('/plantel/{member}/cuota', [CuotaController::class, 'setMemberFee'])->name('plantel.cuota');
