@@ -389,7 +389,13 @@ a.nc-btn { text-decoration: none; }
 .nc-transfer-row .nc-label { margin-bottom: 2px; }
 
 /* sheets */
-.nc-sheet { position: fixed; inset: 0; background: rgba(18,18,18,.55); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
+/* El overlay va clavado al viewport VISIBLE, no al de layout: con el teclado
+   abierto iOS deja el viewport de layout entero (inset:0 llegaba hasta abajo de
+   todo) y el sheet, que se apoya en el borde inferior, quedaba dibujado DEBAJO
+   del teclado. Mismas variables que .nc-root para que overlay y app coincidan. */
+.nc-sheet { position: fixed; top: var(--app-top, 0px); left: 0; right: 0;
+  height: 100dvh; height: var(--app-vh, 100dvh);
+  background: rgba(18,18,18,.55); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
 /* Con un sheet abierto ocultamos las tabs de abajo: son un modal, y si no
    quedan tapando (y robando el tap de) el botón del sheet, como el de Guardar
    en Nuevo gasto. */
