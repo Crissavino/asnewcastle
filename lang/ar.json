@@ -243,6 +243,8 @@
     "agenda.edit_title": "تعديل الحدث",
     "agenda.result_btn": "أدخل النتيجة",
     "agenda.result_title": "نهاية المباراة",
+    "agenda.result_fix_title": "تصحيح النتيجة",
+    "agenda.result_below_credited": "هناك :count أهداف مسجلة للاعبين. صحّح تفاصيل المباراة أولاً.",
     "agenda.us": "نحن",
     "agenda.save": "حفظ",
     "agenda.recent": "آخر النتائج",

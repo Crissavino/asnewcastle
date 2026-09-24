@@ -252,6 +252,8 @@
     "agenda.edit_title": "Edit event",
     "agenda.result_btn": "Enter result",
     "agenda.result_title": "Full time",
+    "agenda.result_fix_title": "Fix the score",
+    "agenda.result_below_credited": "There are already :count goals assigned to players. Fix the match detail first.",
     "agenda.us": "Us",
     "agenda.save": "Save",
     "agenda.saving": "Saving…",

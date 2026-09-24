@@ -220,13 +220,16 @@ function ConfirmButton({ className, onConfirm, children }) {
 
 function ResultSheet({ ev, onClose }) {
     const { t } = useTranslations();
-    const [gf, setGf] = useState('');
-    const [ga, setGa] = useState('');
+    // Corregir: viene con el marcador cargado y se edita encima
+    const [gf, setGf] = useState(ev.result ? String(ev.result.gf) : '');
+    const [ga, setGa] = useState(ev.result ? String(ev.result.ga) : '');
+    const [errors, setErrors] = useState({});
     const { club } = usePage().props;
 
     const save = () => {
         router.post(route('eventos.resultado', ev.id), { goals_for: gf, goals_against: ga }, {
             onSuccess: onClose,
+            onError: setErrors,
             preserveScroll: true,
         });
     };
@@ -235,7 +238,9 @@ function ResultSheet({ ev, onClose }) {
         <div className="nc-sheet" onClick={onClose}>
             <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
                 <div className="nc-sheet-head">
-                    <h3 className="nc-display" style={{ fontSize: 21, margin: 0 }}>{t('agenda.result_title')}</h3>
+                    <h3 className="nc-display" style={{ fontSize: 21, margin: 0 }}>
+                        {t(ev.result ? 'agenda.result_fix_title' : 'agenda.result_title')}
+                    </h3>
                     <button type="button" className="nc-sheet-close" onClick={onClose} aria-label={t('common.close')}>
                         <X size={26} />
                     </button>
@@ -251,6 +256,7 @@ function ResultSheet({ ev, onClose }) {
                         <input type="number" min="0" max="99" inputMode="numeric" value={ga} onChange={(e) => setGa(e.target.value)} />
                     </label>
                 </div>
+                {Object.values(errors)[0] && <div className="nc-error">{Object.values(errors)[0]}</div>}
                 <button className="nc-btn" style={{ marginTop: 8 }} disabled={gf === '' || ga === ''} onClick={save}>
                     {t('agenda.save')}
                 </button>
@@ -801,9 +807,21 @@ function RecentResults({ recent, onLoadResult, onLoadPresence }) {
                                 </button>
                             )}
                             {m.result ? (
-                                <span className="nc-display nc-num" style={{ fontSize: 21 }}>
-                                    {m.is_home ? `${m.result.gf}–${m.result.ga}` : `${m.result.ga}–${m.result.gf}`}
-                                </span>
+                                isManager ? (
+                                    <button
+                                        type="button"
+                                        className="nc-display nc-num"
+                                        style={{ fontSize: 21, background: 'none', border: 0, padding: '0 4px', minHeight: 44, cursor: 'pointer' }}
+                                        onClick={() => onLoadResult(m)}
+                                        aria-label={t('agenda.result_fix_title')}
+                                    >
+                                        {m.is_home ? `${m.result.gf}–${m.result.ga}` : `${m.result.ga}–${m.result.gf}`}
+                                    </button>
+                                ) : (
+                                    <span className="nc-display nc-num" style={{ fontSize: 21 }}>
+                                        {m.is_home ? `${m.result.gf}–${m.result.ga}` : `${m.result.ga}–${m.result.gf}`}
+                                    </span>
+                                )
                             ) : isManager ? (
                                 <button className="nc-mini" style={{ flex: 'none' }} onClick={() => onLoadResult(m)}>
                                     {t('agenda.result_btn')}

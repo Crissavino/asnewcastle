@@ -252,6 +252,8 @@
     "agenda.edit_title": "Editar evento",
     "agenda.result_btn": "Cargar resultado",
     "agenda.result_title": "Resultado final",
+    "agenda.result_fix_title": "Corregir el resultado",
+    "agenda.result_below_credited": "Ya hay :count goles cargados a jugadores. Corregí primero el detalle del partido.",
     "agenda.us": "Nosotros",
     "agenda.save": "Guardar",
     "agenda.saving": "Guardando…",

@@ -252,6 +252,8 @@
     "agenda.edit_title": "Editează evenimentul",
     "agenda.result_btn": "Adaugă rezultatul",
     "agenda.result_title": "Scor final",
+    "agenda.result_fix_title": "Corectează scorul",
+    "agenda.result_below_credited": "Sunt deja :count goluri atribuite jucătorilor. Corectează mai întâi detaliile meciului.",
     "agenda.us": "Noi",
     "agenda.save": "Salvează",
     "agenda.saving": "Se salvează…",

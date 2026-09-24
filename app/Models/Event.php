@@ -3,14 +3,17 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToClub;
+use Database\Factories\EventFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class Event extends Model
 {
-    /** @use HasFactory<\Database\Factories\EventFactory> */
+    /** @use HasFactory<EventFactory> */
     use BelongsToClub, HasFactory;
 
     protected $fillable = [
@@ -91,6 +94,16 @@ class Event extends Model
         return $this->kind === 'match';
     }
 
+    /**
+     * Partidos y entrenamientos ya terminados, con el mismo criterio que
+     * isFinished(): dos horas desde el kick-off, o desde el encuentro si no
+     * está cargado. Que la lista y las estadísticas no discutan entre ellas.
+     */
+    public function scopeFinished(Builder $query): void
+    {
+        $query->whereRaw('COALESCE(kickoff_at, starts_at) < ?', [now()->subHours(2)]);
+    }
+
     public function mvpVotes(): HasMany
     {
         return $this->hasMany(MvpVote::class);
@@ -121,10 +134,24 @@ class Event extends Model
     }
 
     /**
+     * Goles y asistencias ya repartidos entre los presentes. El marcador no
+     * puede quedar por debajo de esto: nadie metió más goles que el equipo.
+     */
+    public function creditedGoals(): int
+    {
+        return (int) $this->attendances()->where('attended', true)->sum('goals');
+    }
+
+    public function creditedAssists(): int
+    {
+        return (int) $this->attendances()->where('attended', true)->sum('assists');
+    }
+
+    /**
      * Ids de los que estuvieron: los presentes confirmados por el manager o,
      * si todavía no confirmó, los que dijeron "Voy".
      */
-    public function presentMemberIds(): \Illuminate\Support\Collection
+    public function presentMemberIds(): Collection
     {
         $attendances = $this->relationLoaded('attendances')
             ? $this->attendances

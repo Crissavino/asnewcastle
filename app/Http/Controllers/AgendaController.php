@@ -11,9 +11,11 @@ use App\Services\SystemMessages;
 use App\Support\CurrentClub;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -41,7 +43,7 @@ class AgendaController extends Controller
             ->orderBy('starts_at')
             ->with(['attendances.member.user:id,name'])
             ->get()
-            ->map(function (Event $event) use ($member, $isManager, $isStaff, $roster, $rosterCount) {
+            ->map(function (Event $event) use ($member, $isManager, $isStaff, $roster) {
                 $byStatus = $event->attendances->groupBy('status');
 
                 // Orden de inscripción: el primero que confirmó aparece primero
@@ -213,7 +215,11 @@ class AgendaController extends Controller
         return back();
     }
 
-    /** El delegado carga el resultado cuando el partido terminó. */
+    /**
+     * El delegado carga el resultado cuando el partido terminó, y lo puede
+     * corregir después: un marcador al revés ensucia la racha, el récord y
+     * las estadísticas de todos.
+     */
     public function result(Request $request, Event $event): RedirectResponse
     {
         app(CurrentClub::class)->assertOwns($event);
@@ -225,11 +231,27 @@ class AgendaController extends Controller
             'goals_against' => ['required', 'integer', 'min:0', 'max:99'],
         ]);
 
+        // Los goleadores ya cargados no pueden quedar por encima del marcador.
+        // Corregir para abajo obliga a corregir antes el detalle del partido.
+        $credited = max($event->creditedGoals(), $event->creditedAssists());
+
+        if ($validated['goals_for'] < $credited) {
+            throw ValidationException::withMessages([
+                'goals_for' => __('agenda.result_below_credited', ['count' => $credited]),
+            ]);
+        }
+
         $firstResult = ! $event->hasResult();
+        $changed = $firstResult
+            || $event->goals_for !== $validated['goals_for']
+            || $event->goals_against !== $validated['goals_against'];
 
         $event->update($validated);
 
-        app(SystemMessages::class)->result($event);
+        // Corregir un error de tipeo no vuelve a anunciar el mismo marcador
+        if ($changed) {
+            app(SystemMessages::class)->result($event);
+        }
 
         // Si los presentes (con goleadores) ya estaban confirmados, el resumen
         // sale acá; en el orden inverso lo publica PresenceController
@@ -293,11 +315,11 @@ class AgendaController extends Controller
         $kickoff = null;
 
         if ($validated['kind'] === 'match' && ! empty($validated['kickoff_time'])) {
-            $kickoff = \Illuminate\Support\Carbon::parse($validated['starts_at'])
+            $kickoff = Carbon::parse($validated['starts_at'])
                 ->setTimeFromTimeString($validated['kickoff_time']);
 
             if ($kickoff->lt($validated['starts_at'])) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'kickoff_time' => __('agenda.kickoff_before_meet'),
                 ]);
             }
@@ -325,7 +347,12 @@ class AgendaController extends Controller
         ];
     }
 
-    /** Los últimos 3 partidos jugados, con resultado y figura si ya cerró. */
+    /**
+     * Los últimos 3 partidos jugados, con resultado y figura si ya cerró.
+     * Al manager le sumamos los que tienen algo pendiente por más viejos que
+     * sean: sin esto, un partido sin resultado se caía de la lista y quedaba
+     * sin cargar para siempre.
+     */
     protected function recentMatches(): array
     {
         $current = app(CurrentClub::class);
@@ -336,14 +363,26 @@ class AgendaController extends Controller
             ? $current->club()->activeMembers()->with('user:id,name')->orderBy('shirt_number')->get()
             : null;
 
-        return Event::query()
+        $played = fn () => Event::query()
             ->where('kind', 'match')
             ->whereNull('cancelled_at')
-            ->where('starts_at', '<', now()->subHours(2))
-            ->orderByDesc('starts_at')
-            ->limit(3)
-            ->with(['mvpVotes.voted.user:id,name', 'attendances'])
-            ->get()
+            ->finished()
+            ->orderByDesc('starts_at');
+
+        $events = $played()->limit(3)->get();
+
+        if ($isManager) {
+            $pending = $played()
+                ->where(fn ($q) => $q->whereNull('goals_for')->orWhereNull('attendance_confirmed_at'))
+                ->limit(12)
+                ->get();
+
+            $events = $events->concat($pending)->unique('id')->sortByDesc('starts_at')->values();
+        }
+
+        $events->load(['mvpVotes.voted.user:id,name', 'attendances']);
+
+        return $events
             ->map(function (Event $event) use ($isManager, $isStaff, $roster) {
                 $winner = null;
 

@@ -9,7 +9,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\FakeWhatsAppChannel;
 
 beforeEach(function () {
-    $this->whatsapp = new FakeWhatsAppChannel();
+    $this->whatsapp = new FakeWhatsAppChannel;
     $this->app->instance(WhatsAppChannel::class, $this->whatsapp);
 });
 
@@ -179,4 +179,96 @@ it('una edición cosmética (kick-off, link, notas) no molesta a nadie', functio
         // Ni WhatsApp ni mensaje del sistema: nadie se enteró
         ->and($this->whatsapp->templates)->toHaveCount(0)
         ->and(Message::withoutGlobalScopes()->where('is_system', true)->count())->toBe(0);
+});
+
+it('el marcador se puede corregir y el vestuario no se entera dos veces del mismo', function () {
+    $manager = Member::factory()->manager()->create();
+    $event = Event::factory()->by($manager)->create(['starts_at' => now()->subHours(4)]);
+
+    $post = fn (int $gf, int $ga) => $this->actingAs($manager->user)
+        ->post("/eventos/{$event->id}/resultado", ['goals_for' => $gf, 'goals_against' => $ga]);
+
+    $post(1, 3)->assertRedirect();
+    // Estaba al revés
+    $post(3, 1)->assertRedirect();
+
+    expect($event->fresh()->goals_for)->toBe(3)
+        ->and($event->fresh()->goals_against)->toBe(1);
+
+    $mensajes = fn () => Message::withoutGlobalScopes()->where('is_system', true)->count();
+    expect($mensajes())->toBe(2);
+
+    // El mismo marcador otra vez no anuncia nada
+    $post(3, 1)->assertRedirect();
+    expect($mensajes())->toBe(2);
+});
+
+it('el marcador no puede quedar por debajo de los goles ya cargados', function () {
+    $manager = Member::factory()->manager()->create();
+    $goleador = Member::factory()->for($manager->club)->create();
+    $event = Event::factory()->by($manager)->create(['starts_at' => now()->subHours(4)]);
+
+    $this->actingAs($manager->user)
+        ->post("/eventos/{$event->id}/resultado", ['goals_for' => 3, 'goals_against' => 1])
+        ->assertRedirect();
+
+    $this->actingAs($manager->user)->post("/eventos/{$event->id}/presentes", [
+        'present_ids' => [$goleador->id],
+        'detail' => [['id' => $goleador->id, 'participation' => 'starter', 'goals' => 3]],
+    ])->assertRedirect();
+
+    // Corregir a 1–1 dejaría 3 goles con autor en un partido de 1
+    $this->actingAs($manager->user)
+        ->post("/eventos/{$event->id}/resultado", ['goals_for' => 1, 'goals_against' => 1])
+        ->assertSessionHasErrors('goals_for');
+
+    expect($event->fresh()->goals_for)->toBe(3);
+
+    // Hacia arriba, sin problema
+    $this->actingAs($manager->user)
+        ->post("/eventos/{$event->id}/resultado", ['goals_for' => 4, 'goals_against' => 1])
+        ->assertRedirect();
+
+    expect($event->fresh()->goals_for)->toBe(4);
+});
+
+it('un partido viejo sin cargar sigue a mano del manager aunque se caiga de los últimos tres', function () {
+    $manager = Member::factory()->manager()->create();
+    $viejo = Event::factory()->by($manager)->create(['starts_at' => now()->subWeeks(6)]);
+
+    // Cuatro partidos más nuevos, todos cargados
+    foreach (range(1, 4) as $i) {
+        Event::factory()->by($manager)->create([
+            'starts_at' => now()->subWeeks($i),
+            'goals_for' => 2,
+            'goals_against' => 0,
+            'attendance_confirmed_at' => now(),
+        ]);
+    }
+
+    $ids = fn ($page) => collect($page->toArray()['props']['recent'])->pluck('id');
+
+    $this->actingAs($manager->user)
+        ->get('/agenda')
+        ->assertInertia(fn (Assert $page) => expect($ids($page))->toContain($viejo->id));
+
+    // Al jugador la lista no se le alarga
+    $player = Member::factory()->for($manager->club)->create();
+    $this->actingAs($player->user)
+        ->get('/agenda')
+        ->assertInertia(fn (Assert $page) => $page->has('recent', 3));
+});
+
+it('un partido en curso todavía no cuenta como jugado', function () {
+    $manager = Member::factory()->manager()->create();
+    // Nos juntamos hace 3hs, se juega hace 1: todavía está en cancha
+    $enCurso = Event::factory()->by($manager)->create([
+        'starts_at' => now()->subHours(3),
+        'kickoff_at' => now()->subHour(),
+    ]);
+    Attendance::create(['event_id' => $enCurso->id, 'member_id' => $manager->id, 'status' => 'in', 'responded_at' => now()]);
+
+    $this->actingAs($manager->user)
+        ->get("/plantel/{$manager->id}/estadisticas")
+        ->assertInertia(fn (Assert $page) => $page->where('stats.matches_total', 0));
 });

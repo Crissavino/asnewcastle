@@ -18,7 +18,7 @@ class StatsService
     {
         $events = Event::query()
             ->whereNull('cancelled_at')
-            ->where('starts_at', '<', now())
+            ->finished()
             ->when($member->joined_at, fn ($q) => $q->where('starts_at', '>=', $member->joined_at))
             ->with('attendances')
             ->orderByDesc('starts_at')

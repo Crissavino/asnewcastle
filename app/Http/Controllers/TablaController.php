@@ -71,7 +71,7 @@ class TablaController extends Controller
         $matches = Event::query()
             ->where('kind', 'match')
             ->whereNull('cancelled_at')
-            ->where('starts_at', '<', now())
+            ->finished()
             ->with(['attendances', 'mvpVotes'])
             ->get();
 
