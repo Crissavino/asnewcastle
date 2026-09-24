@@ -48,6 +48,11 @@ class PresenceController extends Controller
             throw ValidationException::withMessages(['detail' => __('agenda.too_many_starters')]);
         }
 
+        // El del banco no jugó: no pudo marcar ni asistir
+        $detail = $detail->map(fn ($d) => ($d['participation'] ?? null) === 'bench'
+            ? [...$d, 'goals' => 0, 'assists' => 0]
+            : $d);
+
         // Con el resultado cargado, el detalle no puede contar más que el marcador.
         // Menos sí: un gol en contra del rival no tiene autor nuestro.
         if ($event->goals_for !== null) {

@@ -3,6 +3,7 @@
 use App\Models\Attendance;
 use App\Models\Event;
 use App\Models\Member;
+use App\Models\Message;
 
 function eventoJugado(Member $creator, array $attrs = []): Event
 {
@@ -187,7 +188,7 @@ it('al confirmar presentes con goles y resultado sale el resumen al vestuario, u
     // Corrige y vuelve a guardar: el resumen no se repite
     $this->actingAs($manager->user)->post("/eventos/{$event->id}/presentes", $payload);
 
-    $summaries = \App\Models\Message::withoutGlobalScopes()
+    $summaries = Message::withoutGlobalScopes()
         ->where('club_id', $event->club_id)
         ->where('is_system', true)
         ->get()
@@ -213,7 +214,7 @@ it('si el resultado se carga después de los presentes, el resumen sale con el r
         'detail' => [['id' => $a->id, 'participation' => 'starter', 'goals' => 1, 'assists' => 0]],
     ]);
 
-    $hayResumen = fn () => \App\Models\Message::withoutGlobalScopes()
+    $hayResumen = fn () => Message::withoutGlobalScopes()
         ->where('club_id', $event->club_id)->where('is_system', true)->get()
         ->contains(fn ($m) => str_contains($m->body, 'match_summary'));
 
@@ -231,9 +232,26 @@ it('sin goles cargados no hay resumen aunque haya resultado', function () {
 
     $this->actingAs($manager->user)->post("/eventos/{$event->id}/presentes", ['present_ids' => [$a->id]]);
 
-    $hayResumen = \App\Models\Message::withoutGlobalScopes()
+    $hayResumen = Message::withoutGlobalScopes()
         ->where('club_id', $event->club_id)->where('is_system', true)->get()
         ->contains(fn ($m) => str_contains($m->body, 'match_summary'));
 
     expect($hayResumen)->toBeFalse();
+});
+
+it('el que quedó en el banco no puede tener goles ni asistencias', function () {
+    $manager = Member::factory()->manager()->create();
+    $suplente = Member::factory()->for($manager->club)->create();
+    $event = eventoJugado($manager, ['goals_for' => 2, 'goals_against' => 0]);
+
+    $this->actingAs($manager->user)->post("/eventos/{$event->id}/presentes", [
+        'present_ids' => [$suplente->id],
+        'detail' => [['id' => $suplente->id, 'participation' => 'bench', 'goals' => 2, 'assists' => 1]],
+    ])->assertRedirect();
+
+    $row = Attendance::where('event_id', $event->id)->where('member_id', $suplente->id)->first();
+
+    expect($row->attended)->toBeTrue()
+        ->and($row->goals)->toBe(0)
+        ->and($row->assists)->toBe(0);
 });
