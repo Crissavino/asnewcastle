@@ -4,6 +4,7 @@ namespace App\Services\Mollie;
 
 use App\Models\Due;
 use App\Models\Member;
+use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\Payment;
 
@@ -76,8 +77,22 @@ class MollieGateway
      */
     public function startSubscription(Member $member, string $webhookUrl, ?string $startDate = null): void
     {
-        if ($member->mollie_subscription_id || ! $member->mollie_customer_id) {
+        if (! $member->mollie_customer_id) {
             return;
+        }
+
+        // Ya tiene suscripción: si sigue viva, no duplicamos (es la guarda que
+        // hace idempotente al reintento del webhook). Pero si Mollie la canceló
+        // —se le agotaron los 5 reintentos—, el id guardado es un fantasma: sin
+        // esto el jugador pagaba el alta de nuevo y el débito no se reactivaba
+        // nunca, porque acá cortábamos antes de crear la nueva.
+        if ($member->mollie_subscription_id) {
+            if ($this->subscriptionIsAlive($member)) {
+                return;
+            }
+
+            $member->update(['mollie_subscription_id' => null]);
+            $member->refresh();
         }
 
         $amount = (int) $member->subscribedFeeCents();
@@ -165,6 +180,30 @@ class MollieGateway
     public function cancelSubscriptionById(string $customerId, string $subscriptionId): void
     {
         $this->mollie->subscriptions->cancelForId($customerId, $subscriptionId, $this->testmode());
+    }
+
+    /**
+     * ¿La suscripción guardada sigue cobrando? `active` y `pending` sí; una
+     * `canceled`, `suspended` o `completed` —o una que ya no existe— no.
+     * Ante un error de red devolvemos true: preferimos no crear una
+     * suscripción de más (cobrarle dos veces) por una caída pasajera.
+     */
+    protected function subscriptionIsAlive(Member $member): bool
+    {
+        try {
+            $subscription = $this->mollie->subscriptions->getForId(
+                $member->mollie_customer_id,
+                $member->mollie_subscription_id,
+                $this->testmode(),
+            );
+        } catch (ApiException) {
+            // 404: no existe en este entorno / fue borrada. Se puede recrear.
+            return false;
+        } catch (\Throwable) {
+            return true;
+        }
+
+        return in_array($subscription->status, ['active', 'pending'], true);
     }
 
     /** Trae un pago por id (para verificar el estado desde el webhook). */
