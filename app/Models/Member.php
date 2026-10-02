@@ -37,6 +37,7 @@ class Member extends Model
         'due_popup_seen_count',
         'joined_at',
         'left_at',
+        'blocked_at',
     ];
 
     protected function casts(): array
@@ -46,6 +47,7 @@ class Member extends Model
             'hidden' => 'boolean',
             'joined_at' => 'datetime',
             'left_at' => 'datetime',
+            'blocked_at' => 'datetime',
             'vestuario_read_at' => 'datetime',
             'due_popup_seen_on' => 'date',
             'due_popup_seen_count' => 'integer',

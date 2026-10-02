@@ -68,10 +68,22 @@ class InviteController extends Controller
         ]);
     }
 
-    /** Si es un ex-member que vuelve, se le levanta la baja; si no, se crea con el rol del link. */
+    /**
+     * Si es un ex-member que vuelve, se le levanta la baja; si no, se crea con
+     * el rol del link.
+     *
+     * Salvo que esté bloqueado: ahí no vuelve por ninguna de las dos puertas,
+     * porque las dos pasan por acá — el auto-join de club único y el link de
+     * invitación. Sin esto la baja duraba hasta el siguiente login: el que no
+     * tiene membresía activa se sumaba solo y se borraba su propio left_at.
+     */
     public static function joinOrRejoin($user, int $clubId, string $role = 'player'): void
     {
         $member = $user->members()->firstOrNew(['club_id' => $clubId]);
+
+        if ($member->exists && $member->blocked_at !== null) {
+            return;
+        }
 
         if (! $member->exists) {
             $member->fill([
