@@ -160,6 +160,20 @@ class Notifications
      *
      * @param  Collection<int, Member>  $managers
      */
+    /**
+     * Al jugador: falló el cobro automático de su cuota. $lastCall distingue
+     * el primer aviso del último llamado antes de que Mollie dé de baja el
+     * débito.
+     */
+    public function subscriptionFailed(Member $member, bool $lastCall = false): void
+    {
+        $key = $lastCall
+            ? 'notifications.subscription_failed_last'
+            : 'notifications.subscription_failed';
+
+        $this->deliver($member->club_id, [$member->id], 'dues', $key, [], '/cuota');
+    }
+
     public function cantPay(Member $debtor, Collection $managers): void
     {
         $this->deliver($debtor->club_id, $managers->pluck('id'), 'dues', 'notifications.cant_pay', [

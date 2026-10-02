@@ -28,6 +28,8 @@ class Member extends Model
         'stripe_customer_id',
         'stripe_subscription_id',
         'subscription_status',
+        'subscription_failures',
+        'subscription_last_failure_id',
         'mollie_customer_id',
         'mollie_subscription_id',
         'vestuario_read_at',
@@ -47,6 +49,7 @@ class Member extends Model
             'vestuario_read_at' => 'datetime',
             'due_popup_seen_on' => 'date',
             'due_popup_seen_count' => 'integer',
+            'subscription_failures' => 'integer',
             'injured_since' => 'datetime',
             'shirt_number' => 'integer',
         ];

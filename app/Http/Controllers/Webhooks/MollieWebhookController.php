@@ -8,6 +8,7 @@ use App\Models\Member;
 use App\Models\Payment;
 use App\Services\Mollie\MollieGateway;
 use App\Services\Notifications;
+use App\Services\Push\Notifier;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
@@ -26,6 +27,12 @@ use Illuminate\Support\Facades\DB;
  */
 class MollieWebhookController extends Controller
 {
+    /** Primer fallo: avisar mientras la ventana de reintentos recién se abre. */
+    private const WARN_ON_FIRST = 1;
+
+    /** Anteúltimo de los 5 reintentos de Mollie: último llamado antes de la baja. */
+    private const WARN_ON_LAST_CALL = 4;
+
     public function __invoke(Request $request, MollieGateway $mollie): Response
     {
         $paymentId = (string) $request->input('id');
@@ -50,8 +57,7 @@ class MollieWebhookController extends Controller
         if (! $payment->isPaid()) {
             // Un cobro recurrente que falló deja la suscripción en past_due
             if (($payment->isFailed() || $payment->isCanceled() || $payment->isExpired()) && $subscriptionId) {
-                Member::where('mollie_subscription_id', $subscriptionId)->first()
-                    ?->update(['subscription_status' => 'past_due']);
+                $this->handleRecurringFailure($payment, $subscriptionId);
             }
 
             return response('ok', 200);
@@ -162,6 +168,47 @@ class MollieWebhookController extends Controller
         }
     }
 
+    /**
+     * Cobro recurrente fallido. Mollie reintenta hasta 5 veces, una por día, y
+     * si se agotan cancela la suscripción — y el jugador se entera tarde, con
+     * el débito ya caído. Le avisamos dos veces: en el primer fallo, para que
+     * cargue saldo con la ventana abierta, y en el cuarto (la anteúltima) como
+     * último llamado. En los del medio callamos: cinco pushes por el mismo
+     * cobro es ruido, no información.
+     */
+    protected function handleRecurringFailure(object $payment, string $subscriptionId): void
+    {
+        $member = Member::where('mollie_subscription_id', $subscriptionId)->first();
+
+        if (! $member) {
+            return;
+        }
+
+        // El webhook de Mollie puede repetirse para el mismo pago: sin esto,
+        // un reenvío adelantaría el contador y dispararía el aviso de más.
+        if ($member->subscription_last_failure_id === $payment->id) {
+            return;
+        }
+
+        $failures = $member->subscription_failures + 1;
+
+        $member->update([
+            'subscription_status' => 'past_due',
+            'subscription_failures' => $failures,
+            'subscription_last_failure_id' => $payment->id,
+        ]);
+
+        if (! in_array($failures, [self::WARN_ON_FIRST, self::WARN_ON_LAST_CALL], true)) {
+            return;
+        }
+
+        $isLastCall = $failures === self::WARN_ON_LAST_CALL;
+
+        $member->loadMissing('user');
+        app(Notifications::class)->subscriptionFailed($member, $isLastCall);
+        app(Notifier::class)->subscriptionFailed($member, $isLastCall);
+    }
+
     /** Cobro mensual automático: marca la cuota del período y registra el pago. */
     protected function handleRecurring(object $payment, string $subscriptionId, int $amountCents): void
     {
@@ -171,8 +218,13 @@ class MollieWebhookController extends Controller
             return;
         }
 
-        if ($member->subscription_status !== 'active') {
-            $member->update(['subscription_status' => 'active']);
+        // Cobró: la racha de fallos vuelve a cero.
+        if ($member->subscription_status !== 'active' || $member->subscription_failures > 0) {
+            $member->update([
+                'subscription_status' => 'active',
+                'subscription_failures' => 0,
+                'subscription_last_failure_id' => null,
+            ]);
         }
 
         $period = ($payment->createdAt ? Carbon::parse($payment->createdAt) : now())->startOfMonth();

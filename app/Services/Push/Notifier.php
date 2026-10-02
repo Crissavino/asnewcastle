@@ -2,8 +2,10 @@
 
 namespace App\Services\Push;
 
+use App\Http\Middleware\SetLocale;
 use App\Models\DeviceToken;
 use App\Models\Event;
+use App\Models\Member;
 use App\Models\Message;
 use Illuminate\Support\Collection;
 
@@ -14,8 +16,24 @@ use Illuminate\Support\Collection;
  */
 class Notifier
 {
-    public function __construct(private PushSender $sender)
+    public function __construct(private PushSender $sender) {}
+
+    /**
+     * Agrupa a los destinatarios por su idioma, con los cuatro que soporta la
+     * app. El fallback es inglés, igual que en el resto del sistema: antes
+     * cada método tenía su propia lista y los que quedaban afuera —árabes e
+     * ingleses— recibían las push en castellano.
+     *
+     * @param  Collection<int, Member>  $recipients
+     * @return Collection<string, Collection<int, Member>>
+     */
+    private function byLocale(Collection $recipients): Collection
     {
+        return $recipients
+            ->filter(fn ($m) => $m->user !== null)
+            ->groupBy(fn ($m) => in_array($m->user->locale, SetLocale::SUPPORTED, true)
+                ? $m->user->locale
+                : 'en');
     }
 
     /**
@@ -28,9 +46,7 @@ class Notifier
         [$titleKey, $bodyKey] = $this->keysFor($notice, $isReminder, $isMatch);
 
         // Agrupar por idioma efectivo del jugador (es/ro; 'en' fallback → es)
-        $byLocale = $recipients
-            ->filter(fn ($m) => $m->user !== null)
-            ->groupBy(fn ($m) => in_array($m->user->locale, ['es', 'ro'], true) ? $m->user->locale : 'es');
+        $byLocale = $this->byLocale($recipients);
 
         foreach ($byLocale as $locale => $members) {
             $params = [
@@ -68,9 +84,7 @@ class Notifier
         // Texto genérico ("tenés mensajes sin leer"): la push llega una sola vez
         // por tanda sin leer y no se actualiza, así que no muestra un mensaje que
         // puede quedar viejo. Título y cuerpo en el idioma de cada jugador.
-        $byLocale = $recipients
-            ->filter(fn ($m) => $m->user !== null)
-            ->groupBy(fn ($m) => in_array($m->user->locale, ['es', 'ro', 'en', 'ar'], true) ? $m->user->locale : 'en');
+        $byLocale = $this->byLocale($recipients);
 
         foreach ($byLocale as $locale => $members) {
             $title = __('push.vestuario_title', [], $locale);
@@ -96,13 +110,11 @@ class Notifier
     /**
      * Push de recordatorio de cuota a los deudores, en el idioma de cada uno.
      *
-     * @param  Collection<int, \App\Models\Member>  $recipients
+     * @param  Collection<int, Member>  $recipients
      */
     public function dues(Collection $recipients): void
     {
-        $byLocale = $recipients
-            ->filter(fn ($m) => $m->user !== null)
-            ->groupBy(fn ($m) => in_array($m->user->locale, ['es', 'ro', 'en'], true) ? $m->user->locale : 'es');
+        $byLocale = $this->byLocale($recipients);
 
         foreach ($byLocale as $locale => $members) {
             $title = __('push.dues_title', [], $locale);
@@ -123,16 +135,40 @@ class Notifier
     }
 
     /**
+     * Push al jugador: falló el cobro automático de su cuota. $lastCall es el
+     * último llamado antes de que Mollie dé de baja el débito.
+     */
+    public function subscriptionFailed(Member $member, bool $lastCall = false): void
+    {
+        $suffix = $lastCall ? 'subscription_failed_last' : 'subscription_failed';
+
+        foreach ($this->byLocale(collect([$member])) as $locale => $members) {
+            $title = __("push.{$suffix}_title", [], $locale);
+            $body = __("push.{$suffix}_body", [], $locale);
+
+            $tokens = DeviceToken::whereIn('user_id', $members->pluck('user.id')->all())->pluck('token')->all();
+
+            if (empty($tokens)) {
+                continue;
+            }
+
+            $invalid = $this->sender->send($tokens, $title, $body, ['url' => '/cuota']);
+
+            if ($invalid) {
+                DeviceToken::whereIn('token', $invalid)->delete();
+            }
+        }
+    }
+
+    /**
      * Push al manager: un deudor avisó que no puede pagar la cuota.
      * El cuerpo es el motivo tal cual lo escribió — no se traduce.
      *
-     * @param  Collection<int, \App\Models\Member>  $managers
+     * @param  Collection<int, Member>  $managers
      */
     public function cantPay(Collection $managers, string $debtorName, string $reason): void
     {
-        $byLocale = $managers
-            ->filter(fn ($m) => $m->user !== null)
-            ->groupBy(fn ($m) => in_array($m->user->locale, ['es', 'ro', 'en'], true) ? $m->user->locale : 'es');
+        $byLocale = $this->byLocale($managers);
 
         foreach ($byLocale as $locale => $members) {
             $title = __('push.cant_pay_title', ['name' => $debtorName], $locale);

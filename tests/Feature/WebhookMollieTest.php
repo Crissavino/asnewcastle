@@ -2,6 +2,7 @@
 
 use App\Models\Due;
 use App\Models\Member;
+use App\Models\Notification;
 use App\Models\Payment;
 use App\Services\Mollie\MollieGateway;
 
@@ -10,9 +11,9 @@ use App\Services\Mollie\MollieGateway;
  * return type de MollieGateway::getPayment) con constructor vacío y estado por
  * status. Solo trae lo que lee el webhook.
  */
-function molliePayment(array $attrs): \Mollie\Api\Resources\Payment
+function molliePayment(array $attrs): Mollie\Api\Resources\Payment
 {
-    $p = new class extends \Mollie\Api\Resources\Payment
+    $p = new class extends Mollie\Api\Resources\Payment
     {
         public function __construct() {}
 
@@ -158,7 +159,84 @@ it('un cobro recurrente fallido deja la suscripción en past_due', function () {
 
     $this->post('/webhooks/mollie', ['id' => 'tr_fail'])->assertOk();
 
-    expect($member->fresh()->subscription_status)->toBe('past_due');
+    expect($member->fresh()->subscription_status)->toBe('past_due')
+        ->and($member->fresh()->subscription_failures)->toBe(1);
+});
+
+/** Dispara un cobro fallido de la suscripción $sub con id de pago propio. */
+function falloRecurrente(object $test, string $sub, string $paymentId): void
+{
+    fakeMollie(molliePayment([
+        'id' => $paymentId, 'status' => 'failed', 'subscriptionId' => $sub,
+    ]));
+
+    $test->post('/webhooks/mollie', ['id' => $paymentId])->assertOk();
+}
+
+it('el primer fallo le avisa al jugador y no al delegado', function () {
+    $member = Member::factory()->create([
+        'mollie_subscription_id' => 'sub_a', 'subscription_status' => 'active',
+    ]);
+    $manager = Member::factory()->create([
+        'club_id' => $member->club_id, 'role' => 'manager',
+    ]);
+
+    falloRecurrente($this, 'sub_a', 'tr_f1');
+
+    $avisos = Notification::where('body_key', 'notifications.subscription_failed')->get();
+
+    expect($avisos)->toHaveCount(1)
+        ->and($avisos->first()->member_id)->toBe($member->id)
+        ->and($avisos->first()->url)->toBe('/cuota')
+        ->and(Notification::where('member_id', $manager->id)->exists())->toBeFalse();
+});
+
+it('los fallos del medio no vuelven a avisar: avisa el 1° y el 4°', function () {
+    $member = Member::factory()->create([
+        'mollie_subscription_id' => 'sub_b', 'subscription_status' => 'active',
+    ]);
+
+    foreach (['tr_1', 'tr_2', 'tr_3', 'tr_4', 'tr_5'] as $id) {
+        falloRecurrente($this, 'sub_b', $id);
+    }
+
+    expect($member->fresh()->subscription_failures)->toBe(5)
+        ->and(Notification::where('body_key', 'notifications.subscription_failed')->count())->toBe(1)
+        ->and(Notification::where('body_key', 'notifications.subscription_failed_last')->count())->toBe(1)
+        ->and(Notification::where('member_id', $member->id)->count())->toBe(2);
+});
+
+it('el reenvío del webhook del mismo pago fallido no adelanta el contador', function () {
+    $member = Member::factory()->create([
+        'mollie_subscription_id' => 'sub_c', 'subscription_status' => 'active',
+    ]);
+
+    falloRecurrente($this, 'sub_c', 'tr_dup');
+    falloRecurrente($this, 'sub_c', 'tr_dup');
+    falloRecurrente($this, 'sub_c', 'tr_dup');
+
+    expect($member->fresh()->subscription_failures)->toBe(1)
+        ->and(Notification::where('member_id', $member->id)->count())->toBe(1);
+});
+
+it('un cobro exitoso borra la racha de fallos', function () {
+    $member = Member::factory()->create([
+        'mollie_subscription_id' => 'sub_d', 'subscription_status' => 'active',
+    ]);
+
+    falloRecurrente($this, 'sub_d', 'tr_x1');
+    falloRecurrente($this, 'sub_d', 'tr_x2');
+
+    expect($member->fresh()->subscription_failures)->toBe(2);
+
+    fakeMollie(molliePayment([
+        'id' => 'tr_ok', 'status' => 'paid', 'subscriptionId' => 'sub_d', 'value' => '300.00',
+    ]));
+    $this->post('/webhooks/mollie', ['id' => 'tr_ok'])->assertOk();
+
+    expect($member->fresh()->subscription_status)->toBe('active')
+        ->and($member->fresh()->subscription_failures)->toBe(0)
+        ->and($member->fresh()->subscription_last_failure_id)->toBeNull();
 });
 
 it('si el mes en curso ya está pago, el alta cubre el mes siguiente (nada de cobrar doble)', function () {
