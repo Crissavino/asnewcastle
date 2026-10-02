@@ -30,7 +30,9 @@ class Notifier
     private function byLocale(Collection $recipients): Collection
     {
         return $recipients
-            ->filter(fn ($m) => $m->user !== null)
+            // Al que dieron de baja no le llega nada: es el único embudo por
+            // el que pasan todas las push, así que alcanza con filtrar acá.
+            ->filter(fn ($m) => $m->user !== null && $m->left_at === null)
             ->groupBy(fn ($m) => in_array($m->user->locale, SetLocale::SUPPORTED, true)
                 ? $m->user->locale
                 : 'en');

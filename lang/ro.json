@@ -605,5 +605,7 @@
     "push.subscription_failed_title": "⚠️ Nu am putut încasa cotizația",
     "push.subscription_failed_body": "Verifică cardul — reîncercăm automat în următoarele zile.",
     "push.subscription_failed_last_title": "⚠️ Ultima încercare de plată",
-    "push.subscription_failed_last_body": "Dacă nu reușește mâine, debitarea automată va fi anulată."
+    "push.subscription_failed_last_body": "Dacă nu reușește mâine, debitarea automată va fi anulată.",
+    "auth.removed_title": "Nu mai faci parte din club",
+    "auth.removed_body": "Contul tău a fost scos din lot. Dacă crezi că este o greșeală, vorbește cu delegatul."
 }

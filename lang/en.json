@@ -605,5 +605,7 @@
     "push.subscription_failed_title": "⚠️ Could not charge your dues",
     "push.subscription_failed_body": "Check your card — we retry automatically over the next few days.",
     "push.subscription_failed_last_title": "⚠️ Last charge attempt",
-    "push.subscription_failed_last_body": "If it does not go through tomorrow, autopay will be cancelled."
+    "push.subscription_failed_last_body": "If it does not go through tomorrow, autopay will be cancelled.",
+    "auth.removed_title": "You are no longer in the club",
+    "auth.removed_body": "Your account was removed from the squad. If you think this is a mistake, talk to the manager."
 }

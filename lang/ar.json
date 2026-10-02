@@ -605,5 +605,7 @@
     "push.subscription_failed_title": "⚠️ تعذّر خصم الاشتراك",
     "push.subscription_failed_body": "تحقّق من بطاقتك — سنعيد المحاولة تلقائيًا خلال الأيام القادمة.",
     "push.subscription_failed_last_title": "⚠️ آخر محاولة للخصم",
-    "push.subscription_failed_last_body": "إذا لم ينجح غدًا، سيتم إلغاء الخصم التلقائي."
+    "push.subscription_failed_last_body": "إذا لم ينجح غدًا، سيتم إلغاء الخصم التلقائي.",
+    "auth.removed_title": "لم تعد ضمن النادي",
+    "auth.removed_body": "تمت إزالة حسابك من الفريق. إذا كنت تعتقد أن هذا خطأ، تحدّث مع المسؤول."
 }

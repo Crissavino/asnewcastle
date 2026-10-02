@@ -27,7 +27,7 @@ class Notifications
         $now = now();
         $rows = [];
 
-        foreach ($memberIds as $memberId) {
+        foreach ($this->stillInClub($memberIds) as $memberId) {
             $rows[] = [
                 'club_id' => $clubId,
                 'member_id' => $memberId,
@@ -45,6 +45,29 @@ class Notifications
         if ($rows) {
             Notification::insert($rows);
         }
+    }
+
+    /**
+     * Descarta a los que ya no están en el club. Va acá, en el único embudo
+     * por el que pasan TODAS las campanitas, y no en cada comando: así lo que
+     * agreguemos mañana tampoco le escribe a un ex-jugador.
+     *
+     * @param  iterable<int>  $memberIds
+     * @return array<int, int>
+     */
+    private function stillInClub(iterable $memberIds): array
+    {
+        $ids = collect($memberIds)->filter()->unique()->values();
+
+        if ($ids->isEmpty()) {
+            return [];
+        }
+
+        return Member::withoutGlobalScopes()
+            ->whereIn('id', $ids)
+            ->whereNull('left_at')
+            ->pluck('id')
+            ->all();
     }
 
     /**

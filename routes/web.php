@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AgendaController;
 use App\Http\Controllers\AltaController;
 use App\Http\Controllers\AttendanceController;
@@ -10,13 +11,13 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\MessageTranslationController;
 use App\Http\Controllers\MvpVoteController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PlayerRatingController;
 use App\Http\Controllers\PresenceController;
-use App\Http\Controllers\StatsController;
-use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PublicRegistrationController;
 use App\Http\Controllers\PushTokenController;
 use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\StatsController;
 use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\TablaController;
 use App\Http\Controllers\VestuarioController;
@@ -24,9 +25,10 @@ use App\Http\Controllers\ViewModeController;
 use App\Http\Controllers\Webhooks\MollieWebhookController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Controllers\Webhooks\TwilioWebhookController;
-use App\Http\Middleware\VerifyTwilioSignature;
 use App\Http\Middleware\EnsureProfileComplete;
 use App\Http\Middleware\SetActiveClub;
+use App\Http\Middleware\VerifyTwilioSignature;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -85,15 +87,19 @@ Route::middleware('auth')->group(function () {
     Route::post('/salir', [OtpController::class, 'logout'])->name('salir');
 
     // Eliminar la cuenta y todos los datos (requisito de Google Play)
-    Route::delete('/cuenta', [\App\Http\Controllers\AccountController::class, 'destroy'])->name('cuenta.eliminar');
+    Route::delete('/cuenta', [AccountController::class, 'destroy'])->name('cuenta.eliminar');
 
     // Registro del token de push del dispositivo (la app nativa lo manda al
     // arrancar). Es del usuario, no del club: va fuera de SetActiveClub.
     Route::post('/push/token', [PushTokenController::class, 'store'])->name('push.token');
     Route::delete('/push/token', [PushTokenController::class, 'destroy'])->name('push.token.baja');
 
-    // Sin club: usuario verificado que no es member de ningún club
-    Route::get('/sin-club', fn () => Inertia::render('Auth/SinClub'))->name('sin-club');
+    // Sin club: usuario verificado que no es member de ningún club. Si alguna
+    // vez lo fue, el texto es otro: al que dieron de baja no tiene sentido
+    // invitarlo a pedir el link que lo trajo la primera vez.
+    Route::get('/sin-club', fn (Request $request) => Inertia::render('Auth/SinClub', [
+        'removed' => (bool) $request->user()?->members()->exists(),
+    ]))->name('sin-club');
 
     Route::middleware(SetActiveClub::class)->group(function () {
         // Alta: el wizard de 5 pasos, fuera del chequeo de perfil completo

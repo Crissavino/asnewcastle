@@ -605,5 +605,7 @@
     "push.subscription_failed_title": "⚠️ No se pudo cobrar la cuota",
     "push.subscription_failed_body": "Revisá la tarjeta — se reintenta solo en los próximos días.",
     "push.subscription_failed_last_title": "⚠️ Último intento de cobro",
-    "push.subscription_failed_last_body": "Si mañana no entra, se da de baja el débito automático."
+    "push.subscription_failed_last_body": "Si mañana no entra, se da de baja el débito automático.",
+    "auth.removed_title": "Ya no estás en el club",
+    "auth.removed_body": "Tu cuenta fue dada de baja del plantel. Si creés que es un error, hablá con el delegado."
 }
