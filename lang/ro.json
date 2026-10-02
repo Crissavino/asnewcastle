@@ -599,5 +599,11 @@
     "cobranza.cant": "Nu poate plăti: „:reason”",
     "notifications.promise_made": ":name s-a angajat să plătească pe :date",
     "notifications.cant_pay": ":name a anunțat că nu poate plăti cotizația",
-    "push.cant_pay_title": "🙋 :name nu poate plăti"
+    "push.cant_pay_title": "🙋 :name nu poate plăti",
+    "notifications.subscription_failed": "Plata automată a cotizației a eșuat. Se reîncearcă în următoarele zile.",
+    "notifications.subscription_failed_last": "Plata cotizației eșuează în continuare. Dacă nu reușește mâine, debitarea automată va fi anulată.",
+    "push.subscription_failed_title": "⚠️ Nu am putut încasa cotizația",
+    "push.subscription_failed_body": "Verifică cardul — reîncercăm automat în următoarele zile.",
+    "push.subscription_failed_last_title": "⚠️ Ultima încercare de plată",
+    "push.subscription_failed_last_body": "Dacă nu reușește mâine, debitarea automată va fi anulată."
 }

@@ -599,5 +599,11 @@
     "cobranza.cant": "Can't pay: “:reason”",
     "notifications.promise_made": ":name committed to pay on :date",
     "notifications.cant_pay": ":name says they can't pay their dues",
-    "push.cant_pay_title": "🙋 :name can't pay"
+    "push.cant_pay_title": "🙋 :name can't pay",
+    "notifications.subscription_failed": "The automatic dues charge failed. It will be retried over the next few days.",
+    "notifications.subscription_failed_last": "Your dues charge keeps failing. If it does not go through tomorrow, autopay will be cancelled.",
+    "push.subscription_failed_title": "⚠️ Could not charge your dues",
+    "push.subscription_failed_body": "Check your card — we retry automatically over the next few days.",
+    "push.subscription_failed_last_title": "⚠️ Last charge attempt",
+    "push.subscription_failed_last_body": "If it does not go through tomorrow, autopay will be cancelled."
 }

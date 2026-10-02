@@ -599,5 +599,11 @@
     "cobranza.cant": "No puede pagar: «:reason»",
     "notifications.promise_made": ":name se comprometió a pagar el :date",
     "notifications.cant_pay": ":name avisó que no puede pagar la cuota",
-    "push.cant_pay_title": "🙋 :name no puede pagar"
+    "push.cant_pay_title": "🙋 :name no puede pagar",
+    "notifications.subscription_failed": "Falló el cobro automático de la cuota. Se reintenta en los próximos días.",
+    "notifications.subscription_failed_last": "El cobro de la cuota sigue fallando. Si mañana no entra, se da de baja el débito automático.",
+    "push.subscription_failed_title": "⚠️ No se pudo cobrar la cuota",
+    "push.subscription_failed_body": "Revisá la tarjeta — se reintenta solo en los próximos días.",
+    "push.subscription_failed_last_title": "⚠️ Último intento de cobro",
+    "push.subscription_failed_last_body": "Si mañana no entra, se da de baja el débito automático."
 }
