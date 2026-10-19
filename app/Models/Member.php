@@ -78,6 +78,11 @@ class Member extends Model
         return $this->role === 'coach';
     }
 
+    public function isPlayer(): bool
+    {
+        return $this->role === 'player';
+    }
+
     /** Lesionado: su "Voy" no suma al pronóstico y lleva badge en la convocatoria. */
     public function isInjured(): bool
     {

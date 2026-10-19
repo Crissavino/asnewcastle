@@ -23,13 +23,18 @@ class AttendanceController extends Controller
         // A un evento cancelado no se le responde
         abort_if($event->isCancelled(), 400);
 
+        $member = app(CurrentClub::class)->member();
+
+        // La lista cierra a las 22:00 del día anterior. El cuerpo técnico
+        // queda exento para su propia asistencia (rol REAL: el dueño en modo
+        // "ver como jugador" sigue siendo manager para la autorización).
+        abort_if(! $event->rsvpOpen() && $member->isPlayer(), 403);
+
         $validated = $request->validate([
             'status' => ['required', Rule::in(['in', 'maybe', 'out'])],
             // El porqué del "No voy", opcional: un tap más y el manager sabe si es recuperable
             'reason' => ['nullable', Rule::in(['work', 'injury', 'travel', 'other'])],
         ]);
-
-        $member = app(CurrentClub::class)->member();
 
         $attendance = $event->attendances()->updateOrCreate(
             ['member_id' => $member->id],

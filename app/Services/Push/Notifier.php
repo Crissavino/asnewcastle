@@ -54,6 +54,8 @@ class Notifier
             $params = [
                 'opponent' => $event->opponent,
                 'date' => $event->starts_at->locale($locale)->isoFormat('ddd D MMM · HH:mm'),
+                // Solo lo usa el recordatorio: "confirmá, la lista cierra hoy 22:00"
+                'closes' => $this->closesLabel($event, $locale),
             ];
 
             $title = __($titleKey, $params, $locale);
@@ -190,6 +192,16 @@ class Notifier
     }
 
     /** @return array{0: string, 1: string}  [titleKey, bodyKey] */
+    /** "hoy 22:00" si el cierre es hoy; si no, el día abreviado y la hora. */
+    private function closesLabel(Event $event, string $locale): string
+    {
+        $closes = $event->rsvpClosesAt();
+
+        return $closes->isToday()
+            ? __('agenda.today', [], $locale).' '.$closes->format('H:i')
+            : $closes->locale($locale)->isoFormat('ddd HH:mm');
+    }
+
     private function keysFor(string $notice, bool $isReminder, bool $isMatch): array
     {
         $kind = $isMatch ? 'match' : 'training';

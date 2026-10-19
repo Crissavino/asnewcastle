@@ -85,6 +85,10 @@ class AgendaController extends Controller
                     'kit' => $event->kit,
                     'notes' => $event->notes,
                     'cancelled' => $event->isCancelled(),
+                    // La lista cierra a las 22:00 del día anterior: el front
+                    // apaga los botones y muestra hasta cuándo se podía.
+                    'rsvp_open' => $event->rsvpOpen(),
+                    'rsvp_closes_at' => $event->rsvpClosesAt()->toIso8601String(),
                     'my_status' => $event->attendances->firstWhere('member_id', $member->id)?->status,
                     'my_reason' => $event->attendances->firstWhere('member_id', $member->id)?->absence_reason,
                     'counts' => [

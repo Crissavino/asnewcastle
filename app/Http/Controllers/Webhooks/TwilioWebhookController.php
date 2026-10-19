@@ -48,6 +48,14 @@ class TwilioWebhookController extends Controller
             return $this->ok();
         }
 
+        // La lista ya cerró: no se graba y se le avisa, que no quede pensando
+        // que quedó anotado por haber tocado el botón.
+        if (! $event->rsvpOpen() && $member->isPlayer()) {
+            $messenger->sendRsvpClosed($member, $event);
+
+            return $this->ok();
+        }
+
         $attendance = $event->attendances()->updateOrCreate(
             ['member_id' => $member->id],
             [

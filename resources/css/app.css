@@ -132,6 +132,10 @@ body { overscroll-behavior-y: none; }
 .nc-rsvp button.on.in { background: var(--red); border-color: var(--red); color: #fff; box-shadow: 2px 2px 0 var(--ink); }
 .nc-rsvp button.on.maybe { background: var(--aqua); border-color: var(--aqua); color: var(--ink); }
 .nc-rsvp button.on.out { background: var(--ink); border-color: var(--ink); color: #fff; }
+/* Lista cerrada: se sigue viendo qué contestó, pero ya no se toca */
+.nc-rsvp button:disabled { cursor: not-allowed; opacity: .45; }
+.nc-rsvp button:disabled:hover { border-color: var(--line); color: var(--stone); }
+.nc-rsvp button.on:disabled:hover { color: inherit; }
 .nc-root button:focus-visible, .nc-root input:focus-visible, .nc-root select:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 
 /* Pronóstico del partido: barra ganamos/empatamos/perdemos + la zanahoria
@@ -203,6 +207,7 @@ body { overscroll-behavior-y: none; }
   font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
   display: flex; align-items: center; justify-content: center; gap: 6px; }
 .nc-mini.solid { background: var(--ink); color: #fff; }
+.nc-mini:disabled { cursor: not-allowed; opacity: .45; }
 .nc-namelist { font-size: 13px; line-height: 1.6; color: var(--ink); margin-top: 8px; }
 
 /* racha V-E-D */

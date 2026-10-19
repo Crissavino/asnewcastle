@@ -27,6 +27,7 @@ function useDates() {
 
     return {
         day: (iso) => new Date(iso).toLocaleDateString(intl, { weekday: 'long', day: 'numeric', month: 'long' }),
+        shortDay: (iso) => new Date(iso).toLocaleDateString(intl, { weekday: 'short' }),
         time: (iso) => new Date(iso).toLocaleTimeString(intl, { hour: '2-digit', minute: '2-digit', hour12: false }),
     };
 }
@@ -430,7 +431,7 @@ function PresentesSheet({ ev, onClose }) {
 function EventCard({ ev, onEdit }) {
     const { t } = useTranslations();
     const { member, invite_url } = usePage().props;
-    const { day, time } = useDates();
+    const { day, shortDay, time } = useDates();
     const [copied, setCopied] = useState(false);
     const [copiedWa, setCopiedWa] = useState(false);
     // Cuántos recibieron el último recordatorio (null = ninguno en curso)
@@ -439,11 +440,22 @@ function EventCard({ ev, onEdit }) {
     const isManager = member?.role === 'manager';
     const isCoach = member?.role === 'coach';
     const isMatch = ev.kind === 'match';
+    // La lista cierra a las 22:00 del día anterior. Al cuerpo técnico no lo
+    // frena (puede cambiar lo suyo); el dueño en modo "ver como jugador" la ve
+    // cerrada, que para eso está la previsualización.
+    const rsvpLocked = ev.rsvp_open === false && !isManager && !isCoach;
     // Con "both" se llevan las dos casacas; las camisetas de la lista van en roja
     const kitColor = ev.kit === 'away' ? 'away' : 'home';
 
     const setStatus = (status) => {
         router.post(route('asistencia', ev.id), { status }, { preserveScroll: true });
+    };
+
+    // "hoy 22:00" si cierra hoy; si no, "mar 22:00"
+    const closesLabel = (iso) => {
+        const d = new Date(iso);
+        const esHoy = d.toDateString() === new Date().toDateString();
+        return `${esHoy ? t('agenda.today') : shortDay(iso)} ${time(iso)}`;
     };
 
     // Un tap más al "No voy": el porqué, opcional. Tocar el mismo lo saca.
@@ -593,10 +605,23 @@ function EventCard({ ev, onEdit }) {
                                 { k: 'maybe', label: t('agenda.maybe'), Icon: HelpCircle },
                                 { k: 'out', label: t('agenda.out'), Icon: X },
                             ].map(({ k, label, Icon }) => (
-                                <button key={k} className={`${k} ${ev.my_status === k ? 'on' : ''}`} onClick={() => setStatus(k)}>
+                                <button
+                                    key={k}
+                                    className={`${k} ${ev.my_status === k ? 'on' : ''}`}
+                                    disabled={rsvpLocked}
+                                    onClick={() => setStatus(k)}
+                                >
                                     <Icon size={13} /> {label}
                                 </button>
                             ))}
+                        </div>
+                    )}
+
+                    {!isCoach && (rsvpLocked || ev.rsvp_open) && (
+                        <div className="nc-meta" style={{ marginTop: 7, fontSize: 11 }}>
+                            {t(rsvpLocked ? 'agenda.rsvp_closed' : 'agenda.rsvp_closes', {
+                                when: closesLabel(ev.rsvp_closes_at),
+                            })}
                         </div>
                     )}
 
@@ -610,6 +635,7 @@ function EventCard({ ev, onEdit }) {
                                         type="button"
                                         className={`nc-mini${ev.my_reason === r ? ' solid' : ''}`}
                                         style={{ flex: 'none', minWidth: 0 }}
+                                        disabled={rsvpLocked}
                                         onClick={() => setReason(r)}
                                     >
                                         {t(`reason.${r}`)}
@@ -637,7 +663,7 @@ function EventCard({ ev, onEdit }) {
                             </div>
                             {/* La zanahoria: al que no contestó, y con más fuerza al que está
                                 en duda. Al que dijo "No voy" no se le insiste. */}
-                            {!isCoach && (ev.my_status == null || ev.my_status === 'maybe')
+                            {!isCoach && !rsvpLocked && (ev.my_status == null || ev.my_status === 'maybe')
                                 && ev.prediction.if_you_confirm > ev.prediction.win && (
                                 <button
                                     type="button"

@@ -14,9 +14,7 @@ use Illuminate\Support\Carbon;
  */
 class EventMessenger
 {
-    public function __construct(protected WhatsAppChannel $channel)
-    {
-    }
+    public function __construct(protected WhatsAppChannel $channel) {}
 
     /** $notice: new (convocatoria) | update (cambió) | cancel (se canceló) */
     public function sendConvocation(Event $event, Member $member, string $notice = 'new'): void
@@ -51,6 +49,18 @@ class EventMessenger
             '6' => "att:{$event->id}:maybe",
             '7' => "att:{$event->id}:out",
         ]);
+    }
+
+    /** Tocó el botón pasada la hora de cierre: no quedó anotado. */
+    public function sendRsvpClosed(Member $member, Event $event): void
+    {
+        $user = $member->user;
+        $locale = $user->locale ?? config('app.fallback_locale');
+
+        $this->channel->sendText($user->phone, trans('wa.rsvp_closed', [
+            'name' => strtok($user->name ?? '', ' ') ?: $user->name,
+            'closed' => Carbon::parse($event->rsvpClosesAt())->locale($locale)->translatedFormat('l H:i'),
+        ], $locale));
     }
 
     /** Respuesta de cortesía dentro de la ventana de 24hs de la conversación. */

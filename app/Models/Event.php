@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToClub;
+use Carbon\CarbonInterface;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +16,9 @@ class Event extends Model
 {
     /** @use HasFactory<EventFactory> */
     use BelongsToClub, HasFactory;
+
+    /** Ventana para el evento cargado después del corte: hasta 3hs antes. */
+    private const LATE_RSVP_HOURS = 3;
 
     protected $fillable = [
         'club_id',
@@ -121,6 +125,37 @@ class Event extends Model
     public function isFinished(): bool
     {
         return ($this->kickoff_at ?? $this->starts_at)->copy()->addHours(2)->isPast();
+    }
+
+    /**
+     * Hasta cuándo el plantel puede anotarse o bajarse: las 22:00 del día
+     * anterior al evento. El que se hace el boludo esperando a ver quién va
+     * se queda afuera, y el manager arma el equipo con la lista cerrada.
+     *
+     * Evento cargado después de esa hora (el amistoso que se arma sobre la
+     * fecha): nacería cerrado, así que se le abre una ventana hasta 3hs antes
+     * del encuentro, nunca menos de una hora desde que se creó y nunca más
+     * allá del inicio.
+     */
+    public function rsvpClosesAt(): CarbonInterface
+    {
+        $closes = $this->starts_at->copy()->subDay()->setTime(22, 0);
+
+        if ($this->created_at && $this->created_at->greaterThanOrEqualTo($closes)) {
+            $closes = $this->starts_at->copy()->subHours(self::LATE_RSVP_HOURS);
+
+            if ($closes->lessThan($this->created_at->copy()->addHour())) {
+                $closes = $this->created_at->copy()->addHour();
+            }
+        }
+
+        return $closes->greaterThan($this->starts_at) ? $this->starts_at->copy() : $closes;
+    }
+
+    /** Si todavía se puede responder Voy / Duda / No voy. */
+    public function rsvpOpen(): bool
+    {
+        return $this->rsvpClosesAt()->isFuture();
     }
 
     public function isCancelled(): bool

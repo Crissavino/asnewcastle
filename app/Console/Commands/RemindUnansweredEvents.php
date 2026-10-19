@@ -19,7 +19,11 @@ class RemindUnansweredEvents extends Command
             ->whereNull('reminded_at')
             ->whereNull('cancelled_at')
             ->whereBetween('starts_at', [now(), now()->addDay()])
-            ->get();
+            ->get()
+            // Con la lista ya cerrada el recordatorio no sirve: no podrían
+            // contestar aunque quisieran (pasa con el evento cargado tarde).
+            ->filter(fn (Event $event) => $event->rsvpOpen())
+            ->values();
 
         foreach ($events as $event) {
             // Marcar primero: si el comando corre dos veces, no se duplica
