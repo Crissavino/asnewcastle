@@ -28,9 +28,9 @@ export default function Alta({ taken, positions, feet, slots, max_number, first_
         {
             q: t('alta.name_q'),
             hint: t('alta.name_hint'),
+            fields: ['first_name', 'last_name', 'birth_date'],
             ok: data.first_name.trim().length > 1 && data.last_name.trim().length > 1
                 && (role === 'coach' || data.birth_date !== ''),
-            error: errors.first_name || errors.last_name || errors.birth_date,
             body: (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <input
@@ -63,8 +63,8 @@ export default function Alta({ taken, positions, feet, slots, max_number, first_
         {
             q: t('alta.pos_q'),
             hint: t('alta.pos_hint'),
+            fields: ['position', 'position_secondary'],
             ok: !!data.position,
-            error: errors.position || errors.position_secondary,
             body: (
                 <>
                     {positions.map((p) => (
@@ -99,8 +99,8 @@ export default function Alta({ taken, positions, feet, slots, max_number, first_
         },
         {
             q: t('alta.foot_q'),
+            fields: ['preferred_foot'],
             ok: !!data.preferred_foot,
-            error: errors.preferred_foot,
             body: feet.map((f) => (
                 <button key={f} type="button" className={`nc-opt ${data.preferred_foot === f ? 'on' : ''}`} onClick={() => setData('preferred_foot', f)}>
                     {t(`foot.${f}`)}
@@ -110,8 +110,8 @@ export default function Alta({ taken, positions, feet, slots, max_number, first_
         {
             q: t('alta.num_q'),
             hint: t('alta.num_hint'),
+            fields: ['shirt_number'],
             ok: data.shirt_number !== null,
-            error: errors.shirt_number,
             body: (
                 <div className="nc-numgrid">
                     {Array.from({ length: max_number }, (_, i) => i + 1).map((n) => (
@@ -131,8 +131,8 @@ export default function Alta({ taken, positions, feet, slots, max_number, first_
         {
             q: t('alta.slots_q'),
             hint: t('alta.slots_hint'),
+            fields: ['availability', 'availability.0'],
             ok: data.availability.length > 0,
-            error: errors.availability,
             body: slots.map((s) => (
                 <button key={s} type="button" className={`nc-opt ${data.availability.includes(s) ? 'on' : ''}`} onClick={() => toggleSlot(s)}>
                     {t(`slot.${s}`)}
@@ -148,9 +148,24 @@ export default function Alta({ taken, positions, feet, slots, max_number, first_
     const cur = steps[step];
     const last = step === steps.length - 1;
 
+    // El error del servidor puede ser de un paso anterior (dorsal que alguien
+    // tomó mientras llenaba el wizard, fecha de nacimiento imposible). Si no lo
+    // mostramos ahí, el botón final "no hace nada".
+    const stepError = cur.fields.map((f) => errors[f]).find(Boolean);
+    const mapped = steps.flatMap((s) => s.fields);
+    const orphanErrors = Object.keys(errors).filter((f) => !mapped.includes(f));
+    const shownError = stepError || (orphanErrors.length ? errors[orphanErrors[0]] : null);
+
     const advance = () => {
         if (last) {
-            post(route('alta.guardar'));
+            post(route('alta.guardar'), {
+                onError: (errs) => {
+                    const failed = steps.findIndex((s) => s.fields.some((f) => errs[f]));
+                    if (failed !== -1 && failed !== step) {
+                        setStep(failed);
+                    }
+                },
+            });
         } else {
             setStep(step + 1);
         }
@@ -179,7 +194,7 @@ export default function Alta({ taken, positions, feet, slots, max_number, first_
 
                     <div>{cur.body}</div>
 
-                    {cur.error && <div className="nc-error">{cur.error}</div>}
+                    {shownError && <div className="nc-error">{shownError}</div>}
 
                     {data.shirt_number !== null && step === 3 && (
                         <div style={{ display: 'flex', justifyContent: 'center', gap: 18, marginTop: 26 }}>
