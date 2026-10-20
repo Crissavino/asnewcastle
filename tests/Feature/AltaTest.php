@@ -181,3 +181,44 @@ it('el perfil muestra el plantel del club sin teléfonos', function () {
             ->missing('roster.1.phone')
         );
 });
+
+it('la baja libera el dorsal para el resto del plantel', function () {
+    $club = Club::factory()->create();
+    $manager = Member::factory()->for($club)->create(['role' => 'manager']);
+    $sale = Member::factory()->for($club)->create(['shirt_number' => 10]);
+
+    $this->actingAs($manager->user)
+        ->post(route('plantel.baja', $sale))
+        ->assertRedirect();
+
+    expect($sale->fresh()->shirt_number)->toBeNull();
+
+    // Y el 10 queda realmente libre: ni tachado ni rechazado.
+    $nuevo = Member::factory()->incomplete()->for($club)->create();
+
+    $this->actingAs($nuevo->user)
+        ->get('/alta')
+        ->assertInertia(fn (Assert $page) => $page->where('taken', fn ($taken) => ! $taken->contains(10)));
+
+    $this->actingAs($nuevo->user)
+        ->post('/alta', altaPayload(['shirt_number' => 10]))
+        ->assertRedirect(route('agenda'));
+
+    expect($nuevo->fresh()->shirt_number)->toBe(10);
+});
+
+it('tacha el dorsal de un member oculto o del técnico', function () {
+    $club = Club::factory()->create();
+    Member::factory()->for($club)->create(['shirt_number' => 10, 'hidden' => true]);
+    Member::factory()->for($club)->create(['shirt_number' => 7, 'role' => 'coach']);
+
+    $nuevo = Member::factory()->incomplete()->for($club)->create();
+
+    $this->actingAs($nuevo->user)
+        ->get('/alta')
+        ->assertInertia(fn (Assert $page) => $page->where('taken', [7, 10]));
+
+    $this->actingAs($nuevo->user)
+        ->post('/alta', altaPayload(['shirt_number' => 10]))
+        ->assertSessionHasErrors('shirt_number');
+});

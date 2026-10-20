@@ -118,12 +118,18 @@ class AltaController extends Controller
         return redirect()->route('agenda');
     }
 
-    /** Dorsales ocupados en el club activo, sin contar el propio. */
+    /**
+     * Dorsales ocupados en el club, sin contar el propio.
+     *
+     * Mira TODOS los members, no solo los activos: el unique(club_id,
+     * shirt_number) de la base no sabe de bajas, ocultos ni técnicos. Si acá
+     * filtráramos, el wizard ofrecería un número que la base rechaza después.
+     */
     protected function takenNumbers(): array
     {
         $current = app(CurrentClub::class);
 
-        return $current->club()->activeMembers()
+        return $current->club()->members()
             ->whereNotNull('shirt_number')
             ->whereKeyNot($current->member()->id)
             ->pluck('shirt_number')

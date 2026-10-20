@@ -235,15 +235,17 @@ class PerfilController extends Controller
         abort_if($member->id === $current->member()->id, 403); // a vos mismo no
         abort_if($member->isManager(), 403); // a otro delegado tampoco
 
-        $member->update(['left_at' => now()]);
+        // El dorsal vuelve al pool: si no, queda ocupado para la base pero
+        // libre para el wizard, y el próximo que lo elija no puede darse de alta.
+        $member->update(['left_at' => now(), 'shirt_number' => null]);
 
         return back();
     }
 
-    /** Dorsales ocupados en el club, sin contar el propio. */
+    /** Dorsales ocupados en el club, sin contar el propio (ver AltaController). */
     protected function takenNumbers(Member $member): array
     {
-        return app(CurrentClub::class)->club()->activeMembers()
+        return app(CurrentClub::class)->club()->members()
             ->whereNotNull('shirt_number')
             ->whereKeyNot($member->id)
             ->pluck('shirt_number')
