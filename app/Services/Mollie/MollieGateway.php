@@ -25,6 +25,9 @@ use Mollie\Api\Resources\Payout;
  */
 class MollieGateway
 {
+    /** Marca en caché de que el saldo no se pudo leer: no es un monto, es "sin dato". */
+    private const TRANSITO_SIN_DATO = 'sin_dato';
+
     public function __construct(protected MollieApiClient $mollie) {}
 
     public function ready(): bool
@@ -262,8 +265,15 @@ class MollieGateway
      *
      * Devuelve null —NUNCA 0— si no se puede leer: un cero falso se lee como
      * "no hay plata en camino" y el dueño decide si gasta mirando este número.
-     * Tampoco se cachea un fallo, para que un error transitorio no deje la
-     * pantalla sin tránsito cinco minutos.
+     *
+     * Esto se lee sincrónico en cada carga de /cuota, de cada jugador, así que
+     * el fallo TAMBIÉN se cachea: sin eso, con Mollie caída o lenta, cada
+     * request de cada miembro le vuelve a pegar y espera el timeout del SDK, y
+     * la pestaña Cuota queda inusable para todo el plantel. Se cachea 60
+     * segundos y no los 5 minutos del éxito: lo cacheado es `null` —la pantalla
+     * sigue mostrando el guion, nunca un cero— y un minuto es corto como para
+     * que un error transitorio no deje la pantalla sin tránsito un rato largo,
+     * pero suficiente para que una caída no se multiplique por jugador.
      */
     public function transitCents(): ?int
     {
@@ -274,11 +284,17 @@ class MollieGateway
             return $cacheado;
         }
 
+        if ($cacheado === self::TRANSITO_SIN_DATO) {
+            return null;
+        }
+
         $cents = $this->leerTransitCents();
 
-        if ($cents !== null) {
-            Cache::put($key, $cents, now()->addMinutes(5));
-        }
+        Cache::put(
+            $key,
+            $cents ?? self::TRANSITO_SIN_DATO,
+            $cents === null ? now()->addSeconds(60) : now()->addMinutes(5),
+        );
 
         return $cents;
     }

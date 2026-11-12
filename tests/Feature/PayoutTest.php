@@ -366,11 +366,18 @@ it('un saldo en otra moneda es null: no se suman euros como lei', function () {
     expect(app(MollieGateway::class)->transitCents())->toBeNull();
 });
 
-it('un fallo no se cachea: la lectura siguiente vuelve a intentar', function () {
+it('un fallo se cachea corto: un minuto, no los cinco del éxito', function () {
+    // El tránsito se lee sincrónico en cada carga de /cuota, de cada jugador:
+    // sin cachear el fallo, una caída de Mollie le pega y espera el timeout en
+    // cada request del plantel. Lo cacheado sigue siendo null —la pantalla
+    // muestra el guion, nunca un cero—, solo se acorta el reintento.
     fakeMollieBalanceFailure();
     expect(app(MollieGateway::class)->transitCents())->toBeNull();
 
     fakeMollieBalance(availableCents: 500, pendingCents: 0);
+    expect(app(MollieGateway::class)->transitCents())->toBeNull();
+
+    $this->travel(61)->seconds();
     expect(app(MollieGateway::class)->transitCents())->toBe(500);
 });
 
