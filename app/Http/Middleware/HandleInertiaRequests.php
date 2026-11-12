@@ -71,6 +71,9 @@ class HandleInertiaRequests extends Middleware
                 'status' => fn () => $request->session()->get('status'),
                 'invite_url' => fn () => $request->session()->get('invite_url'),
                 'reminded' => fn () => $request->session()->get('reminded'),
+                // Un gasto, una transferencia o un ajuste dejaron un bolsillo
+                // en rojo. Avisa, no bloquea: el saldo puede ir en negativo.
+                'aviso_saldo_negativo' => fn () => $request->session()->get('aviso_saldo_negativo'),
             ],
 
             // Control de versión del APK: la app nativa Android compara su

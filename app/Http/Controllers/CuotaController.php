@@ -14,6 +14,7 @@ use App\Models\Movement;
 use App\Models\Payment;
 use App\Services\Mollie\MollieGateway;
 use App\Services\CuotaLedger;
+use App\Services\Ledger;
 use App\Services\Notifications;
 use App\Services\Push\Notifier;
 use App\Services\Stripe\StripeGateway;
@@ -51,7 +52,8 @@ class CuotaController extends Controller
             ->first();
 
         $stripeReady = $club->stripe_onboarded_at !== null && config('services.stripe.enabled');
-        $mollieReady = app(MollieGateway::class)->ready();
+        $mollie = app(MollieGateway::class);
+        $mollieReady = $mollie->ready();
 
         $props = [
             'currency' => $club->currency,
@@ -74,8 +76,21 @@ class CuotaController extends Controller
             ] : null,
             // Quién está al día y quién debe: lo ve todo el plantel
             'plantel' => $this->squadStatus($period),
-            // Saldo y movimientos del mes: transparencia para todos
+            // Entró/salió del mes y gastos por categoría: transparencia para todos
             'resumen' => $this->cashSummary($period),
+            // Cuánta plata hay DE VERDAD, bolsillo por bolsillo, más lo que
+            // Mollie todavía no depositó. Reemplaza al saldo viejo (cobrado
+            // histórico − gastado histórico), que no podía coincidir con el
+            // banco porque medía otra cosa.
+            'saldos' => [
+                ...app(Ledger::class)->balances(),
+                // null —nunca 0— si no se pudo leer: un cero falso se lee como
+                // "no hay plata en camino" y con eso se decide si se gasta.
+                'transito_cents' => $mollieReady ? $mollie->transitCents() : null,
+                'as_of' => now()->toDateString(),
+            ],
+            // El libro, como lo ve quien mira (el manager, con detalle)
+            'movimientos' => $this->movements($isManager),
             // Débito automático del jugador: estado + monto con descuento
             'subscription' => [
                 'status' => $member->subscription_status,
@@ -346,18 +361,68 @@ class CuotaController extends Controller
         return back();
     }
 
-    /** Saldo acumulado y movimientos del mes. Caja lógica, no el banco. */
+    /**
+     * El libro de movimientos para la pantalla.
+     *
+     * El manager ve fila por fila, con el `due_id` y el nombre de quien pagó.
+     * El resto del plantel ve las cuotas del día SUMADAS y sin dueño: un monto
+     * suelto delata al becado o al de cuota personalizada, y el tipo de cuota
+     * de cada uno es privado.
+     */
+    protected function movements(bool $isManager): array
+    {
+        $movements = app(Ledger::class)->history();
+
+        $line = fn ($m) => [
+            'id' => $m->id,
+            'kind' => $m->kind,
+            'pot' => $m->pot,
+            'amount_cents' => $m->amount_cents,
+            'occurred_on' => $m->occurred_on->toDateString(),
+            'note' => $m->note,
+        ];
+
+        if ($isManager) {
+            $movements->load('due.member.user:id,name');
+
+            return $movements->map(fn ($m) => [
+                ...$line($m),
+                'due_id' => $m->due_id,
+                'member_name' => $m->due?->member?->user?->name,
+            ])->values()->all();
+        }
+
+        [$cuotas, $resto] = $movements->partition(fn ($m) => $m->kind === 'cuota');
+
+        $porDia = $cuotas
+            ->groupBy(fn ($m) => $m->occurred_on->toDateString().'|'.$m->pot)
+            ->map(fn ($g) => [
+                'id' => 'cuota-'.$g->first()->occurred_on->toDateString().'-'.$g->first()->pot,
+                'kind' => 'cuota',
+                'pot' => $g->first()->pot,
+                'amount_cents' => (int) $g->sum('amount_cents'),
+                'occurred_on' => $g->first()->occurred_on->toDateString(),
+                'note' => null,
+                'count' => $g->count(),
+            ])
+            // Una cuota marcada y desmarcada el mismo día suma cero: es ruido.
+            ->reject(fn ($g) => $g['amount_cents'] === 0);
+
+        return $resto->map($line)
+            ->concat($porDia)
+            ->sortByDesc('occurred_on')
+            ->values()
+            ->all();
+    }
+
+    /** Entró y salió este mes, y los gastos por categoría. No es el saldo. */
     protected function cashSummary($period): array
     {
-        $incomeAll = (int) Due::query()->where('status', 'paid')->sum('amount_cents');
-        $spentAll = (int) Expense::query()->sum('amount_cents');
-
         $monthExpenses = Expense::query()
             ->whereBetween('spent_on', [$period, $period->copy()->endOfMonth()])
             ->get();
 
         return [
-            'balance_cents' => $incomeAll - $spentAll,
             'month_in_cents' => (int) Due::query()->whereDate('period', $period)->where('status', 'paid')->sum('amount_cents'),
             'month_out_cents' => (int) $monthExpenses->sum('amount_cents'),
             'by_category' => $monthExpenses->groupBy('category')

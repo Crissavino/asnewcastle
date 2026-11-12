@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\Expense;
 use App\Models\Member;
 use App\Models\Message;
+use App\Models\Movement;
 use App\Models\Notification;
 use App\Services\Push\PushSender;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -24,14 +25,14 @@ it('todo el plantel ve quién está al día y quién debe, y el resumen de caja'
         ->assertInertia(fn (Assert $page) => $page
             ->has('plantel', 2)
             ->where('plantel.0.due_status', fn ($s) => in_array($s, ['paid', 'pending'], true))
-            ->where('resumen.balance_cents', 12000)
+            ->has('saldos')
             ->has('caja')
             ->missing('config')
             ->missing('gastos')
         );
 });
 
-it('el saldo descuenta los gastos, y el jugador ve el desglose por categoría', function () {
+it('los gastos bajan el bolsillo del que salieron, y el jugador ve el desglose por categoría', function () {
     $manager = Member::factory()->manager()->create();
     Due::factory()->forMember($manager)->paid()->create(['amount_cents' => 12000]);
 
@@ -53,11 +54,112 @@ it('el saldo descuenta los gastos, y el jugador ve el desglose por categoría', 
     $this->actingAs($manager->user)
         ->get('/cuota')
         ->assertInertia(fn (Assert $page) => $page
-            ->where('resumen.balance_cents', 12000 - 19000) // puede quedar en rojo
+            ->where('saldos.cash', -15000)   // puede quedar en rojo
+            ->where('saldos.cuenta', -4000)
             ->where('resumen.month_out_cents', 19000)
             ->where('resumen.by_category.referee', 15000)
             ->has('gastos', 2)
         );
+});
+
+it('el saldo viejo ya no se manda y en su lugar van los dos bolsillos', function () {
+    $m = Member::factory()->manager()->create();
+    $this->actingAs($m->user)->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page
+            ->missing('resumen.balance_cents')
+            ->has('saldos.cuenta')->has('saldos.cash')->has('saldos.as_of')
+            ->where('saldos.as_of', now()->toDateString())
+        );
+});
+
+it('sin poder leer el saldo de Mollie, el tránsito va null y nunca cero', function () {
+    $m = Member::factory()->manager()->create();
+    fakeMollieBalanceFailure();
+
+    $this->actingAs($m->user)->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page->where('saldos.transito_cents', null));
+});
+
+it('con el saldo de Mollie legible, el tránsito va en centavos', function () {
+    $m = Member::factory()->manager()->create();
+    fakeMollieBalance(12000, 6000);
+
+    $this->actingAs($m->user)->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page->where('saldos.transito_cents', 18000));
+});
+
+it('el jugador ve los saldos pero no el detalle de cada cuota cobrada', function () {
+    $manager = Member::factory()->manager()->create();
+    $player = Member::factory()->for($manager->club)->create();
+    $otro = Member::factory()->for($manager->club)->create();
+    $becado = Member::factory()->for($manager->club)->create();
+    $due = Due::factory()->forMember($otro)->create(['amount_cents' => 30000]);
+    $chica = Due::factory()->forMember($becado)->create(['amount_cents' => 5000]);
+    $this->actingAs($manager->user)->post("/cuota/{$due->id}/estado", ['status' => 'paid', 'pot' => 'cash']);
+    $this->actingAs($manager->user)->post("/cuota/{$chica->id}/estado", ['status' => 'paid', 'pot' => 'cash']);
+
+    $this->actingAs($player->user)->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('saldos')
+            ->where('movimientos', fn ($ms) => collect($ms)
+                ->where('kind', 'cuota')
+                ->every(fn ($mv) => ! isset($mv['due_id']) && ! isset($mv['member_name'])))
+            // Las dos cuotas del día van en UNA fila sumada: un monto suelto de
+            // 5000 entre los de 30000 delataría al becado o al de cuota custom.
+            ->where('movimientos', fn ($ms) => collect($ms)->where('kind', 'cuota')->count() === 1)
+            ->where('movimientos', fn ($ms) => collect($ms)->firstWhere('kind', 'cuota')['amount_cents'] === 35000)
+        );
+});
+
+it('el manager sí ve el detalle', function () {
+    $manager = Member::factory()->manager()->create();
+    $otro = Member::factory()->for($manager->club)->create();
+    $otro->user->update(['name' => 'Sergio Quiroga']);
+    $due = Due::factory()->forMember($otro)->create(['amount_cents' => 30000]);
+    $this->actingAs($manager->user)->post("/cuota/{$due->id}/estado", ['status' => 'paid', 'pot' => 'cash']);
+
+    $this->actingAs($manager->user)->get('/cuota')
+        ->assertInertia(function (Assert $page) use ($due) {
+            $cuotas = collect($page->toArray()['props']['movimientos'])->where('kind', 'cuota');
+
+            expect($cuotas)->toHaveCount(1)
+                ->and($cuotas->first()['due_id'])->toBe($due->id)
+                ->and($cuotas->first()['member_name'])->toBe('Sergio Quiroga')
+                ->and($cuotas->first()['amount_cents'])->toBe(30000);
+        });
+});
+
+it('la caja sigue mostrando cobrado vs adeudado y los deudores', function () {
+    $m = Member::factory()->manager()->create();
+    Due::factory()->forMember($m)->create();
+    $this->actingAs($m->user)->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('caja.paid_all_cents')->has('caja.owed_all_cents')->has('caja.debtors'));
+});
+
+it('el aviso de saldo negativo llega a la pantalla, no se queda en la sesión', function () {
+    $m = Member::factory()->manager()->create();
+
+    $this->actingAs($m->user)->post('/gastos', [
+        'category' => 'pitch',
+        'amount_cents' => 20000,
+        'spent_on' => now()->toDateString(),
+        'pot' => 'cash',
+    ])->assertRedirect();
+
+    $this->actingAs($m->user)->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page->where('flash.aviso_saldo_negativo', true));
+});
+
+it('los movimientos de otro club no entran en el historial', function () {
+    $mio = Member::factory()->manager()->create();
+    $ajeno = Member::factory()->manager()->create();
+    Movement::factory()->for($ajeno->club)->create(['pot' => 'cuenta', 'amount_cents' => 99000]);
+
+    $this->actingAs($mio->user)->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('saldos.cuenta', 0)
+            ->where('movimientos', []));
 });
 
 it('un jugador no puede cargar ni borrar gastos', function () {

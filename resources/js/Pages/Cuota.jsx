@@ -13,6 +13,11 @@ function money(cents) {
     return cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2);
 }
 
+// 'AAAA-MM-DD' → '12 nov'. Mediodía fijo para que el huso no corra el día.
+function dayMonth(iso, intl) {
+    return new Date(`${iso}T12:00:00`).toLocaleDateString(intl, { day: 'numeric', month: 'short' });
+}
+
 // Pago de la cuota por transferencia. Siempre disponible si el club tiene IBAN;
 // cuando además hay pago online, va como alternativa (secondary) debajo, con un
 // separador "— o —". El jugador transfiere al IBAN poniendo su nombre y el mes
@@ -174,6 +179,115 @@ function ExpenseSheet({ categorias, eventos, currency, onClose }) {
     );
 }
 
+// Los tres movimientos que el delegado carga a mano. Un solo sheet con tres
+// formas, porque comparten bolsillo + monto + nota. Las tres acciones quedan
+// visiblemente distintas: mover plata NO es un gasto (si se cargan las dos
+// cosas como gasto, el club gastó el doble).
+function MovementSheet({ kind, saldos, currency, onClose }) {
+    const { t } = useTranslations();
+    const [pot, setPot] = useState('');
+    const [amount, setAmount] = useState('');
+    const [occurredOn, setOccurredOn] = useState(new Date().toISOString().slice(0, 10));
+    const [note, setNote] = useState('');
+    const [processing, setProcessing] = useState(false);
+    const [errors, setErrors] = useState({});
+
+    const isTransfer = kind === 'transferencia';
+    const isAjuste = kind === 'ajuste';
+    const title = { transferencia: 'movimiento.mover_plata', ingreso: 'movimiento.ingreso_titulo', ajuste: 'movimiento.ajustar' }[kind];
+    const hint = { transferencia: 'movimiento.mover_plata_hint', ajuste: 'movimiento.ajustar_hint' }[kind];
+    const potLabel = { transferencia: 'movimiento.desde', ingreso: 'movimiento.ingreso_pot', ajuste: 'saldo.pot_cual' }[kind];
+    // En la transferencia el bolsillo es el ORIGEN; el destino es el otro.
+    const potOptions = isTransfer
+        ? [['cuenta', 'movimiento.pot_cuenta_origen'], ['cash', 'movimiento.pot_cash_origen']]
+        : [['cuenta', 'saldo.cuenta'], ['cash', 'saldo.cash']];
+
+    // El ajuste dicta el saldo OBJETIVO: arranca en el que hay hoy.
+    const pickPot = (k) => {
+        setPot(k);
+        if (isAjuste) setAmount(String(saldos[k] / 100));
+    };
+
+    const cents = Math.round(parseFloat(amount) * 100);
+    const noteRequired = ! isTransfer;
+    const ready = pot !== '' && Number.isFinite(cents) && (isAjuste || cents > 0) && (! noteRequired || note.trim() !== '');
+
+    const save = () => {
+        // El ajuste lee el saldo y escribe sin lock: dos envíos simultáneos
+        // dejarían dos ajustes. Acá se cierra la puerta barata — un solo envío.
+        setProcessing(true);
+        const payload = isTransfer
+            ? { from: pot, amount_cents: cents, occurred_on: occurredOn, note: note || null }
+            : isAjuste
+                ? { pot, target_cents: cents, note }
+                : { pot, amount_cents: cents, occurred_on: occurredOn, note };
+
+        router.post(route(`movimientos.${kind}`), payload, {
+            onSuccess: onClose,
+            onError: setErrors,
+            onFinish: () => setProcessing(false),
+            preserveScroll: true,
+        });
+    };
+
+    return (
+        <div className="nc-sheet" onClick={onClose}>
+            <div className="nc-sheet-inner" onClick={(e) => e.stopPropagation()}>
+                <div className="nc-sheet-head">
+                    <h3 className="nc-display" style={{ fontSize: 21, margin: 0 }}>{t(title)}</h3>
+                    <button type="button" className="nc-sheet-close" onClick={onClose} aria-label={t('common.close')}>
+                        <X size={26} />
+                    </button>
+                </div>
+
+                {hint && <p className="nc-meta" style={{ margin: '0 0 14px' }}>{t(hint)}</p>}
+
+                <div className="nc-field-l">
+                    <span className="nc-label">{t(potLabel)}</span>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 5 }}>
+                        {potOptions.map(([k, label]) => (
+                            <button key={k} type="button" className={pot === k ? 'nc-btn' : 'nc-mini'}
+                                style={{ flex: 1, minHeight: 44 }} aria-pressed={pot === k}
+                                onClick={() => pickPot(k)}>
+                                {t(label)}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <label className="nc-field-l">
+                    <span className="nc-label">
+                        {t(isAjuste ? 'movimiento.extracto_dice' : 'movimiento.monto')} ({currency})
+                    </span>
+                    <input type="number" step="0.01" inputMode="decimal" min={isAjuste ? undefined : '0'}
+                        value={amount} onChange={(e) => setAmount(e.target.value)} />
+                </label>
+
+                {! isAjuste && (
+                    <label className="nc-field-l">
+                        <span className="nc-label">{t('movimiento.fecha')}</span>
+                        <input type="date" value={occurredOn} onChange={(e) => setOccurredOn(e.target.value)} />
+                    </label>
+                )}
+
+                <label className="nc-field-l">
+                    <span className="nc-label">{t('movimiento.nota')}</span>
+                    <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={120} />
+                    {noteRequired && note.trim() === '' && (
+                        <span className="nc-meta" style={{ fontSize: 11.5 }}>{t('movimiento.nota_obligatoria')}</span>
+                    )}
+                </label>
+
+                {Object.values(errors)[0] && <div className="nc-error">{Object.values(errors)[0]}</div>}
+
+                <button className="nc-btn" style={{ marginTop: 8 }} disabled={processing || ! ready} onClick={save}>
+                    {processing ? t('agenda.saving') : t('agenda.save')}
+                </button>
+            </div>
+        </div>
+    );
+}
+
 function ConfirmMini({ onConfirm, children, style }) {
     const { t } = useTranslations();
     const [arming, setArming] = useState(false);
@@ -327,12 +441,13 @@ function FeeSettings({ config, currency }) {
     );
 }
 
-export default function Cuota({ currency, online_ready, bank, my_due, caja, plantel, resumen, subscription, gastos, categorias, eventos, config, cobranza }) {
+export default function Cuota({ currency, online_ready, mollie_ready, bank, my_due, caja, plantel, resumen, saldos, movimientos, subscription, gastos, categorias, eventos, config, cobranza }) {
     const { t, locale } = useTranslations();
     const { auth, member, flash, errors, debt } = usePage().props;
     const [claimed, setClaimed] = useState(false);
     const [addingExpense, setAddingExpense] = useState(false);
     const [choosingPot, setChoosingPot] = useState(null);
+    const [movementSheet, setMovementSheet] = useState(null);
     const isManager = member?.role === 'manager';
     const intl = INTL_LOCALES[locale] ?? 'en-GB';
 
@@ -489,16 +604,64 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                 </div>
             ) : null}
 
-            {/* Caja transparente: saldo y movimientos, para todo el plantel */}
-            {resumen && (
+            {/* Caja transparente: los dos bolsillos, para todo el plantel */}
+            {resumen && saldos && (
                 <div className="nc-card">
                     <div className="nc-label">{t('cuota.balance')}</div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 10 }}>
-                        <span className="nc-display" style={{ fontSize: 34, color: resumen.balance_cents < 0 ? 'var(--red-dk)' : 'inherit' }}>
-                            {money(resumen.balance_cents)}
-                        </span>
-                        <span className="nc-num nc-meta" style={{ fontSize: 13 }}>{currency}</span>
+
+                    {/* El gasto, la transferencia y el ajuste avisan, no bloquean:
+                        si dejaron un bolsillo en rojo, hay que verlo acá. */}
+                    {flash.aviso_saldo_negativo && (
+                        <div className="nc-error" style={{ fontWeight: 600 }}>{t('saldo.negativo')}</div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: 12, marginTop: 10 }}>
+                        {[['cuenta', 'saldo.cuenta'], ['cash', 'saldo.cash']].map(([k, label]) => (
+                            <div key={k} style={{ flex: 1, minWidth: 0 }}>
+                                <div className="nc-label" style={{ marginBottom: 3 }}>{t(label)}</div>
+                                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                                    <span className="nc-display" style={{ fontSize: 27, color: saldos[k] < 0 ? 'var(--red-dk)' : 'inherit' }}>
+                                        {money(saldos[k])}
+                                    </span>
+                                    <span className="nc-num nc-meta" style={{ fontSize: 11 }}>{currency}</span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
+
+                    {/* En tránsito: lo que Mollie cobró y todavía no depositó. No es
+                        un bolsillo y NO se suma al disponible: va aparte, en gris.
+                        Sin dato va un guion — un 0 se leería como "no viene nada". */}
+                    {mollie_ready && (
+                        <div className="nc-row" style={{ marginTop: 12 }}>
+                            <span className="nc-meta">{t('saldo.transito')}</span>
+                            <span className="nc-num nc-meta" style={{ fontSize: 13 }}>
+                                {typeof saldos.transito_cents === 'number'
+                                    ? `${money(saldos.transito_cents)} ${currency}`
+                                    : '—'}
+                            </span>
+                        </div>
+                    )}
+                    {mollie_ready && typeof saldos.transito_cents !== 'number' && (
+                        <div className="nc-meta" style={{ fontSize: 11.5, marginTop: 4 }}>{t('saldo.transito_no')}</div>
+                    )}
+
+                    {/* El saldo se muestra con fecha de corte, no como si fuera en vivo */}
+                    <div className="nc-meta" style={{ fontSize: 11.5, marginTop: 8 }}>
+                        {t('saldo.as_of', { date: dayMonth(saldos.as_of, intl) })}
+                    </div>
+
+                    {/* Cargar plata a mano: solo el delegado */}
+                    {isManager && (
+                        <div className="nc-admin-actions">
+                            {['transferencia', 'ingreso', 'ajuste'].map((k) => (
+                                <button key={k} className="nc-mini" style={{ minHeight: 44 }} onClick={() => setMovementSheet(k)}>
+                                    {t({ transferencia: 'movimiento.mover_plata', ingreso: 'movimiento.ingreso_titulo', ajuste: 'movimiento.ajustar' }[k])}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
                     <div className="nc-row" style={{ marginTop: 12 }}>
                         <span className="nc-meta">{t('cuota.month_in')}</span>
                         <span className="nc-num" style={{ fontSize: 14, color: 'var(--aqua-tx)', fontWeight: 700 }}>
@@ -517,6 +680,40 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                             <span className="nc-num nc-meta" style={{ fontSize: 12 }}>{money(cents)} {currency}</span>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* Cómo se llegó a esos saldos. El plantel ve las cuotas del día
+                sumadas y sin nombre: el tipo de cuota de cada uno es privado. */}
+            {movimientos && (
+                <div className="nc-card">
+                    <div className="nc-label">{t('saldo.movimientos')}</div>
+                    {movimientos.length === 0 ? (
+                        <p className="nc-meta" style={{ marginTop: 8 }}>{t('saldo.sin_movimientos')}</p>
+                    ) : (
+                        <div style={{ marginTop: 6 }}>
+                            {movimientos.map((m) => (
+                                <div key={m.id} className="nc-row">
+                                    <div style={{ minWidth: 0 }}>
+                                        <span style={{ fontSize: 14 }}>
+                                            {t(`saldo.kind_${m.kind}`)}
+                                            {m.count > 1 && <span className="nc-num nc-meta" style={{ fontSize: 12 }}> ·&nbsp;{m.count}</span>}
+                                        </span>
+                                        <div className="nc-meta" style={{ fontSize: 11.5 }}>
+                                            {[dayMonth(m.occurred_on, intl), t(`saldo.${m.pot}`), m.member_name, m.note]
+                                                .filter(Boolean).join(' · ')}
+                                        </div>
+                                    </div>
+                                    <span className="nc-num" style={{
+                                        fontSize: 14, fontWeight: 700, flexShrink: 0,
+                                        color: m.amount_cents < 0 ? 'var(--red-dk)' : 'var(--aqua-tx)',
+                                    }}>
+                                        {m.amount_cents < 0 ? '−' : '+'}{money(Math.abs(m.amount_cents))} {currency}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -644,12 +841,15 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                                                     aria-expanded={choosingPot === d.due_id}
                                                     onClick={() => setChoosingPot(choosingPot === d.due_id ? null : d.due_id)}
                                                 >
-                                                    {t('cuota.mark_cash')}
+                                                    {t('cuota.mark_paid')}
                                                 </button>
                                                 <button
                                                     className="nc-mini"
                                                     style={{ flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 10, opacity: 0.65 }}
-                                                    onClick={() => router.post(route('cuota.estado', d.due_id), { status: 'waived' }, { preserveScroll: true })}
+                                                    onClick={() => {
+                                                        setChoosingPot(null);
+                                                        router.post(route('cuota.estado', d.due_id), { status: 'waived' }, { preserveScroll: true });
+                                                    }}
                                                 >
                                                     {t('cuota.waive')}
                                                 </button>
@@ -725,6 +925,15 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                 <Shield size={13} style={{ marginTop: 2, flexShrink: 0 }} />
                 <span>{t('cuota.trust')}</span>
             </p>
+
+            {movementSheet && (
+                <MovementSheet
+                    kind={movementSheet}
+                    saldos={saldos}
+                    currency={currency}
+                    onClose={() => setMovementSheet(null)}
+                />
+            )}
 
             {addingExpense && (
                 <ExpenseSheet
