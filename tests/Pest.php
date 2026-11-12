@@ -38,7 +38,9 @@ function mollieGatewayFake(): MockInterface
         return $actual;
     }
 
-    $mock = Mockery::mock(MollieGateway::class);
+    // Parcial: lo que el helper no stubbea (transitCents) corre de verdad sobre
+    // los métodos stubbeados (getBalance), que es lo que hay que ejercitar.
+    $mock = Mockery::mock(MollieGateway::class)->makePartial();
     $mock->shouldReceive('ready')->andReturn(true)->byDefault();
     app()->instance(MollieGateway::class, $mock);
 

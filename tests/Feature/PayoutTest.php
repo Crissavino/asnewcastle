@@ -5,6 +5,7 @@ use App\Models\Member;
 use App\Models\MolliePayout;
 use App\Models\Movement;
 use App\Services\Ledger;
+use App\Services\Mollie\MollieGateway;
 
 /**
  * Los payouts son la ÚNICA entrada de plata a la cuenta del club: Mollie junta
@@ -256,4 +257,55 @@ it('un webhook sin id no rompe nada', function () {
     $this->post('/webhooks/mollie/payouts', [])->assertOk();
 
     expect(Movement::withoutGlobalScopes()->count())->toBe(0);
+});
+
+it('si Mollie no responde, el tránsito es null y no cero', function () {
+    // Review Focus #5: un cero falso se lee como "no hay plata en camino".
+    fakeMollieBalanceFailure();
+
+    expect(app(MollieGateway::class)->transitCents())->toBeNull();
+});
+
+it('el tránsito es el saldo pendiente de Mollie', function () {
+    fakeMollieBalance(availableCents: 12000, pendingCents: 6000);
+
+    expect(app(MollieGateway::class)->transitCents())->toBe(18000);
+});
+
+it('un saldo en cero es cero, no null', function () {
+    fakeMollieBalance(availableCents: 0, pendingCents: 0);
+
+    expect(app(MollieGateway::class)->transitCents())->toBe(0);
+});
+
+it('un saldo sin la forma esperada es null y no cero', function () {
+    $balance = fakeMollieBalance(availableCents: 12000, pendingCents: 6000);
+    $balance->incomingAmount = null;
+
+    expect(app(MollieGateway::class)->transitCents())->toBeNull();
+});
+
+it('un saldo en otra moneda es null: no se suman euros como lei', function () {
+    fakeMollieBalance(availableCents: 12000, pendingCents: 6000, currency: 'EUR');
+
+    expect(app(MollieGateway::class)->transitCents())->toBeNull();
+});
+
+it('un fallo no se cachea: la lectura siguiente vuelve a intentar', function () {
+    fakeMollieBalanceFailure();
+    expect(app(MollieGateway::class)->transitCents())->toBeNull();
+
+    fakeMollieBalance(availableCents: 500, pendingCents: 0);
+    expect(app(MollieGateway::class)->transitCents())->toBe(500);
+});
+
+it('un saldo leído se cachea cinco minutos', function () {
+    fakeMollieBalance(availableCents: 500, pendingCents: 0);
+    expect(app(MollieGateway::class)->transitCents())->toBe(500);
+
+    fakeMollieBalance(availableCents: 9999, pendingCents: 0);
+    expect(app(MollieGateway::class)->transitCents())->toBe(500);
+
+    $this->travel(6)->minutes();
+    expect(app(MollieGateway::class)->transitCents())->toBe(9999);
 });

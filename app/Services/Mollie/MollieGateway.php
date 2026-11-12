@@ -4,8 +4,11 @@ namespace App\Services\Mollie;
 
 use App\Models\Due;
 use App\Models\Member;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\MollieApiClient;
+use Mollie\Api\Resources\Balance;
 use Mollie\Api\Resources\Payment;
 use Mollie\Api\Resources\Payout;
 
@@ -220,6 +223,74 @@ class MollieGateway
     public function getPayout(string $payoutId): Payout
     {
         return $this->mollie->payouts->get($payoutId, $this->testmode());
+    }
+
+    /** El saldo principal de la cuenta de Mollie (balances.read). */
+    public function getBalance(): Balance
+    {
+        return $this->mollie->balances->primary($this->testmode());
+    }
+
+    /**
+     * La plata que ya es del club pero todavía no llegó a su banco: lo que
+     * Mollie tiene disponible más lo que viene en camino. NO se deriva del
+     * libro: nuestros pagos son brutos y el payout es neto, así que una resta
+     * propia se inflaría con cada comisión. Se lee del saldo real.
+     *
+     * Devuelve null —NUNCA 0— si no se puede leer: un cero falso se lee como
+     * "no hay plata en camino" y el dueño decide si gasta mirando este número.
+     * Tampoco se cachea un fallo, para que un error transitorio no deje la
+     * pantalla sin tránsito cinco minutos.
+     */
+    public function transitCents(): ?int
+    {
+        $key = 'mollie.transito';
+        $cacheado = Cache::get($key);
+
+        if (is_int($cacheado)) {
+            return $cacheado;
+        }
+
+        $cents = $this->leerTransitCents();
+
+        if ($cents !== null) {
+            Cache::put($key, $cents, now()->addMinutes(5));
+        }
+
+        return $cents;
+    }
+
+    private function leerTransitCents(): ?int
+    {
+        try {
+            $balance = $this->getBalance();
+
+            // SUPOSICIÓN SIN CONFIRMAR (la sonda app:mollie-saldo-diag nunca corrió
+            // contra la cuenta real): el saldo trae availableAmount e incomingAmount
+            // como {currency, value:"12.00"}. Si falta algo no se asume: null.
+            $moneda = strtoupper((string) ($balance->currency ?? ''));
+            $disponible = $balance->availableAmount->value ?? null;
+            $entrante = $balance->incomingAmount->value ?? null;
+
+            if ($moneda !== 'RON' || ! is_numeric($disponible) || ! is_numeric($entrante)) {
+                Log::warning('Saldo de Mollie con forma inesperada: el tránsito queda sin dato', [
+                    'moneda' => $moneda,
+                    'disponible' => $balance->availableAmount ?? null,
+                    'entrante' => $balance->incomingAmount ?? null,
+                ]);
+
+                return null;
+            }
+
+            return (int) round((float) $disponible * 100) + (int) round((float) $entrante * 100);
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo leer el saldo de Mollie: el tránsito queda sin dato', [
+                'codigo' => $e->getCode(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     /**
