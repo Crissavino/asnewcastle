@@ -6,11 +6,6 @@ use App\Models\Movement;
 use App\Services\Ledger;
 use App\Support\CurrentClub;
 
-function fijarClub(Member $member): void
-{
-    app(CurrentClub::class)->set($member->club, $member);
-}
-
 function cargarGasto($test, Member $m, array $extra = [])
 {
     return $test->actingAs($m->user)->post('/gastos', [
@@ -103,4 +98,34 @@ it('un manager no puede borrar el gasto de otro club ni mover su libro', functio
     $this->actingAs($m->user)->delete("/gastos/{$gastoAjeno->id}")->assertNotFound();
     expect(Movement::withoutGlobalScopes()->where('club_id', $ajeno->club_id)->count())->toBe(1)
         ->and(Movement::withoutGlobalScopes()->where('club_id', $m->club_id)->count())->toBe(0);
+});
+
+it('si el gasto ya fue borrado por otra request, el borrado aborta 404 sin contra-asentar', function () {
+    $m = Member::factory()->manager()->create();
+    cargarGasto($this, $m, ['pot' => 'cash']);
+    $expense = Expense::query()->sole();
+
+    // Simula al DELETE concurrente ya resuelto: el binding de la segunda request
+    // vio el gasto, pero cuando toma el lock otro ya lo borró.
+    $this->actingAs($m->user);
+    $viejo = clone $expense;
+    $expense->delete();
+
+    $controller = app(\App\Http\Controllers\ExpenseController::class);
+    fijarClub($m);
+    expect(fn () => $controller->destroy($viejo))
+        ->toThrow(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+
+    expect(Movement::query()->count())->toBe(1);
+});
+
+it('un gasto con bolsillo pero sin movimiento no se borra en silencio', function () {
+    $m = Member::factory()->manager()->create();
+    $expense = Expense::create([
+        'club_id' => $m->club_id, 'member_id' => $m->id, 'category' => 'other',
+        'amount_cents' => 5000, 'spent_on' => now(), 'pot' => 'cash',
+    ]);
+    $this->actingAs($m->user)->delete("/gastos/{$expense->id}")->assertNotFound();
+
+    expect(Expense::withoutGlobalScopes()->count())->toBe(1);
 });

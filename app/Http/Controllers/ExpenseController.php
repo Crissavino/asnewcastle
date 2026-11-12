@@ -67,12 +67,18 @@ class ExpenseController extends Controller
         app(CurrentClub::class)->assertOwns($expense);
 
         DB::transaction(function () use ($expense) {
-            // Contra-asiento: el movimiento original queda; se anula con el inverso.
-            $original = Movement::where('expense_id', $expense->id)
-                ->whereNull('reverses_movement_id')
-                ->first();
+            // Se re-resuelve con lock: dos DELETE concurrentes pasan el binding,
+            // pero el segundo espera acá y, al entrar, el gasto ya no existe.
+            $expense = Expense::whereKey($expense->id)->lockForUpdate()->first();
+            abort_if($expense === null, 404);
 
-            if ($original) {
+            // Los gastos anteriores a los bolsillos (pot null) no tienen movimiento.
+            if ($expense->pot !== null) {
+                // Contra-asiento: el movimiento original queda; se anula con el inverso.
+                $original = Movement::where('expense_id', $expense->id)
+                    ->whereNull('reverses_movement_id')
+                    ->firstOrFail();
+
                 Movement::create([
                     'pot' => $original->pot,
                     'kind' => 'gasto',
