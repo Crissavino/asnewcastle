@@ -421,6 +421,9 @@ a.nc-btn { text-decoration: none; }
   margin: 0 -20px 12px; padding: 6px 20px; }
 @keyframes nc-up { from { transform: translateY(16px); opacity: 0 } to { transform: none; opacity: 1 } }
 .nc-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-top: 1px solid var(--line); }
+.nc-row-2l { display: flex; flex-direction: column; gap: 7px; padding: 9px 0; border-top: 1px solid var(--line); }
+.nc-row-2l header { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.nc-row-2l footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 .nc-bar { height: 8px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 12px; }
 .nc-bar i { display: block; height: 100%;
   background: repeating-linear-gradient(90deg, transparent 0 5px, rgba(255,255,255,.4) 5px 6px), var(--red); }

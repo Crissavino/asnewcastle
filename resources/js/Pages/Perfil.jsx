@@ -288,52 +288,62 @@ export default function Perfil({ me, season, slots, positions, feet, max_number,
             <div className="nc-card">
                 <div className="nc-label">{t('perfil.roster')}</div>
                 <div style={{ marginTop: 6 }}>
-                    {roster.map((p) => (
-                        <div key={p.id} className="nc-row">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                                <Kit n={p.shirt_number ?? '–'} size="sm" />
-                                <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name ?? '—'}</span>
-                                {p.role === 'manager' && <span className="nc-pill ok" style={{ flexShrink: 0 }}>{t('perfil.admin')}</span>}
-                                {p.injured && <span className="nc-pill no" style={{ flexShrink: 0 }}>🤕 {t('perfil.injured_short')}</span>}
-                                {p.due_status === 'pending' && <span className="nc-pill no" style={{ flexShrink: 0 }}>{t('pill.due_owing')}</span>}
-                                {p.due_status === 'paid' && <span className="nc-pill ok" style={{ flexShrink: 0, opacity: 0.7 }}>{t('pill.due_ok')}</span>}
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                                <span className="nc-label">{p.position ?? ''}</span>
-                                {isManager && (
-                                    <button
-                                        type="button"
-                                        className="nc-mini"
-                                        style={{ flex: 'none', minWidth: 0, padding: '6px 8px' }}
-                                        onClick={() => router.visit(route('plantel.estadisticas', p.id))}
-                                        aria-label={t('stats.view')}
-                                    >
-                                        <BarChart2 size={12} />
-                                    </button>
-                                )}
-                                {isManager && p.id !== member.id && (
-                                    <>
-                                        <ConfirmButton
-                                            className="nc-mini"
-                                            style={{ flex: 'none', minWidth: 0, padding: '6px 8px', fontSize: 10, opacity: 0.75 }}
-                                            onConfirm={() => router.post(route('plantel.rol', p.id), { role: p.role === 'manager' ? 'player' : 'manager' }, { preserveScroll: true })}
-                                        >
-                                            {p.role === 'manager' ? t('perfil.drop_admin') : t('perfil.make_admin')}
-                                        </ConfirmButton>
-                                        {p.role === 'player' && (
-                                            <ConfirmButton
-                                                className="nc-mini"
-                                                style={{ flex: 'none', minWidth: 0, padding: '6px 8px', fontSize: 10 }}
-                                                onConfirm={() => removeMember(p)}
-                                            >
-                                                <X size={12} /> {t('perfil.remove')}
-                                            </ConfirmButton>
+                    {roster.map((p) => {
+                        const hasPills = p.role === 'manager' || p.injured || p.due_status === 'pending' || p.due_status === 'paid';
+                        const btn = { flex: 'none', minWidth: 44, minHeight: 44 };
+                        return (
+                            <div key={p.id} className="nc-row-2l">
+                                <header>
+                                    <Kit n={p.shirt_number ?? '–'} size="sm" />
+                                    <span style={{ fontSize: 14, flex: 1, minWidth: 0, whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{p.name ?? '—'}</span>
+                                    <span className="nc-label" style={{ flexShrink: 0 }}>{p.position ?? ''}</span>
+                                </header>
+                                {(hasPills || isManager) && (
+                                    <footer>
+                                        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                                            {p.role === 'manager' && <span className="nc-pill ok">{t('perfil.admin')}</span>}
+                                            {p.injured && <span className="nc-pill no">🤕 {t('perfil.injured_short')}</span>}
+                                            {p.due_status === 'pending' && <span className="nc-pill no">{t('pill.due_owing')}</span>}
+                                            {p.due_status === 'paid' && <span className="nc-pill ok" style={{ opacity: 0.7 }}>{t('pill.due_ok')}</span>}
+                                        </div>
+                                        {isManager && (
+                                            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginInlineStart: 'auto' }}>
+                                                <button
+                                                    type="button"
+                                                    className="nc-mini"
+                                                    style={btn}
+                                                    onClick={() => router.visit(route('plantel.estadisticas', p.id))}
+                                                    aria-label={t('stats.view')}
+                                                >
+                                                    <BarChart2 size={14} />
+                                                </button>
+                                                {p.id !== member.id && (
+                                                    <>
+                                                        <ConfirmButton
+                                                            className="nc-mini"
+                                                            style={{ ...btn, opacity: 0.75 }}
+                                                            onConfirm={() => router.post(route('plantel.rol', p.id), { role: p.role === 'manager' ? 'player' : 'manager' }, { preserveScroll: true })}
+                                                        >
+                                                            {p.role === 'manager' ? t('perfil.drop_admin') : t('perfil.make_admin')}
+                                                        </ConfirmButton>
+                                                        {p.role === 'player' && (
+                                                            <ConfirmButton
+                                                                className="nc-mini"
+                                                                style={btn}
+                                                                onConfirm={() => removeMember(p)}
+                                                            >
+                                                                <X size={12} /> {t('perfil.remove')}
+                                                            </ConfirmButton>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
                                         )}
-                                    </>
+                                    </footer>
                                 )}
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
 
