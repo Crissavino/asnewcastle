@@ -629,6 +629,77 @@ it('la caja sigue mostrando cobrado vs adeudado y los deudores', function () {
 
 ---
 
+### Task 13: Dos líneas por jugador en el plantel del perfil
+
+Pedido del dueño el 12.11.2026, con captura: como admin, cada fila del plantel
+mete escudo, nombre, pastillas, puesto y tres botones en un solo renglón de
+380px. El nombre queda en "Ste...", la pastilla de LESIONADO se superpone al
+puesto y no se entiende nada. **No cambia ningún dato ni ninguna acción: es
+solo el layout de la fila.**
+
+**Files:**
+- Modify: `resources/js/Pages/Perfil.jsx:289-335` (el `roster.map`)
+- Modify: `resources/css/app.css` (después de `.nc-row`, línea 423)
+- Test: `tests/Feature/PlantelTest.php` (los que ya existen, tienen que seguir verdes)
+
+**Interfaces:**
+- Consumes: nada de las tareas anteriores. Es independiente del resto del plan y se puede hacer en cualquier orden.
+- Produces: nada que otra tarea use.
+
+- [ ] **Step 1: Correr los tests del plantel para tener la línea de base verde.**
+
+Run: `/usr/local/bin/php vendor/bin/pest tests/Feature/PlantelTest.php`
+Expected: PASS. Si ya falla algo, parar y avisar: este cambio no arregla backend.
+
+- [ ] **Step 2: Partir la fila en dos líneas en `resources/js/Pages/Perfil.jsx`**
+
+La fila pasa de un `.nc-row` horizontal a un contenedor en columna:
+
+- **Línea 1 — identidad:** `<Kit>`, nombre, y a la derecha el puesto. El nombre
+  deja de truncarse a la fuerza: `whiteSpace: 'normal'` y `flex: 1` para que use
+  todo el ancho que le queda. El puesto queda pegado al borde derecho.
+- **Línea 2 — estado y acciones:** las pastillas (ADMIN, 🤕 LESIONADO, DEBE / AL
+  DÍA) alineadas a la izquierda, y los botones del manager (estadísticas, hacer
+  admin / quitar admin, baja) a la derecha, con `flexWrap: 'wrap'` y `gap: 8`.
+- Cuando el rol efectivo **no** es manager no hay botones: la línea 2 son solo
+  las pastillas, y si no hay ninguna pastilla la línea 2 no se renderiza (nada
+  de un renglón vacío que agrande la fila sin motivo).
+- Los botones de acción suben a **44px de alto** (regla dura de CLAUDE.md): sacar
+  el `padding: '6px 8px'` y el `fontSize: 10` que hoy los achican por debajo del
+  mínimo táctil, y dejar que el texto se lea.
+- El `padding` vertical de la fila baja a `9px` para compensar la segunda línea.
+
+Hacer lo mismo en el bloque de `staff` (`Perfil.jsx:340+`) solo si la fila del
+staff también desborda; si entra en un renglón, dejarla como está.
+
+- [ ] **Step 3: La clase nueva en `resources/css/app.css`**
+
+Agregar `.nc-row-2l` (fila en columna, `gap: 7px`, mismo borde superior y mismo
+padding que `.nc-row`) y `.nc-row-2l header` / `.nc-row-2l footer` para las dos
+líneas. Nada de media queries: el diseño es mobile-first y el escritorio es la
+misma columna.
+
+- [ ] **Step 4: Verificar que no se rompió nada**
+
+Run: `/usr/local/bin/php vendor/bin/pest tests/Feature/PlantelTest.php tests/Feature/ViewModeTest.php tests/Feature/TranslationTest.php`
+Expected: PASS. Si hiciste falta cadena nueva, va en los cuatro `lang/*.json`.
+
+- [ ] **Step 5: Verificación visual a 380px**
+
+Run: `npm run build`
+Expected: compila sin errores. Dejarle al dueño la nota de que mire el perfil
+como ADMIN en el teléfono: el nombre completo tiene que verse entero y la
+pastilla de lesionado no tiene que pisar el puesto.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add resources/js/Pages/Perfil.jsx resources/css/app.css
+git commit -m "El plantel del perfil usa dos líneas por jugador"
+```
+
+---
+
 ## Después del plan (no son tareas de código)
 
 - `php artisan app:saldo-inicial 225 0 go` en producción, el día que se pone en marcha.
