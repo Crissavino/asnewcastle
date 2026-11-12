@@ -459,7 +459,7 @@ function FeeSettings({ config, currency }) {
     );
 }
 
-export default function Cuota({ currency, online_ready, mollie_ready, bank, my_due, caja, plantel, resumen, saldos, movimientos, subscription, gastos, categorias, eventos, config, cobranza }) {
+export default function Cuota({ currency, online_ready, mollie_ready, bank, my_due, caja, plantel, resumen, saldos, payouts_sin_acreditar, movimientos, subscription, gastos, categorias, eventos, config, cobranza }) {
     const { t, locale } = useTranslations();
     const { auth, member, flash, errors, debt } = usePage().props;
     const [claimed, setClaimed] = useState(false);
@@ -662,6 +662,25 @@ export default function Cuota({ currency, online_ready, mollie_ready, bank, my_d
                     )}
                     {mollie_ready && typeof saldos.transito_cents !== 'number' && (
                         <div className="nc-meta" style={{ fontSize: 11.5, marginTop: 4 }}>{t('saldo.transito_no')}</div>
+                    )}
+
+                    {/* Sin Mollie no hay tránsito que leer, pero puede haber un
+                        payout todavía en camino: plata que desaparece de la
+                        pantalla sin decir nada es lo que esto vino a eliminar. */}
+                    {!mollie_ready && (
+                        <div className="nc-meta" style={{ fontSize: 11.5, marginTop: 12 }}>{t('saldo.transito_off')}</div>
+                    )}
+
+                    {/* Plata que Mollie informó y no entró a ningún saldo. Solo
+                        la ve el delegado: es él quien puede hacer algo. */}
+                    {payouts_sin_acreditar && (
+                        <div className="nc-error" style={{ fontWeight: 600, marginTop: 10 }}>
+                            {t('saldo.no_acreditado', {
+                                amount: money(payouts_sin_acreditar.amount_cents),
+                                currency,
+                                count: payouts_sin_acreditar.count,
+                            })}
+                        </div>
                     )}
 
                     {/* El saldo se muestra con fecha de corte, no como si fuera en vivo */}

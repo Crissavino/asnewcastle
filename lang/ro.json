@@ -633,6 +633,8 @@
     "saldo.cash": "În numerar",
     "saldo.transito": "Pe drum spre bancă",
     "saldo.transito_no": "Nu s-a putut citi ce este pe drum. Încearcă din nou mai târziu.",
+    "saldo.no_acreditado": "Bani de la Mollie pe care aplicația nu a putut credita: :amount :currency (:count). Soldul contului poate fi mai mic decât cel din bancă: verifică setarea Mollie.",
+    "saldo.transito_off": "Plățile online sunt oprite. Dacă Mollie mai are un virament de făcut, banii sunt pe drum și încă nu sunt în niciun buzunar.",
     "saldo.as_of": "Solduri la :date",
     "saldo.negativo": "Un buzunar a rămas pe minus. Verifică soldul sau ajustează-l la extras.",
     "saldo.movimientos": "Ultimele mișcări",

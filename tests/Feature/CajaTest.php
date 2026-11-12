@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\Expense;
 use App\Models\Member;
 use App\Models\Message;
+use App\Models\MolliePayout;
 use App\Models\Movement;
 use App\Models\Notification;
 use App\Services\Push\PushSender;
@@ -160,6 +161,67 @@ it('dos cuotas del mismo día en bolsillos distintos siguen siendo una sola fila
         });
 });
 
+it('un día que solo tiene la reversa no le aparece al jugador como cuota cobrada', function () {
+    // La reversa es una fila más del libro, con signo negativo: contándola, un
+    // día en el que SOLO se desmarcó una cuota decía "Cuotas cobradas · 1".
+    $manager = Member::factory()->manager()->create();
+    $player = Member::factory()->for($manager->club)->create();
+    $otro = Member::factory()->for($manager->club)->create();
+    $due = Due::factory()->forMember($otro)->create(['amount_cents' => 30000]);
+
+    $this->travelTo(now()->subDay());
+    $this->actingAs($manager->user)->post("/cuota/{$due->id}/estado", ['status' => 'paid', 'pot' => 'cash']);
+    $this->travelBack();
+    // Al día siguiente se desmarca: el contra-asiento queda con la fecha de hoy.
+    $this->actingAs($manager->user)->post("/cuota/{$due->id}/estado", ['status' => 'pending']);
+
+    $this->actingAs($player->user)->get('/cuota')
+        ->assertInertia(function (Assert $page) {
+            $cuotas = collect($page->toArray()['props']['movimientos'])->where('kind', 'cuota');
+
+            // Ni la fila del día de la reversa, ni la del día del asiento que
+            // quedó anulado: esa plata ya no está en ningún saldo.
+            expect($cuotas)->toHaveCount(0);
+        });
+});
+
+it('una cuota marcada y desmarcada el mismo día tampoco le aparece al jugador', function () {
+    $manager = Member::factory()->manager()->create();
+    $player = Member::factory()->for($manager->club)->create();
+    $otro = Member::factory()->for($manager->club)->create();
+    $due = Due::factory()->forMember($otro)->create(['amount_cents' => 30000]);
+
+    $this->actingAs($manager->user)->post("/cuota/{$due->id}/estado", ['status' => 'paid', 'pot' => 'cash']);
+    $this->actingAs($manager->user)->post("/cuota/{$due->id}/estado", ['status' => 'pending']);
+
+    $this->actingAs($player->user)->get('/cuota')
+        ->assertInertia(function (Assert $page) {
+            expect(collect($page->toArray()['props']['movimientos'])->where('kind', 'cuota'))->toHaveCount(0);
+        });
+});
+
+it('una cuota cobrada el mismo día que se desmarcó otra se cuenta una sola vez', function () {
+    // El contador no se infla con la reversa: ese día se cobró UNA.
+    $manager = Member::factory()->manager()->create();
+    $player = Member::factory()->for($manager->club)->create();
+    $uno = Member::factory()->for($manager->club)->create();
+    $otro = Member::factory()->for($manager->club)->create();
+    $anulada = Due::factory()->forMember($uno)->create(['amount_cents' => 30000]);
+    $buena = Due::factory()->forMember($otro)->create(['amount_cents' => 5000]);
+
+    $this->actingAs($manager->user)->post("/cuota/{$anulada->id}/estado", ['status' => 'paid', 'pot' => 'cash']);
+    $this->actingAs($manager->user)->post("/cuota/{$anulada->id}/estado", ['status' => 'pending']);
+    $this->actingAs($manager->user)->post("/cuota/{$buena->id}/estado", ['status' => 'paid', 'pot' => 'cash']);
+
+    $this->actingAs($player->user)->get('/cuota')
+        ->assertInertia(function (Assert $page) {
+            $cuotas = collect($page->toArray()['props']['movimientos'])->where('kind', 'cuota');
+
+            expect($cuotas)->toHaveCount(1)
+                ->and($cuotas->first()['count'])->toBe(1);
+        });
+});
+
 it('el manager sí ve el detalle', function () {
     $manager = Member::factory()->manager()->create();
     $otro = Member::factory()->for($manager->club)->create();
@@ -176,6 +238,72 @@ it('el manager sí ve el detalle', function () {
                 ->and($cuotas->first()['member_name'])->toBe('Sergio Quiroga')
                 ->and($cuotas->first()['amount_cents'])->toBe(30000);
         });
+});
+
+it('la plata de Mollie que no se pudo acreditar la ve el delegado en la pantalla', function () {
+    // Es el único aviso de que la cuenta de Mollie quedó mal configurada. Sin
+    // él, el síntoma que ve el dueño es "la app muestra menos plata que el
+    // banco", que es justo lo que los dos bolsillos vinieron a eliminar.
+    $manager = Member::factory()->manager()->create();
+    $player = Member::factory()->for($manager->club)->create();
+
+    // Uno sin dueño (el resolvedor no supo de quién era) y uno en otra moneda.
+    MolliePayout::withoutGlobalScopes()->create([
+        'club_id' => null,
+        'mollie_payout_id' => 'ptr_huerfano',
+        'status' => 'completed',
+        'amount_cents' => 28800,
+        'currency' => 'RON',
+        'pending_reason' => 'club_ambiguo',
+    ]);
+    MolliePayout::withoutGlobalScopes()->create([
+        'club_id' => $manager->club_id,
+        'mollie_payout_id' => 'ptr_euros',
+        'status' => 'completed',
+        'amount_cents' => 10000,
+        'currency' => 'EUR',
+        'pending_reason' => 'moneda',
+    ]);
+
+    $this->actingAs($manager->user)->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('payouts_sin_acreditar.count', 2)
+            ->where('payouts_sin_acreditar.amount_cents', 38800));
+
+    // Al jugador no: el cartel es para quien puede hacer algo.
+    $this->actingAs($player->user)->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page->where('payouts_sin_acreditar', null));
+});
+
+it('sin payouts sin acreditar no hay cartel, y los acreditados no cuentan', function () {
+    $manager = Member::factory()->manager()->create();
+    MolliePayout::withoutGlobalScopes()->create([
+        'club_id' => $manager->club_id,
+        'mollie_payout_id' => 'ptr_ok',
+        'status' => 'completed',
+        'amount_cents' => 28800,
+        'currency' => 'RON',
+        'pending_reason' => null,
+    ]);
+
+    $this->actingAs($manager->user)->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page->where('payouts_sin_acreditar', null));
+});
+
+it('el payout sin acreditar de otro club no se cuenta', function () {
+    $mio = Member::factory()->manager()->create();
+    $ajeno = Member::factory()->manager()->create();
+    MolliePayout::withoutGlobalScopes()->create([
+        'club_id' => $ajeno->club_id,
+        'mollie_payout_id' => 'ptr_ajeno',
+        'status' => 'completed',
+        'amount_cents' => 28800,
+        'currency' => 'EUR',
+        'pending_reason' => 'moneda',
+    ]);
+
+    $this->actingAs($mio->user)->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page->where('payouts_sin_acreditar', null));
 });
 
 it('la caja sigue mostrando cobrado vs adeudado y los deudores', function () {

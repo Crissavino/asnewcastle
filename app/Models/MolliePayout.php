@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToClub;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -33,6 +34,12 @@ class MolliePayout extends Model
     public function sinAcreditar(): bool
     {
         return $this->pending_reason !== null;
+    }
+
+    /** Los que quedaron registrados sin acreditar: plata que tiene que estar a la vista. */
+    public function scopeSinAcreditar(Builder $query): void
+    {
+        $query->whereNotNull('pending_reason');
     }
 
     protected function casts(): array

@@ -10,6 +10,7 @@ use App\Models\Event;
 use App\Models\Expense;
 use App\Jobs\CancelMollieSubscription;
 use App\Models\Member;
+use App\Models\MolliePayout;
 use App\Models\Movement;
 use App\Models\Payment;
 use App\Services\Mollie\MollieGateway;
@@ -89,6 +90,11 @@ class CuotaController extends Controller
                 'transito_cents' => $mollieReady ? $mollie->transitCents() : null,
                 'as_of' => now()->toDateString(),
             ],
+            // Plata que Mollie informó y la app NO pudo acreditar. Es el único
+            // aviso de que la cuenta de Mollie quedó mal configurada, y sin él
+            // el síntoma que ve el dueño es "la app muestra menos plata que el
+            // banco" — justo lo que esto vino a eliminar.
+            'payouts_sin_acreditar' => $isManager ? $this->payoutsSinAcreditar($club) : null,
             // El libro, como lo ve quien mira (el manager, con detalle)
             'movimientos' => $this->movements($isManager),
             // Débito automático del jugador: estado + monto con descuento
@@ -399,12 +405,19 @@ class CuotaController extends Controller
 
         [$cuotas, $resto] = $movements->partition(fn ($m) => $m->kind === 'cuota');
 
+        // Solo las cuotas que todavía cuentan: ni los contra-asientos ni los
+        // asientos que alguien contra-asentó. Contando las filas de reversa, un
+        // día que SOLO tiene una reversa (cuota desmarcada al día siguiente) le
+        // aparecía al jugador como "Cuotas cobradas · 1", y un día con las dos
+        // filas le inflaba el contador. El contra-asiento es siempre igual o más
+        // nuevo que su asiento, así que si el asiento entró en esta ventana del
+        // historial, su reversa también.
+        $anulados = $movements->pluck('reverses_movement_id')->filter()->all();
+
         $porDia = $cuotas
+            ->whereNull('reverses_movement_id')
+            ->whereNotIn('id', $anulados)
             ->groupBy(fn ($m) => $m->occurred_on->toDateString())
-            // Un día cuyo neto es cero no cobró nada (cuota marcada y
-            // desmarcada el mismo día): se queda sin fila en vez de mostrar un
-            // movimiento que no existió.
-            ->reject(fn ($g) => (int) $g->sum('amount_cents') === 0)
             ->map(fn ($g, $dia) => [
                 'id' => 'cuota-'.$dia,
                 'kind' => 'cuota',
@@ -418,6 +431,34 @@ class CuotaController extends Controller
             ->sortByDesc('occurred_on')
             ->values()
             ->all();
+    }
+
+    /**
+     * Cuántos payouts quedaron sin acreditar y por cuánto. null si no hay
+     * ninguno: la pantalla no muestra un cartel tranquilizador, muestra nada.
+     *
+     * Entran los del club y también los que quedaron SIN dueño (club_id null,
+     * porque el resolvedor no supo de quién era la cuenta): esos son el caso que
+     * más importa avisar, y no son datos de otro club — no tienen club. Se lee
+     * con el club a mano, como todo lo que no puede confiar en el global scope.
+     *
+     * @return array{count: int, amount_cents: int}|null
+     */
+    protected function payoutsSinAcreditar(Club $club): ?array
+    {
+        $payouts = MolliePayout::withoutGlobalScopes()
+            ->sinAcreditar()
+            ->where(fn ($q) => $q->where('club_id', $club->id)->orWhereNull('club_id'))
+            ->get();
+
+        if ($payouts->isEmpty()) {
+            return null;
+        }
+
+        return [
+            'count' => $payouts->count(),
+            'amount_cents' => (int) $payouts->sum('amount_cents'),
+        ];
     }
 
     /** Entró y salió este mes, y los gastos por categoría. No es el saldo. */
