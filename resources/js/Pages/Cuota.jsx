@@ -1,7 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { Check, Copy, Shield, X } from 'lucide-react';
 import { IconBell } from '../Components/TabIcons';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import AppLayout from '../Layouts/AppLayout';
 import Kit from '../Components/Kit';
 import { useTranslations } from '../i18n';
@@ -16,6 +16,15 @@ function money(cents) {
 // 'AAAA-MM-DD' → '12 nov'. Mediodía fijo para que el huso no corra el día.
 function dayMonth(iso, intl) {
     return new Date(`${iso}T12:00:00`).toLocaleDateString(intl, { day: 'numeric', month: 'short' });
+}
+
+// Hoy en hora LOCAL, 'AAAA-MM-DD'. Con toISOString() sale el día UTC: en
+// Bucarest, de medianoche a las 2 o 3 de la mañana, precargaba ayer.
+function todayLocal() {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, '0');
+
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
 // Pago de la cuota por transferencia. Siempre disponible si el club tiene IBAN;
@@ -85,7 +94,7 @@ function ExpenseSheet({ categorias, eventos, currency, onClose }) {
     const [data, setData] = useState({
         category: 'referee',
         amount: '',
-        spent_on: new Date().toISOString().slice(0, 10),
+        spent_on: todayLocal(),
         description: '',
         event_id: '',
         pot: '',
@@ -187,10 +196,14 @@ function MovementSheet({ kind, saldos, currency, onClose }) {
     const { t } = useTranslations();
     const [pot, setPot] = useState('');
     const [amount, setAmount] = useState('');
-    const [occurredOn, setOccurredOn] = useState(new Date().toISOString().slice(0, 10));
+    const [occurredOn, setOccurredOn] = useState(todayLocal());
     const [note, setNote] = useState('');
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState({});
+    // El disabled del botón recién existe después del re-render: dos taps en el
+    // mismo tick (un tap fantasma del WebView) se colarían los dos. El ref se
+    // lee y se escribe en el mismo tick, así que la traba es hermética.
+    const sending = useRef(false);
 
     const isTransfer = kind === 'transferencia';
     const isAjuste = kind === 'ajuste';
@@ -215,6 +228,8 @@ function MovementSheet({ kind, saldos, currency, onClose }) {
     const save = () => {
         // El ajuste lee el saldo y escribe sin lock: dos envíos simultáneos
         // dejarían dos ajustes. Acá se cierra la puerta barata — un solo envío.
+        if (sending.current) return;
+        sending.current = true;
         setProcessing(true);
         const payload = isTransfer
             ? { from: pot, amount_cents: cents, occurred_on: occurredOn, note: note || null }
@@ -225,7 +240,10 @@ function MovementSheet({ kind, saldos, currency, onClose }) {
         router.post(route(`movimientos.${kind}`), payload, {
             onSuccess: onClose,
             onError: setErrors,
-            onFinish: () => setProcessing(false),
+            onFinish: () => {
+                sending.current = false;
+                setProcessing(false);
+            },
             preserveScroll: true,
         });
     };
@@ -697,19 +715,25 @@ export default function Cuota({ currency, online_ready, mollie_ready, bank, my_d
                                     <div style={{ minWidth: 0 }}>
                                         <span style={{ fontSize: 14 }}>
                                             {t(`saldo.kind_${m.kind}`)}
-                                            {m.count > 1 && <span className="nc-num nc-meta" style={{ fontSize: 12 }}> ·&nbsp;{m.count}</span>}
+                                            {/* Sin monto, la cantidad es lo único que lleva la
+                                                fila del jugador: va siempre, incluso si es 1. */}
+                                            {m.count > 0 && <span className="nc-num nc-meta" style={{ fontSize: 12 }}> ·&nbsp;{m.count}</span>}
                                         </span>
                                         <div className="nc-meta" style={{ fontSize: 11.5 }}>
-                                            {[dayMonth(m.occurred_on, intl), t(`saldo.${m.pot}`), m.member_name, m.note]
+                                            {[dayMonth(m.occurred_on, intl), m.pot && t(`saldo.${m.pot}`), m.member_name, m.note]
                                                 .filter(Boolean).join(' · ')}
                                         </div>
                                     </div>
-                                    <span className="nc-num" style={{
-                                        fontSize: 14, fontWeight: 700, flexShrink: 0,
-                                        color: m.amount_cents < 0 ? 'var(--red-dk)' : 'var(--aqua-tx)',
-                                    }}>
-                                        {m.amount_cents < 0 ? '−' : '+'}{money(Math.abs(m.amount_cents))} {currency}
-                                    </span>
+                                    {/* Al jugador las cuotas del día le llegan sin monto ni
+                                        bolsillo: un importe suelto delata al becado. */}
+                                    {typeof m.amount_cents === 'number' && (
+                                        <span className="nc-num" style={{
+                                            fontSize: 14, fontWeight: 700, flexShrink: 0,
+                                            color: m.amount_cents < 0 ? 'var(--red-dk)' : 'var(--aqua-tx)',
+                                        }}>
+                                            {m.amount_cents < 0 ? '−' : '+'}{money(Math.abs(m.amount_cents))} {currency}
+                                        </span>
+                                    )}
                                 </div>
                             ))}
                         </div>

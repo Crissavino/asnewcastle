@@ -365,9 +365,14 @@ class CuotaController extends Controller
      * El libro de movimientos para la pantalla.
      *
      * El manager ve fila por fila, con el `due_id` y el nombre de quien pagó.
-     * El resto del plantel ve las cuotas del día SUMADAS y sin dueño: un monto
-     * suelto delata al becado o al de cuota personalizada, y el tipo de cuota
-     * de cada uno es privado.
+     *
+     * Al resto del plantel las cuotas le llegan agregadas POR DÍA y sin nombre
+     * ni monto: solo la fecha y cuántas se cobraron. El monto es justo lo que
+     * delata — un solo importe suelto, cruzado con quién pasó de "debe" a "al
+     * día" en el plantel (que lo ve todo el mundo), identifica la cuota de esa
+     * persona, y el tipo de cuota de cada uno es privado. Tampoco se parte por
+     * bolsillo: dos cuotas del mismo día en bolsillos distintos volverían a ser
+     * dos filas. La plata está igual, arriba, en los dos saldos.
      */
     protected function movements(bool $isManager): array
     {
@@ -395,18 +400,18 @@ class CuotaController extends Controller
         [$cuotas, $resto] = $movements->partition(fn ($m) => $m->kind === 'cuota');
 
         $porDia = $cuotas
-            ->groupBy(fn ($m) => $m->occurred_on->toDateString().'|'.$m->pot)
-            ->map(fn ($g) => [
-                'id' => 'cuota-'.$g->first()->occurred_on->toDateString().'-'.$g->first()->pot,
+            ->groupBy(fn ($m) => $m->occurred_on->toDateString())
+            // Un día cuyo neto es cero no cobró nada (cuota marcada y
+            // desmarcada el mismo día): se queda sin fila en vez de mostrar un
+            // movimiento que no existió.
+            ->reject(fn ($g) => (int) $g->sum('amount_cents') === 0)
+            ->map(fn ($g, $dia) => [
+                'id' => 'cuota-'.$dia,
                 'kind' => 'cuota',
-                'pot' => $g->first()->pot,
-                'amount_cents' => (int) $g->sum('amount_cents'),
-                'occurred_on' => $g->first()->occurred_on->toDateString(),
-                'note' => null,
+                'occurred_on' => $dia,
+                // Cuántas se cobraron ese día. Ni monto, ni bolsillo, ni dueño.
                 'count' => $g->count(),
-            ])
-            // Una cuota marcada y desmarcada el mismo día suma cero: es ruido.
-            ->reject(fn ($g) => $g['amount_cents'] === 0);
+            ]);
 
         return $resto->map($line)
             ->concat($porDia)

@@ -104,11 +104,60 @@ it('el jugador ve los saldos pero no el detalle de cada cuota cobrada', function
             ->where('movimientos', fn ($ms) => collect($ms)
                 ->where('kind', 'cuota')
                 ->every(fn ($mv) => ! isset($mv['due_id']) && ! isset($mv['member_name'])))
-            // Las dos cuotas del día van en UNA fila sumada: un monto suelto de
-            // 5000 entre los de 30000 delataría al becado o al de cuota custom.
+            // Las dos cuotas del día van en UNA fila, y SIN monto: el monto
+            // delata al becado o al de cuota personalizada.
             ->where('movimientos', fn ($ms) => collect($ms)->where('kind', 'cuota')->count() === 1)
-            ->where('movimientos', fn ($ms) => collect($ms)->firstWhere('kind', 'cuota')['amount_cents'] === 35000)
+            ->where('movimientos', fn ($ms) => collect($ms)
+                ->where('kind', 'cuota')
+                ->every(fn ($mv) => $mv['count'] === 2 && ! isset($mv['amount_cents']) && ! isset($mv['pot'])))
         );
+});
+
+it('una sola cuota cobrada en el día tampoco le muestra el monto al jugador', function () {
+    // El caso que el agrupado por día NO tapa si además se manda el monto: un
+    // solo monto suelto, cruzado con quién pasó de "debe" a "al día" en el
+    // plantel (que ve todo el mundo), identifica la cuota de esa persona.
+    $manager = Member::factory()->manager()->create();
+    $player = Member::factory()->for($manager->club)->create();
+    $becado = Member::factory()->for($manager->club)->create();
+    $chica = Due::factory()->forMember($becado)->create(['amount_cents' => 5000]);
+    $this->actingAs($manager->user)->post("/cuota/{$chica->id}/estado", ['status' => 'paid', 'pot' => 'cash']);
+
+    $this->actingAs($player->user)->get('/cuota')
+        ->assertInertia(function (Assert $page) {
+            $cuotas = collect($page->toArray()['props']['movimientos'])->where('kind', 'cuota');
+
+            expect($cuotas)->toHaveCount(1)
+                ->and($cuotas->first())->not->toHaveKey('amount_cents')
+                ->and($cuotas->first())->not->toHaveKey('pot')
+                ->and($cuotas->first())->not->toHaveKey('due_id')
+                ->and($cuotas->first()['count'])->toBe(1);
+        });
+
+    // Y el saldo de arriba sigue teniendo la plata: lo que se esconde es la
+    // fila, no el dinero.
+    $this->actingAs($player->user)->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page->where('saldos.cash', 5000));
+});
+
+it('dos cuotas del mismo día en bolsillos distintos siguen siendo una sola fila', function () {
+    $manager = Member::factory()->manager()->create();
+    $player = Member::factory()->for($manager->club)->create();
+    $uno = Member::factory()->for($manager->club)->create();
+    $otro = Member::factory()->for($manager->club)->create();
+    $dueUno = Due::factory()->forMember($uno)->create(['amount_cents' => 30000]);
+    $dueOtro = Due::factory()->forMember($otro)->create(['amount_cents' => 5000]);
+    $this->actingAs($manager->user)->post("/cuota/{$dueUno->id}/estado", ['status' => 'paid', 'pot' => 'cash']);
+    $this->actingAs($manager->user)->post("/cuota/{$dueOtro->id}/estado", ['status' => 'paid', 'pot' => 'cuenta']);
+
+    $this->actingAs($player->user)->get('/cuota')
+        ->assertInertia(function (Assert $page) {
+            $cuotas = collect($page->toArray()['props']['movimientos'])->where('kind', 'cuota');
+
+            // Partir por bolsillo volvería a dejar dos montos sueltos
+            expect($cuotas)->toHaveCount(1)
+                ->and($cuotas->first()['count'])->toBe(2);
+        });
 });
 
 it('el manager sí ve el detalle', function () {
