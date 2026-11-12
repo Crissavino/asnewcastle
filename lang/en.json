@@ -634,6 +634,7 @@
     "saldo.transito": "On the way to the bank",
     "saldo.transito_no": "Could not read what is on the way. Try again in a while.",
     "saldo.no_acreditado": "Mollie money the app could not credit: :amount :currency (:count). The account balance may be lower than the bank: the Mollie setup needs a look.",
+    "saldo.no_acreditado_sin_monto": "Mollie money the app could not credit, in more than one currency (:count payouts). The account balance may be lower than the bank: the Mollie setup needs a look.",
     "saldo.transito_off": "Online payments are off. If Mollie still owes a payout, that money is on the way and is not in any pocket yet.",
     "saldo.as_of": "Balances as of :date",
     "saldo.negativo": "A pocket went negative. Check the balance or adjust it against the statement.",

@@ -268,11 +268,33 @@ it('la plata de Mollie que no se pudo acreditar la ve el delegado en la pantalla
     $this->actingAs($manager->user)->get('/cuota')
         ->assertInertia(fn (Assert $page) => $page
             ->where('payouts_sin_acreditar.count', 2)
-            ->where('payouts_sin_acreditar.amount_cents', 38800));
+            // Monedas distintas: el monto se omite, no se suma ni se rotula.
+            ->where('payouts_sin_acreditar.amount_cents', null)
+            ->where('payouts_sin_acreditar.currency', null));
 
     // Al jugador no: el cartel es para quien puede hacer algo.
     $this->actingAs($player->user)->get('/cuota')
         ->assertInertia(fn (Assert $page) => $page->where('payouts_sin_acreditar', null));
+});
+
+it('con una sola moneda el cartel muestra el monto en esa moneda, no en la del club', function () {
+    $manager = Member::factory()->manager()->create();
+    foreach ([['ptr_a', 10000], ['ptr_b', 5050]] as [$id, $amount]) {
+        MolliePayout::withoutGlobalScopes()->create([
+            'club_id' => $manager->club_id,
+            'mollie_payout_id' => $id,
+            'status' => 'completed',
+            'amount_cents' => $amount,
+            'currency' => 'EUR',
+            'pending_reason' => 'moneda',
+        ]);
+    }
+
+    $this->actingAs($manager->user)->get('/cuota')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('payouts_sin_acreditar.count', 2)
+            ->where('payouts_sin_acreditar.amount_cents', 15050)
+            ->where('payouts_sin_acreditar.currency', 'EUR'));
 });
 
 it('sin payouts sin acreditar no hay cartel, y los acreditados no cuentan', function () {

@@ -634,6 +634,7 @@
     "saldo.transito": "En camino al banco",
     "saldo.transito_no": "No se pudo leer lo que viene en camino. Probá de nuevo en un rato.",
     "saldo.no_acreditado": "Plata de Mollie que la app no pudo acreditar: :amount :currency (:count). El saldo de la cuenta puede estar por debajo del banco: hay que revisar la configuración de Mollie.",
+    "saldo.no_acreditado_sin_monto": "Plata de Mollie que la app no pudo acreditar, en más de una moneda (:count payouts). El saldo de la cuenta puede estar por debajo del banco: hay que revisar la configuración de Mollie.",
     "saldo.transito_off": "Los pagos online están apagados. Si Mollie todavía debe un depósito, esa plata viene en camino y no está en ningún bolsillo.",
     "saldo.as_of": "Saldos al :date",
     "saldo.negativo": "Un bolsillo quedó en negativo. Fijate el saldo o ajustalo contra el extracto.",

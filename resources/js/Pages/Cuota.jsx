@@ -675,11 +675,13 @@ export default function Cuota({ currency, online_ready, mollie_ready, bank, my_d
                         la ve el delegado: es él quien puede hacer algo. */}
                     {payouts_sin_acreditar && (
                         <div className="nc-error" style={{ fontWeight: 600, marginTop: 10 }}>
-                            {t('saldo.no_acreditado', {
-                                amount: money(payouts_sin_acreditar.amount_cents),
-                                currency,
-                                count: payouts_sin_acreditar.count,
-                            })}
+                            {payouts_sin_acreditar.amount_cents === null
+                                ? t('saldo.no_acreditado_sin_monto', { count: payouts_sin_acreditar.count })
+                                : t('saldo.no_acreditado', {
+                                    amount: money(payouts_sin_acreditar.amount_cents),
+                                    currency: payouts_sin_acreditar.currency,
+                                    count: payouts_sin_acreditar.count,
+                                })}
                         </div>
                     )}
 

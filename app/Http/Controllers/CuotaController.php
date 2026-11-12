@@ -442,7 +442,12 @@ class CuotaController extends Controller
      * más importa avisar, y no son datos de otro club — no tienen club. Se lee
      * con el club a mano, como todo lo que no puede confiar en el global scope.
      *
-     * @return array{count: int, amount_cents: int}|null
+     * El monto solo se informa si todos están en la MISMA moneda (y entonces va
+     * con ella): sumar euros con lei y rotular el total con la moneda del club
+     * es un número falso. Con más de una, amount_cents y currency van null y la
+     * pantalla muestra solo la cantidad.
+     *
+     * @return array{count: int, amount_cents: int|null, currency: string|null}|null
      */
     protected function payoutsSinAcreditar(Club $club): ?array
     {
@@ -455,9 +460,13 @@ class CuotaController extends Controller
             return null;
         }
 
+        $monedas = $payouts->groupBy(fn ($p) => $p->currency ?? $club->currency);
+        $unica = $monedas->count() === 1;
+
         return [
             'count' => $payouts->count(),
-            'amount_cents' => (int) $payouts->sum('amount_cents'),
+            'amount_cents' => $unica ? (int) $payouts->sum('amount_cents') : null,
+            'currency' => $unica ? $monedas->keys()->first() : null,
         ];
     }
 
