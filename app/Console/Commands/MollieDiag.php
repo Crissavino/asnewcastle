@@ -22,8 +22,15 @@ class MollieDiag extends Command
         $key = (string) config('services.mollie.key');
         $this->info('key prefix='.substr($key, 0, 5).' | enabled='.(int) config('services.mollie.enabled').' | profile='.config('services.mollie.profile_id'));
 
+        // Con access token (access_...) Mollie exige saber de qué perfil hablás:
+        // sin profileId devuelve 400 "A website profile is required for payments".
+        // Con API key clásica el perfil va implícito en la credencial.
+        $esAccessToken = str_starts_with($key, 'access_');
+        $query = $esAccessToken ? ['profileId' => config('services.mollie.profile_id')] : [];
+        $testmode = $esAccessToken && (bool) config('services.mollie.testmode');
+
         try {
-            $methods = $mollie->methods->allActive();
+            $methods = $mollie->methods->allActive($query, $testmode);
             $ids = collect($methods)->map(fn ($m) => $m->id)->implode(',');
             $this->info('AUTH OK — métodos activos: '.count($methods).' ('.$ids.')');
         } catch (\Throwable $e) {
