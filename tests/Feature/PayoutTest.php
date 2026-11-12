@@ -309,3 +309,60 @@ it('un saldo leído se cachea cinco minutos', function () {
     $this->travel(6)->minutes();
     expect(app(MollieGateway::class)->transitCents())->toBe(9999);
 });
+it('trae un payout que el webhook se perdió', function () {
+    $m = Member::factory()->manager()->create();
+    fakeMolliePayoutList([['id' => 'ptr_x', 'amountCents' => 28800, 'status' => 'completed']]);
+
+    $this->artisan('payouts:sincronizar')->assertSuccessful();
+
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(28800);
+
+    $mov = Movement::withoutGlobalScopes()->where('mollie_payout_id', 'ptr_x')->get();
+    expect($mov)->toHaveCount(1)->and($mov->first()->club_id)->toBe($m->club_id);
+});
+
+it('no duplica lo que el webhook ya acreditó', function () {
+    // Review Focus #4
+    $m = Member::factory()->manager()->create();
+    fakeMolliePayout(id: 'ptr_x', amountCents: 28800, status: 'completed');
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_x', 'type' => 'payout.completed']);
+
+    fakeMolliePayoutList([['id' => 'ptr_x', 'amountCents' => 28800, 'status' => 'completed']]);
+    $this->artisan('payouts:sincronizar')->assertSuccessful();
+    $this->artisan('payouts:sincronizar')->assertSuccessful();
+
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(28800)
+        ->and(Movement::withoutGlobalScopes()->where('mollie_payout_id', 'ptr_x')->count())->toBe(1);
+});
+
+it('el chequeo diario también contra-asienta un payout que falló', function () {
+    $m = Member::factory()->manager()->create();
+    fakeMolliePayout(id: 'ptr_x', amountCents: 28800, status: 'completed');
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_x']);
+
+    fakeMolliePayoutList([['id' => 'ptr_x', 'amountCents' => 28800, 'status' => 'failed']]);
+    $this->artisan('payouts:sincronizar')->assertSuccessful();
+
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(0);
+});
+
+it('si no puede listar los payouts falla a la vista y no acredita nada', function () {
+    $m = Member::factory()->manager()->create();
+    fakeMolliePayoutListFailure();
+
+    $this->artisan('payouts:sincronizar')->assertFailed();
+
+    expect(Movement::withoutGlobalScopes()->count())->toBe(0);
+});
+
+it('el chequeo diario corre a las 07:00 de Bucarest', function () {
+    $evento = collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())
+        ->first(fn ($e) => str_contains($e->command, 'payouts:sincronizar'));
+
+    expect($evento)->not->toBeNull()
+        ->and($evento->expression)->toBe('0 7 * * *')
+        ->and($evento->timezone)->toBe('Europe/Bucharest');
+});

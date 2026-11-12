@@ -144,8 +144,10 @@ function fakeMolliePayoutList(array $payouts): array
         );
     }
 
+    // Acumulativo, igual que fakeMolliePayout(): un id repetido se reemplaza y
+    // los demás conviven, para poder mezclar el payout del webhook con la lista.
     $holder = mollieFakeHolder();
-    $holder->payouts = $resources;
+    $holder->payouts = $resources + ($holder->payouts ?? []);
     $holder->payoutError = null;
     $holder->listError = null;
     mollieFakeStubPayouts();

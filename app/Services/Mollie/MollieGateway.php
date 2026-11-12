@@ -4,6 +4,8 @@ namespace App\Services\Mollie;
 
 use App\Models\Due;
 use App\Models\Member;
+use Illuminate\Support\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Mollie\Api\Exceptions\ApiException;
@@ -223,6 +225,27 @@ class MollieGateway
     public function getPayout(string $payoutId): Payout
     {
         return $this->mollie->payouts->get($payoutId, $this->testmode());
+    }
+
+    /**
+     * Los payouts creados desde $desde, el más nuevo primero. La API de payouts
+     * no filtra por fecha: se recorre todo y se descartan los anteriores a $desde.
+     *
+     * @return array<int, Payout>
+     */
+    public function listPayouts(CarbonInterface $desde): array
+    {
+        $payouts = [];
+
+        foreach ($this->mollie->payouts->iterator(null, 50, ['testmode' => $this->testmode()]) as $payout) {
+            if (filled($payout->createdAt ?? null) && Carbon::parse($payout->createdAt)->lt($desde)) {
+                continue; // no se asume el orden de la API: se sigue recorriendo
+            }
+
+            $payouts[] = $payout;
+        }
+
+        return $payouts;
     }
 
     /** El saldo principal de la cuenta de Mollie (balances.read). */

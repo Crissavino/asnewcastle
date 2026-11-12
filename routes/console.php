@@ -10,3 +10,6 @@ Schedule::command('tabla:importar')->dailyAt('07:00');
 Schedule::command('figura:abrir')->hourly();
 Schedule::command('figura:cerrar')->hourly();
 Schedule::command('legitimacion:purgar')->dailyAt('04:00');
+
+// Red de seguridad del webhook de payouts de Mollie: repasa los últimos 30 días.
+Schedule::command('payouts:sincronizar')->dailyAt('07:00')->timezone('Europe/Bucharest')->withoutOverlapping();
