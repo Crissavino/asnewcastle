@@ -620,5 +620,14 @@
     "movimiento.mover_plata_hint": "Moving money between pockets is not an expense: the club total does not change.",
     "movimiento.desde": "Move from",
     "movimiento.pot_cuenta_origen": "From the account",
-    "movimiento.pot_cash_origen": "In cash"
+    "movimiento.pot_cash_origen": "In cash",
+    "movimiento.ingreso_titulo": "Income that is not a fee",
+    "movimiento.ingreso_pot": "Where it came in",
+    "movimiento.monto": "Amount",
+    "movimiento.fecha": "Date",
+    "movimiento.nota": "What is it for?",
+    "movimiento.extracto_dice": "The statement says",
+    "movimiento.ajustar": "Adjust to statement",
+    "movimiento.ajustar_hint": "Enter the balance the statement shows. The app works out the difference.",
+    "movimiento.nota_obligatoria": "Note is required"
 }

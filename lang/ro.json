@@ -620,5 +620,14 @@
     "movimiento.mover_plata_hint": "Mutarea banilor între buzunare nu este o cheltuială: totalul clubului nu se schimbă.",
     "movimiento.desde": "Mută din",
     "movimiento.pot_cuenta_origen": "Din cont",
-    "movimiento.pot_cash_origen": "În numerar"
+    "movimiento.pot_cash_origen": "În numerar",
+    "movimiento.ingreso_titulo": "Venit care nu este cotizație",
+    "movimiento.ingreso_pot": "Unde a intrat",
+    "movimiento.monto": "Sumă",
+    "movimiento.fecha": "Data",
+    "movimiento.nota": "Pentru ce este?",
+    "movimiento.extracto_dice": "Extrasul arată",
+    "movimiento.ajustar": "Ajustează la extras",
+    "movimiento.ajustar_hint": "Introdu soldul din extras. Aplicația calculează diferența.",
+    "movimiento.nota_obligatoria": "Nota este obligatorie"
 }

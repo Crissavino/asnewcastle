@@ -620,5 +620,14 @@
     "movimiento.mover_plata_hint": "Pasar plata de un bolsillo al otro no es un gasto: el total del club no cambia.",
     "movimiento.desde": "Sacar de",
     "movimiento.pot_cuenta_origen": "De la cuenta",
-    "movimiento.pot_cash_origen": "En efectivo"
+    "movimiento.pot_cash_origen": "En efectivo",
+    "movimiento.ingreso_titulo": "Ingreso que no es cuota",
+    "movimiento.ingreso_pot": "Dónde entró",
+    "movimiento.monto": "Monto",
+    "movimiento.fecha": "Fecha",
+    "movimiento.nota": "¿De qué es?",
+    "movimiento.extracto_dice": "El extracto dice",
+    "movimiento.ajustar": "Ajustar al extracto",
+    "movimiento.ajustar_hint": "Poné el saldo que ves en el extracto. La app calcula la diferencia.",
+    "movimiento.nota_obligatoria": "La nota es obligatoria"
 }

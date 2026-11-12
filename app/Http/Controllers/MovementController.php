@@ -35,26 +35,83 @@ class MovementController extends Controller
         ]);
 
         $to = $validated['from'] === 'cuenta' ? 'cash' : 'cuenta';
-        $member = app(CurrentClub::class)->member();
         $group = (string) Str::uuid();
 
-        DB::transaction(function () use ($validated, $to, $member, $group) {
+        DB::transaction(function () use ($validated, $to, $group) {
             foreach ([[$validated['from'], -1], [$to, 1]] as [$pot, $sign]) {
-                Movement::create([
-                    'pot' => $pot,
-                    'kind' => 'transferencia',
-                    'amount_cents' => $sign * $validated['amount_cents'],
-                    'occurred_on' => $validated['occurred_on'],
-                    'group_uuid' => $group,
-                    'note' => $validated['note'] ?? null,
-                    'created_by_member_id' => $member->id,
-                ]);
+                $this->record($pot, 'transferencia', $sign * $validated['amount_cents'], $validated['occurred_on'], $validated['note'] ?? null, $group);
             }
         });
 
-        // Avisa, nunca frena: se mueve plata que todavía no entró.
+        return $this->backWarningIfNegative($validated['from']);
+    }
+
+    /**
+     * Plata que entra y no es cuota (patrimonio inicial, rifa, donación,
+     * devolución). La nota es obligatoria: un movimiento sin explicación
+     * vuelve inauditable el libro.
+     */
+    public function ingreso(Request $request): RedirectResponse
+    {
+        Gate::authorize('create', Event::class);
+
+        $validated = $request->validate([
+            'pot' => ['required', Rule::in(Movement::POTS)],
+            'amount_cents' => ['required', 'integer', 'min:1', 'max:10000000'],
+            'occurred_on' => ['required', 'date'],
+            'note' => ['required', 'string', 'max:120'],
+        ]);
+
+        $this->record($validated['pot'], 'ingreso', $validated['amount_cents'], $validated['occurred_on'], $validated['note']);
+
+        return back();
+    }
+
+    /**
+     * Ajuste contra el extracto. El usuario dicta el saldo OBJETIVO ("el banco
+     * dice 180"); lo que se guarda es objetivo - actual, con signo. Diferencia
+     * cero no crea fila: sería ruido en el historial.
+     */
+    public function ajuste(Request $request): RedirectResponse
+    {
+        Gate::authorize('create', Event::class);
+
+        $validated = $request->validate([
+            'pot' => ['required', Rule::in(Movement::POTS)],
+            'target_cents' => ['required', 'integer', 'min:-100000000', 'max:100000000'],
+            'note' => ['required', 'string', 'max:120'],
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            $difference = $validated['target_cents'] - app(Ledger::class)->balance($validated['pot']);
+
+            if ($difference !== 0) {
+                $this->record($validated['pot'], 'ajuste', $difference, now()->toDateString(), $validated['note']);
+            }
+        });
+
+        // El objetivo lo dicta el banco: si hay menos, hay menos. Avisa, no frena.
+        return $this->backWarningIfNegative($validated['pot']);
+    }
+
+    private function record(string $pot, string $kind, int $amountCents, string $occurredOn, ?string $note, ?string $group = null): void
+    {
+        Movement::create([
+            'pot' => $pot,
+            'kind' => $kind,
+            'amount_cents' => $amountCents,
+            'occurred_on' => $occurredOn,
+            'group_uuid' => $group,
+            'note' => $note,
+            'created_by_member_id' => app(CurrentClub::class)->member()->id,
+        ]);
+    }
+
+    /** Avisa, nunca frena: el saldo puede quedar en negativo. */
+    private function backWarningIfNegative(string $pot): RedirectResponse
+    {
         $redirect = back();
-        if (app(Ledger::class)->balance($validated['from']) < 0) {
+        if (app(Ledger::class)->balance($pot) < 0) {
             $redirect->with('aviso_saldo_negativo', true);
         }
 

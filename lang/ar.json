@@ -620,5 +620,14 @@
     "movimiento.mover_plata_hint": "نقل الأموال بين المحفظتين ليس مصروفًا: إجمالي النادي لا يتغير.",
     "movimiento.desde": "النقل من",
     "movimiento.pot_cuenta_origen": "من الحساب",
-    "movimiento.pot_cash_origen": "نقدًا"
+    "movimiento.pot_cash_origen": "نقدًا",
+    "movimiento.ingreso_titulo": "إيراد ليس اشتراكًا",
+    "movimiento.ingreso_pot": "أين دخل",
+    "movimiento.monto": "المبلغ",
+    "movimiento.fecha": "التاريخ",
+    "movimiento.nota": "ما سببه؟",
+    "movimiento.extracto_dice": "كشف الحساب يقول",
+    "movimiento.ajustar": "التسوية مع كشف الحساب",
+    "movimiento.ajustar_hint": "اكتب الرصيد الظاهر في كشف الحساب. التطبيق يحسب الفرق.",
+    "movimiento.nota_obligatoria": "الملاحظة إلزامية"
 }

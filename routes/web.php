@@ -149,6 +149,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/gastos', [ExpenseController::class, 'store'])->name('gastos.crear');
             Route::delete('/gastos/{expense}', [ExpenseController::class, 'destroy'])->name('gastos.borrar');
             Route::post('/movimientos/transferencia', [MovementController::class, 'transfer'])->name('movimientos.transferencia');
+            Route::post('/movimientos/ingreso', [MovementController::class, 'ingreso'])->name('movimientos.ingreso');
+            Route::post('/movimientos/ajuste', [MovementController::class, 'ajuste'])->name('movimientos.ajuste');
 
             Route::post('/invitaciones', [InviteController::class, 'create'])->name('invitacion.crear');
 
