@@ -37,7 +37,15 @@ class MollieSaldoDiag extends Command
             $balances = $mollie->balances->page(null, 10, ['testmode' => $testmode]);
             $this->info('balances.read: SÍ ('.count($balances).' balances)');
             foreach ($balances as $b) {
-                $this->line("  {$b->id} {$b->currency} {$b->status} disponible=".$this->money($b->availableAmount).' entrante='.$this->money($b->incomingAmount).' saliente='.$this->money($b->outgoingAmount));
+                $this->line("  {$b->id} {$b->currency} {$b->status}");
+                // Volcado crudo de los montos: el SDK declara incomingAmount y
+                // outgoingAmount, pero la API manda otros nombres. Sin ver los
+                // campos reales se adivina, y adivinar acá es plata mal contada.
+                foreach (get_object_vars($b) as $campo => $valor) {
+                    if (str_ends_with((string) $campo, 'Amount')) {
+                        $this->line("    {$campo} = ".$this->money($valor));
+                    }
+                }
             }
         } catch (\Throwable $e) {
             $this->error('balances.read: NO — '.$this->why($e));
