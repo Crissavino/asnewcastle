@@ -4,7 +4,6 @@ use App\Models\Expense;
 use App\Models\Member;
 use App\Models\Movement;
 use App\Services\Ledger;
-use App\Support\CurrentClub;
 
 function cargarGasto($test, Member $m, array $extra = [])
 {

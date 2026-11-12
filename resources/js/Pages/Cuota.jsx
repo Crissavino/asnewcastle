@@ -332,6 +332,7 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
     const { auth, member, flash, errors, debt } = usePage().props;
     const [claimed, setClaimed] = useState(false);
     const [addingExpense, setAddingExpense] = useState(false);
+    const [choosingPot, setChoosingPot] = useState(null);
     const isManager = member?.role === 'manager';
     const intl = INTL_LOCALES[locale] ?? 'en-GB';
 
@@ -640,7 +641,8 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                                                 <button
                                                     className="nc-mini"
                                                     style={{ flex: 'none', minWidth: 0, padding: '6px 9px', fontSize: 10 }}
-                                                    onClick={() => router.post(route('cuota.estado', d.due_id), { status: 'paid' }, { preserveScroll: true })}
+                                                    aria-expanded={choosingPot === d.due_id}
+                                                    onClick={() => setChoosingPot(choosingPot === d.due_id ? null : d.due_id)}
                                                 >
                                                     {t('cuota.mark_cash')}
                                                 </button>
@@ -658,6 +660,23 @@ export default function Cuota({ currency, online_ready, bank, my_due, caja, plan
                                             </span>
                                         )}
                                     </div>
+                                    {/* Dónde entró la plata: la cuota cobrada a mano declara su bolsillo */}
+                                    {isManager && choosingPot === d.due_id && (
+                                        <div style={{ margin: '0 0 8px' }}>
+                                            <span className="nc-label">{t('cuota.pot_in_label')}</span>
+                                            <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                                                {[['cuenta', 'cuota.pot_cuenta'], ['cash', 'cuota.pot_cash']].map(([k, label]) => (
+                                                    <button key={k} type="button" className="nc-mini" style={{ flex: 1, minHeight: 44 }}
+                                                        onClick={() => {
+                                                            setChoosingPot(null);
+                                                            router.post(route('cuota.estado', d.due_id), { status: 'paid', pot: k }, { preserveScroll: true });
+                                                        }}>
+                                                        {t(label)}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                     {/* Cobranza (solo manager): compromiso, incumplimiento, motivo */}
                                     {c && (c.status || c.cant_pay || c.seen_count > 0) && (
                                         <div className="nc-meta" style={{ fontSize: 11.5, margin: '-4px 0 8px 34px', display: 'flex', flexDirection: 'column', gap: 3 }}>

@@ -10,14 +10,17 @@ use App\Models\Event;
 use App\Models\Expense;
 use App\Jobs\CancelMollieSubscription;
 use App\Models\Member;
+use App\Models\Movement;
 use App\Models\Payment;
 use App\Services\Mollie\MollieGateway;
+use App\Services\CuotaLedger;
 use App\Services\Notifications;
 use App\Services\Push\Notifier;
 use App\Services\Stripe\StripeGateway;
 use App\Services\WhatsApp\WhatsAppChannel;
 use App\Support\CurrentClub;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -479,16 +482,27 @@ class CuotaController extends Controller
 
         $validated = $request->validate([
             'status' => ['required', Rule::in(['pending', 'paid', 'waived'])],
+            // Dónde entró la plata: solo se pide al cobrar.
+            'pot' => [Rule::requiredIf($request->input('status') === 'paid'), 'nullable', Rule::in(Movement::POTS)],
         ]);
 
-        $from = $due->status;
-        $due->update(['status' => $validated['status']]);
+        $pot = $validated['status'] === 'paid' ? $validated['pot'] : null;
 
-        // Quién marcó a mano una cuota pagada/condonada/pendiente.
-        AuditLog::record('due.status.set', $due, [
-            'from' => $from,
-            'to' => $validated['status'],
-        ]);
+        DB::transaction(function () use ($due, $validated, $pot) {
+            // Bloqueo: dos toques seguidos no deben asentar dos veces.
+            $due = Due::whereKey($due->id)->lockForUpdate()->firstOrFail();
+            $from = $due->status;
+            $due->update(['status' => $validated['status']]);
+
+            app(CuotaLedger::class)->sync($due, $pot, app(CurrentClub::class)->member()->id);
+
+            // Quién marcó a mano una cuota pagada/condonada/pendiente.
+            AuditLog::record('due.status.set', $due, [
+                'from' => $from,
+                'to' => $validated['status'],
+                'pot' => $pot,
+            ]);
+        });
 
         return back();
     }

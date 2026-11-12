@@ -299,6 +299,7 @@
     "cuota.pot_label": "Salió de",
     "cuota.pot_cuenta": "De la cuenta",
     "cuota.pot_cash": "En efectivo",
+    "cuota.pot_in_label": "A dónde entró",
     "cuota.expense_title": "Nuevo gasto",
     "cuota.category": "Categoría",
     "cuota.amount": "Monto",

@@ -30,7 +30,7 @@ it('deja registro de quién marcó a mano una cuota', function () {
     $due = Due::factory()->forMember($player)->create(); // pendiente
 
     $this->actingAs($manager->user)
-        ->post("/cuota/{$due->id}/estado", ['status' => 'paid'])
+        ->post("/cuota/{$due->id}/estado", ['status' => 'paid', 'pot' => 'cash'])
         ->assertRedirect();
 
     $log = AuditLog::withoutGlobalScopes()
@@ -54,7 +54,7 @@ it('el manager ve en configuración quién fijó el tipo y quién marcó la cuot
     $this->actingAs($manager->user)->post("/plantel/{$player->id}/cuota", ['fee_type' => 'becado']);
     // Al becar se borra la cuota del mes; genero otra para poder marcarla a mano.
     $due2 = Due::factory()->forMember($player)->create();
-    $this->actingAs($manager->user)->post("/cuota/{$due2->id}/estado", ['status' => 'paid']);
+    $this->actingAs($manager->user)->post("/cuota/{$due2->id}/estado", ['status' => 'paid', 'pot' => 'cash']);
 
     $this->actingAs($manager->user)
         ->get('/cuota')

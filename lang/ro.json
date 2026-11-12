@@ -299,6 +299,7 @@
     "cuota.pot_label": "Plătit din",
     "cuota.pot_cuenta": "Din cont",
     "cuota.pot_cash": "În numerar",
+    "cuota.pot_in_label": "Unde a intrat",
     "cuota.expense_title": "Cheltuială nouă",
     "cuota.category": "Categorie",
     "cuota.amount": "Suma",

@@ -299,6 +299,7 @@
     "cuota.pot_label": "Paid from",
     "cuota.pot_cuenta": "From the account",
     "cuota.pot_cash": "In cash",
+    "cuota.pot_in_label": "Where did it go",
     "cuota.expense_title": "New expense",
     "cuota.category": "Category",
     "cuota.amount": "Amount",

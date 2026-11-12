@@ -299,6 +299,7 @@
     "cuota.pot_label": "دُفع من",
     "cuota.pot_cuenta": "من الحساب",
     "cuota.pot_cash": "نقدًا",
+    "cuota.pot_in_label": "أين دخل المبلغ",
     "cuota.expense_title": "مصروف جديد",
     "cuota.category": "الفئة",
     "cuota.amount": "المبلغ",

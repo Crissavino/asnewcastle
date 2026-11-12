@@ -192,7 +192,7 @@ it('el manager marca cuotas en efectivo o las condona, y la caja lo refleja', fu
     $condonado = Member::factory()->for($manager->club)->create();
     $dueCondonada = Due::factory()->forMember($condonado)->create();
 
-    $this->actingAs($manager->user)->post("/cuota/{$due->id}/estado", ['status' => 'paid'])->assertRedirect();
+    $this->actingAs($manager->user)->post("/cuota/{$due->id}/estado", ['status' => 'paid', 'pot' => 'cash'])->assertRedirect();
     $this->actingAs($manager->user)->post("/cuota/{$dueCondonada->id}/estado", ['status' => 'waived'])->assertRedirect();
 
     expect($due->fresh()->status)->toBe('paid')
