@@ -7,6 +7,7 @@ use App\Models\Member;
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\Payment;
+use Mollie\Api\Resources\Payout;
 
 /**
  * Cobro de cuotas con Mollie sobre la cuenta PROPIA del club (no Connect).
@@ -210,6 +211,15 @@ class MollieGateway
     public function getPayment(string $paymentId): Payment
     {
         return $this->mollie->payments->get($paymentId, [], $this->testmode());
+    }
+
+    /**
+     * Trae un payout por id: el depósito de Mollie en el banco del club. Es la
+     * verdad del webhook de payouts (el body solo manda el id).
+     */
+    public function getPayout(string $payoutId): Payout
+    {
+        return $this->mollie->payouts->get($payoutId, $this->testmode());
     }
 
     /**

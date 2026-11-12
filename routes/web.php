@@ -23,6 +23,7 @@ use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\TablaController;
 use App\Http\Controllers\VestuarioController;
 use App\Http\Controllers\ViewModeController;
+use App\Http\Controllers\Webhooks\MolliePayoutWebhookController;
 use App\Http\Controllers\Webhooks\MollieWebhookController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Controllers\Webhooks\TwilioWebhookController;
@@ -69,6 +70,11 @@ Route::post('/webhooks/stripe', StripeWebhookController::class)->name('webhooks.
 
 // Webhook de Mollie: manda solo el id; la verificación es traer el pago por API
 Route::post('/webhooks/mollie', MollieWebhookController::class)->name('webhooks.mollie');
+
+// Webhook de payouts de Mollie: el depósito en el banco del club, la única
+// entrada de plata a la cuenta. También manda solo el id.
+Route::post('/webhooks/mollie/payouts', MolliePayoutWebhookController::class)
+    ->name('webhooks.mollie.payouts');
 
 // Formulario público de legitimación: solo por link firmado del manager.
 // Sin login y sin acceso a nada más; la sesión ata la ficha al navegador.
