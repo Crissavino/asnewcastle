@@ -8,6 +8,7 @@ use App\Services\PayoutLedger;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Mollie\Api\Webhooks\SignatureValidator;
 
 /**
  * Webhook de payouts de Mollie: cada vez que Mollie deposita en el banco del
@@ -26,6 +27,10 @@ class MolliePayoutWebhookController extends Controller
 {
     public function __invoke(Request $request, MollieGateway $mollie, PayoutLedger $ledger): Response
     {
+        if (! $this->firmaValida($request)) {
+            return response('firma invalida', 403);
+        }
+
         // Los webhooks nuevos de Mollie (event destinations) mandan el id del
         // EVENTO en `id` y el del payout en `entityId`. Confirmado en el panel
         // el 12.11.2026, donde se suscriben payout.completed / failed / canceled.
@@ -70,5 +75,41 @@ class MolliePayoutWebhookController extends Controller
         ]);
 
         return response('ok', 200);
+    }
+
+    /**
+     * Firma del webhook (HMAC-SHA256 del cuerpo crudo, header X-Mollie-Signature
+     * con prefijo "sha256="), usando el validador del SDK para no reimplementar
+     * el esquema.
+     *
+     * Sin `MOLLIE_WEBHOOK_SECRET` configurado no se verifica nada: así poner el
+     * secret es un paso aparte que no puede cortar la entrada de plata, y el
+     * handler sigue siendo seguro igual porque NO confía en el cuerpo — la
+     * verdad se trae por API y acreditar es idempotente.
+     *
+     * Con el secret puesto se exige firma válida. Rechazar de más no pierde
+     * plata: el chequeo diario de payouts la repesca.
+     */
+    private function firmaValida(Request $request): bool
+    {
+        $secret = (string) config('services.mollie.webhook_secret');
+
+        if ($secret === '') {
+            return true;
+        }
+
+        try {
+            return SignatureValidator::validate(
+                $request->getContent(),
+                $secret,
+                $request->header(SignatureValidator::SIGNATURE_HEADER),
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Webhook de payout con firma inválida: se rechaza', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 }

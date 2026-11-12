@@ -66,6 +66,10 @@ return [
         // El club dueño de esta cuenta de Mollie: a él se le acreditan los
         // payouts. Si no se setea, se resuelve solo mientras haya un solo club.
         'club_id' => env('MOLLIE_CLUB_ID'),
+        // Secret de firma del webhook de payouts (lo da Mollie al crearlo, una
+        // sola vez). Mientras esté vacío no se verifica firma: así setearlo es
+        // un paso aparte que no puede romper la entrada de plata.
+        'webhook_secret' => env('MOLLIE_WEBHOOK_SECRET'),
         // ¿La comisión del payout es un cargo APARTE del monto depositado?
         // Apagado hasta que la sonda (app:mollie-saldo-diag) confirme si el
         // `amount` del payout es bruto o neto: si es neto —como documenta el

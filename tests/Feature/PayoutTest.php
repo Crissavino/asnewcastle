@@ -13,6 +13,63 @@ use App\Services\Mollie\MollieGateway;
  * request ni usuario, así que acá el club activo se fija a mano (fijarClub)
  * para leer el Ledger, igual que lo haría el middleware en una request.
  */
+it('con secret configurado, una firma válida acredita', function () {
+    config(['services.mollie.webhook_secret' => 'wh_secret_test']);
+    $m = Member::factory()->manager()->create();
+    fakeMolliePayout(id: 'payout_firmado', amountCents: 28800, status: 'completed');
+
+    $cuerpo = json_encode(['id' => 'event_x', 'entityId' => 'payout_firmado', 'type' => 'payout.completed']);
+    $firma = 'sha256='.hash_hmac('sha256', $cuerpo, 'wh_secret_test');
+
+    $this->call('POST', '/webhooks/mollie/payouts', [], [], [], [
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_X_MOLLIE_SIGNATURE' => $firma,
+    ], $cuerpo)->assertOk();
+
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(28800);
+});
+
+it('con secret configurado, una firma falsa se rechaza y no acredita', function () {
+    config(['services.mollie.webhook_secret' => 'wh_secret_test']);
+    $m = Member::factory()->manager()->create();
+    fakeMolliePayout(id: 'payout_firmado', amountCents: 28800, status: 'completed');
+
+    $cuerpo = json_encode(['id' => 'event_x', 'entityId' => 'payout_firmado', 'type' => 'payout.completed']);
+
+    $this->call('POST', '/webhooks/mollie/payouts', [], [], [], [
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_X_MOLLIE_SIGNATURE' => 'sha256='.hash_hmac('sha256', $cuerpo, 'otro_secret'),
+    ], $cuerpo)->assertForbidden();
+
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(0);
+});
+
+it('con secret configurado, sin firma tampoco pasa', function () {
+    config(['services.mollie.webhook_secret' => 'wh_secret_test']);
+    $m = Member::factory()->manager()->create();
+    fakeMolliePayout(id: 'payout_firmado', amountCents: 28800, status: 'completed');
+
+    $this->post('/webhooks/mollie/payouts', ['entityId' => 'payout_firmado'])
+        ->assertForbidden();
+
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(0);
+});
+
+it('sin secret configurado no se verifica firma: poner el secret es un paso aparte', function () {
+    config(['services.mollie.webhook_secret' => null]);
+    $m = Member::factory()->manager()->create();
+    fakeMolliePayout(id: 'payout_sin_secret', amountCents: 28800, status: 'completed');
+
+    $this->post('/webhooks/mollie/payouts', ['entityId' => 'payout_sin_secret'])
+        ->assertOk();
+
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(28800);
+});
+
 it('el webhook nuevo manda el payout en entityId y el evento en id: acredita igual', function () {
     // Formato real de los event destinations de Mollie: `id` es el id del
     // EVENTO. Leerlo como id de payout pedía un `event_...` inexistente y la
