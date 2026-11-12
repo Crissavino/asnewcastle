@@ -26,9 +26,21 @@ class MolliePayoutWebhookController extends Controller
 {
     public function __invoke(Request $request, MollieGateway $mollie, PayoutLedger $ledger): Response
     {
-        $payoutId = (string) $request->input('id');
+        // Los webhooks nuevos de Mollie (event destinations) mandan el id del
+        // EVENTO en `id` y el del payout en `entityId`. Confirmado en el panel
+        // el 12.11.2026, donde se suscriben payout.completed / failed / canceled.
+        // Leer `id` a secas pediría por API un `event_...` que no existe: 404,
+        // 200 y la plata nunca se acreditaba, en silencio. Se prefiere
+        // `entityId`; `id` queda como respaldo para el formato viejo.
+        $payoutId = (string) ($request->input('entityId') ?: $request->input('id'));
 
-        if ($payoutId === '') {
+        if ($payoutId === '' || str_starts_with($payoutId, 'event_')) {
+            Log::warning('Webhook de payout sin id de payout utilizable', [
+                'id' => $request->input('id'),
+                'entityId' => $request->input('entityId'),
+                'type' => $request->input('type'),
+            ]);
+
             return response('ok', 200);
         }
 

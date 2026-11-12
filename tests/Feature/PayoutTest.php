@@ -13,6 +13,35 @@ use App\Services\Mollie\MollieGateway;
  * request ni usuario, así que acá el club activo se fija a mano (fijarClub)
  * para leer el Ledger, igual que lo haría el middleware en una request.
  */
+it('el webhook nuevo manda el payout en entityId y el evento en id: acredita igual', function () {
+    // Formato real de los event destinations de Mollie: `id` es el id del
+    // EVENTO. Leerlo como id de payout pedía un `event_...` inexistente y la
+    // plata se perdía en silencio.
+    $m = Member::factory()->manager()->create();
+    fakeMolliePayout(id: 'payout_real', amountCents: 28800, status: 'completed');
+
+    $this->post('/webhooks/mollie/payouts', [
+        'id' => 'event_abc123',
+        'entityId' => 'payout_real',
+        'type' => 'payout.completed',
+    ])->assertOk();
+
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(28800);
+});
+
+it('un webhook que solo trae el id del evento no rompe ni acredita nada', function () {
+    $m = Member::factory()->manager()->create();
+    fakeMolliePayout(id: 'payout_real', amountCents: 28800, status: 'completed');
+
+    $this->post('/webhooks/mollie/payouts', ['id' => 'event_abc123', 'type' => 'payout.completed'])
+        ->assertOk();
+
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(0)
+        ->and(MolliePayout::withoutGlobalScopes()->count())->toBe(0);
+});
+
 it('un payout completado acredita el neto en la cuenta', function () {
     $m = Member::factory()->manager()->create();
     fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'completed');
