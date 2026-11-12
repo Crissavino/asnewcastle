@@ -142,16 +142,77 @@ it('si la comisión no viene no la inventa', function () {
         ->and(app(Ledger::class)->balance('cuenta'))->toBe(28800);
 });
 
-it('un payout que no viene en RON no se acredita', function () {
+it('un payout que no viene en RON no se acredita, pero queda registrado', function () {
     $m = Member::factory()->manager()->create();
     fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'completed', currency: 'EUR');
 
     $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc'])->assertOk();
 
     fijarClub($m);
+    // No se acredita (no se suman euros como lei) pero el depósito existió en
+    // el banco: sin fila no habría nada que mirar ni cartel que lo levante.
+    $registro = MolliePayout::withoutGlobalScopes()->sole();
     expect(app(Ledger::class)->balance('cuenta'))->toBe(0)
         ->and(Movement::withoutGlobalScopes()->count())->toBe(0)
-        ->and(MolliePayout::withoutGlobalScopes()->count())->toBe(0);
+        ->and($registro->club_id)->toBe($m->club_id)
+        ->and($registro->amount_cents)->toBe(28800)
+        ->and($registro->currency)->toBe('EUR')
+        ->and($registro->pending_reason)->toBe('moneda')
+        ->and($registro->sinAcreditar())->toBeTrue();
+});
+
+it('un payout fallido se contra-asienta aunque el club ya no se resuelva', function () {
+    // El dueño está en la fila desde que sí se resolvió: si el contra-asiento
+    // dependiera del resolvedor, la app seguiría mostrando en `cuenta` un
+    // depósito que el banco nunca hizo.
+    $m = Member::factory()->manager()->create();
+    fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'completed');
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc'])->assertOk();
+
+    // Se da de alta un segundo club: desde ahora el resolvedor no sabe de quién
+    // es la cuenta de Mollie.
+    Club::factory()->create();
+
+    fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'failed');
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc'])->assertOk();
+
+    fijarClub($m);
+    $registro = MolliePayout::withoutGlobalScopes()->sole();
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(0)
+        ->and($registro->status)->toBe('failed')
+        ->and($registro->club_id)->toBe($m->club_id)
+        ->and(Movement::withoutGlobalScopes()->whereNotNull('reverses_movement_id')->count())->toBe(1);
+});
+
+it('un payout fallido sin club en la fila sigue quedando sin acreditar', function () {
+    // Sin dueño escrito no hay nada que revertir: no se inventa un club.
+    Member::factory()->manager()->create();
+    Club::factory()->create();
+    fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'failed');
+
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc'])->assertOk();
+
+    expect(Movement::withoutGlobalScopes()->count())->toBe(0)
+        ->and(MolliePayout::withoutGlobalScopes()->sole()->pending_reason)->toBe('club_ambiguo');
+});
+
+it('un webhook posterior a la adopción no re-acredita', function () {
+    // La adopción (club_id null -> club resuelto) es el camino con más ramas de
+    // acreditar(): el webhook se repite siempre, así que tiene que ser idempotente.
+    $m = Member::factory()->manager()->create();
+    Club::factory()->create();
+    fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'completed');
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc']);
+
+    config(['services.mollie.club_id' => $m->club_id]);
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc']);
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc']);
+    $this->artisan('payouts:sincronizar');
+
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(28800)
+        ->and(Movement::withoutGlobalScopes()->count())->toBe(1)
+        ->and(MolliePayout::withoutGlobalScopes()->count())->toBe(1);
 });
 
 it('un payout todavía en camino no acredita nada', function (string $status) {

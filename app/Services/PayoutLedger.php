@@ -32,6 +32,9 @@ class PayoutLedger
     /** El payout no llegó (o se canceló después de salir): hay que contra-asentarlo. */
     private const REVIERTE = ['failed', 'canceled'];
 
+    /** Quedó registrado pero no acreditado porque vino en otra moneda. */
+    public const MONEDA = 'moneda';
+
     /** Los dos bolsillos son `cuenta` y `cash`; el payout entra al banco. */
     private const POT = 'cuenta';
 
@@ -61,20 +64,34 @@ class PayoutLedger
 
         [$club, $motivo] = $this->clubDeLaCuenta->resolver();
 
-        if (! $club) {
-            // Un movimiento con club_id null es plata sin dueño que no suma en
-            // ningún saldo, así que no se escribe. Pero el payout existió: queda
-            // registrado como SIN ACREDITAR para que se vea en la pantalla y lo
-            // repesque el chequeo diario, no escondido en un warning.
-            return DB::transaction(fn () => $this->registrarSinAcreditar($payout, $payoutId, $status, $motivo));
-        }
+        return DB::transaction(function () use ($club, $motivo, $payout, $payoutId, $status) {
+            if (! $club && in_array($status, self::REVIERTE, true)) {
+                // El contra-asiento NO depende del resolvedor: el dueño ya está
+                // en la fila, escrito el día que sí se resolvió. Gatearlo con el
+                // resolvedor dejaba acreditado en `cuenta` un depósito que el
+                // banco nunca hizo, nada más que porque hoy MOLLIE_CLUB_ID quedó
+                // mal o apareció un segundo club. vigentes() y movimiento() solo
+                // necesitan un club_id.
+                $club = Club::withoutGlobalScopes()->find($this->registro($payoutId)?->club_id);
+            }
 
-        // El contra-asiento usa los importes que ya están en la base, así que no
-        // depende de la moneda ni del monto que traiga ESTE payout: gatearlo con
-        // esos chequeos dejaría acreditada plata que nunca llegó al banco.
-        return DB::transaction(fn () => $status === self::CREDITA
-            ? $this->acreditar($club, $payout, $payoutId)
-            : $this->contraAsentar($club, $payoutId, $status));
+            if (! $club) {
+                // Un movimiento con club_id null es plata sin dueño que no suma
+                // en ningún saldo, así que no se escribe. Pero el payout existió:
+                // queda registrado como SIN ACREDITAR para que se vea en la
+                // pantalla y lo repesque el chequeo diario, no escondido en un
+                // warning.
+                return $this->registrarSinAcreditar($payout, $payoutId, $status, $motivo);
+            }
+
+            // El contra-asiento usa los importes que ya están en la base, así que
+            // no depende de la moneda ni del monto que traiga ESTE payout:
+            // gatearlo con esos chequeos dejaría acreditada plata que nunca llegó
+            // al banco.
+            return $status === self::CREDITA
+                ? $this->acreditar($club, $payout, $payoutId)
+                : $this->contraAsentar($club, $payoutId, $status);
+        });
     }
 
     /** Escribe el depósito en el libro: una fila por el neto y, si corresponde, otra por la comisión. */
@@ -90,7 +107,10 @@ class PayoutLedger
                 'esperada' => strtoupper($club->currency),
             ]);
 
-            return 'moneda';
+            // No acreditarlo es correcto; no dejar rastro, no. Ese depósito
+            // existe en el banco de verdad: sin fila no hay nada que mirar ni
+            // nada que levante el cartel de "plata no acreditada".
+            return $this->registrarMoneda($club, $payout, $payoutId, $currency);
         }
 
         $amountCents = $this->cents($payout->amount->value ?? null);
@@ -179,6 +199,51 @@ class PayoutLedger
     }
 
     /**
+     * El payout vino en una moneda que no es la del club: se registra CON su
+     * club (acá sí se sabe de quién es) y SIN movimiento. No se convierte nada:
+     * la fila queda marcada sin acreditar y la levanta el mismo cartel de la
+     * pantalla que los payouts sin club.
+     */
+    private function registrarMoneda(Club $club, object $payout, string $payoutId, string $currency): string
+    {
+        $registro = $this->registro($payoutId);
+
+        if ($registro && $registro->club_id !== null && $registro->club_id !== $club->id) {
+            Log::warning('Payout de Mollie ya registrado en otro club: no se toca', ['payout' => $payoutId]);
+
+            return 'sin_cambios';
+        }
+
+        // Si ya tiene asientos vigentes, alguna vez se acreditó bien: marcarlo
+        // sin acreditar sería un cartel falso y la plata seguiría en el saldo.
+        if ($this->vigentes($club->id, $payoutId)->isNotEmpty()) {
+            Log::warning('Payout de Mollie ya acreditado pero ahora informa otra moneda: no se toca', [
+                'payout' => $payoutId,
+                'moneda' => $currency,
+            ]);
+
+            return 'sin_cambios';
+        }
+
+        $datos = [
+            'club_id' => $club->id,
+            'status' => self::CREDITA,
+            'amount_cents' => $this->cents($payout->amount->value ?? null) ?? 0,
+            'currency' => $currency ?: null,
+            'pending_reason' => self::MONEDA,
+            'completed_at' => isset($payout->completedAt) ? Carbon::parse($payout->completedAt) : null,
+        ];
+
+        if ($registro) {
+            $registro->update($datos);
+        } else {
+            MolliePayout::withoutGlobalScopes()->create($datos + ['mollie_payout_id' => $payoutId]);
+        }
+
+        return self::MONEDA;
+    }
+
+    /**
      * El payout existió pero no se sabe de quién es la cuenta: se registra sin
      * club y sin movimiento. Plata no acreditada tiene que estar a la vista.
      */
@@ -246,7 +311,8 @@ class PayoutLedger
 
     /**
      * Los asientos de este payout que todavía no fueron contra-asentados (el
-     * depósito y su comisión). Mismo mecanismo que CuotaLedger::vigente().
+     * depósito y su comisión). "Vigente" lo define Movement::scopeVigentes(),
+     * el mismo que usa CuotaLedger.
      *
      * @return Collection<int, Movement>
      */
@@ -255,9 +321,7 @@ class PayoutLedger
         return Movement::withoutGlobalScopes()
             ->where('club_id', $clubId)
             ->where('mollie_payout_id', $payoutId)
-            ->whereNull('reverses_movement_id')
-            ->whereNotIn('id', Movement::withoutGlobalScopes()
-                ->whereNotNull('reverses_movement_id')->select('reverses_movement_id'))
+            ->vigentes()
             ->lockForUpdate()
             ->get();
     }
