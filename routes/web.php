@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\CuotaController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\MessageTranslationController;
+use App\Http\Controllers\MovementController;
 use App\Http\Controllers\MvpVoteController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PerfilController;
@@ -147,6 +148,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/plantel/{member}/rol', [PerfilController::class, 'setRole'])->name('plantel.rol');
             Route::post('/gastos', [ExpenseController::class, 'store'])->name('gastos.crear');
             Route::delete('/gastos/{expense}', [ExpenseController::class, 'destroy'])->name('gastos.borrar');
+            Route::post('/movimientos/transferencia', [MovementController::class, 'transfer'])->name('movimientos.transferencia');
 
             Route::post('/invitaciones', [InviteController::class, 'create'])->name('invitacion.crear');
 

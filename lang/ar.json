@@ -615,5 +615,10 @@
     "push.subscription_failed_last_title": "⚠️ آخر محاولة للخصم",
     "push.subscription_failed_last_body": "إذا لم ينجح غدًا، سيتم إلغاء الخصم التلقائي.",
     "auth.removed_title": "لم تعد ضمن النادي",
-    "auth.removed_body": "تمت إزالة حسابك من الفريق. إذا كنت تعتقد أن هذا خطأ، تحدّث مع المسؤول."
+    "auth.removed_body": "تمت إزالة حسابك من الفريق. إذا كنت تعتقد أن هذا خطأ، تحدّث مع المسؤول.",
+    "movimiento.mover_plata": "نقل الأموال",
+    "movimiento.mover_plata_hint": "نقل الأموال بين المحفظتين ليس مصروفًا: إجمالي النادي لا يتغير.",
+    "movimiento.desde": "النقل من",
+    "movimiento.pot_cuenta_origen": "من الحساب",
+    "movimiento.pot_cash_origen": "نقدًا"
 }

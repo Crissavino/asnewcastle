@@ -615,5 +615,10 @@
     "push.subscription_failed_last_title": "⚠️ Last charge attempt",
     "push.subscription_failed_last_body": "If it does not go through tomorrow, autopay will be cancelled.",
     "auth.removed_title": "You are no longer in the club",
-    "auth.removed_body": "Your account was removed from the squad. If you think this is a mistake, talk to the manager."
+    "auth.removed_body": "Your account was removed from the squad. If you think this is a mistake, talk to the manager.",
+    "movimiento.mover_plata": "Move money",
+    "movimiento.mover_plata_hint": "Moving money between pockets is not an expense: the club total does not change.",
+    "movimiento.desde": "Move from",
+    "movimiento.pot_cuenta_origen": "From the account",
+    "movimiento.pot_cash_origen": "In cash"
 }

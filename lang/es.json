@@ -615,5 +615,10 @@
     "push.subscription_failed_last_title": "⚠️ Último intento de cobro",
     "push.subscription_failed_last_body": "Si mañana no entra, se da de baja el débito automático.",
     "auth.removed_title": "Ya no estás en el club",
-    "auth.removed_body": "Tu cuenta fue dada de baja del plantel. Si creés que es un error, hablá con el delegado."
+    "auth.removed_body": "Tu cuenta fue dada de baja del plantel. Si creés que es un error, hablá con el delegado.",
+    "movimiento.mover_plata": "Mover plata",
+    "movimiento.mover_plata_hint": "Pasar plata de un bolsillo al otro no es un gasto: el total del club no cambia.",
+    "movimiento.desde": "Sacar de",
+    "movimiento.pot_cuenta_origen": "De la cuenta",
+    "movimiento.pot_cash_origen": "En efectivo"
 }
