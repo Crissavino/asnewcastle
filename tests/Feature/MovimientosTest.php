@@ -2,6 +2,7 @@
 
 use App\Models\Member;
 use App\Models\Movement;
+use App\Services\Ledger;
 use App\Support\CurrentClub;
 
 /**
@@ -31,4 +32,33 @@ it('guarda signo, bolsillo y tipo', function () {
     ]);
     expect($mov->fresh()->amount_cents)->toBe(22500)
         ->and($mov->club_id)->toBe($m->club_id);
+});
+
+it('el saldo de cada bolsillo es la suma de sus movimientos', function () {
+    $m = Member::factory()->manager()->create();
+    activarClub($m);
+    Movement::factory()->create(['pot' => 'cuenta', 'amount_cents' => 30000]);
+    Movement::factory()->create(['pot' => 'cuenta', 'amount_cents' => -7500]);
+    Movement::factory()->create(['pot' => 'cash', 'amount_cents' => 10000]);
+
+    expect(app(Ledger::class)->balances())->toBe(['cuenta' => 22500, 'cash' => 10000]);
+});
+
+it('un bolsillo sin movimientos vale cero, no null', function () {
+    $m = Member::factory()->manager()->create();
+    activarClub($m);
+    expect(app(Ledger::class)->balance('cash'))->toBe(0)
+        ->and(app(Ledger::class)->balances())->toBe(['cuenta' => 0, 'cash' => 0]);
+});
+
+it('el historial viene del más nuevo al más viejo y respeta el límite', function () {
+    $m = Member::factory()->manager()->create();
+    activarClub($m);
+    $viejo = Movement::factory()->create(['occurred_on' => '2026-10-01']);
+    $a = Movement::factory()->create(['occurred_on' => '2026-11-01']);
+    $b = Movement::factory()->create(['occurred_on' => '2026-11-01']);
+
+    $ids = app(Ledger::class)->history()->pluck('id')->all();
+    expect($ids)->toBe([$b->id, $a->id, $viejo->id])
+        ->and(app(Ledger::class)->history(2))->toHaveCount(2);
 });
