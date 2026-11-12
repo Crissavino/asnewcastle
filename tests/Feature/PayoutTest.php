@@ -13,6 +13,47 @@ use App\Services\Mollie\MollieGateway;
  * request ni usuario, así que acá el club activo se fija a mano (fijarClub)
  * para leer el Ledger, igual que lo haría el middleware en una request.
  */
+it('un payout anterior a la línea en la arena no se acredita: ya está en el saldo inicial', function () {
+    // El chequeo diario mira 30 días para atrás. Sin esta guarda, la primera
+    // corrida volvía a sumar los depósitos que el extracto del banco ya había
+    // contado dentro del saldo inicial, inflando la cuenta.
+    $m = Member::factory()->manager()->create();
+    $this->artisan('app:saldo-inicial 225 0 go')->assertSuccessful();
+
+    $viejo = fakeMolliePayout(id: 'payout_viejo', amountCents: 109058, status: 'completed');
+    $viejo->completedAt = now()->subDays(10)->toIso8601String();
+
+    $this->post('/webhooks/mollie/payouts', ['entityId' => 'payout_viejo'])->assertOk();
+
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(22500)
+        ->and(Movement::query()->where('kind', 'payout')->count())->toBe(0);
+});
+
+it('un payout posterior a la línea sí se acredita sobre el saldo inicial', function () {
+    $m = Member::factory()->manager()->create();
+    $this->artisan('app:saldo-inicial 225 0 go')->assertSuccessful();
+
+    $nuevo = fakeMolliePayout(id: 'payout_nuevo', amountCents: 28800, status: 'completed');
+    $nuevo->completedAt = now()->addMinutes(5)->toIso8601String();
+
+    $this->post('/webhooks/mollie/payouts', ['entityId' => 'payout_nuevo'])->assertOk();
+
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(22500 + 28800);
+});
+
+it('sin línea trazada no hay nada que proteger: el payout entra igual', function () {
+    $m = Member::factory()->manager()->create();
+    $viejo = fakeMolliePayout(id: 'payout_viejo', amountCents: 28800, status: 'completed');
+    $viejo->completedAt = now()->subDays(10)->toIso8601String();
+
+    $this->post('/webhooks/mollie/payouts', ['entityId' => 'payout_viejo'])->assertOk();
+
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(28800);
+});
+
 it('con secret configurado, una firma válida acredita', function () {
     config(['services.mollie.webhook_secret' => 'wh_secret_test']);
     $m = Member::factory()->manager()->create();

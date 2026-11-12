@@ -134,6 +134,15 @@ class PayoutLedger
 
         $completedAt = isset($payout->completedAt) ? Carbon::parse($payout->completedAt) : null;
 
+        if ($this->anteriorALaLinea($club->id, $completedAt)) {
+            Log::info('Payout anterior a la línea en la arena: ya está dentro del saldo inicial', [
+                'payout' => $payoutId,
+                'completado' => $completedAt?->toIso8601String(),
+            ]);
+
+            return 'anterior_a_la_linea';
+        }
+
         $datos = [
             'club_id' => $club->id,
             'status' => self::CREDITA,
@@ -298,6 +307,37 @@ class PayoutLedger
             'reverses_movement_id' => $reverses,
             'note' => $note,
         ]);
+    }
+
+    /**
+     * ¿El payout ya está contado dentro del saldo inicial?
+     *
+     * La línea en la arena dice "a esta hora la cuenta tiene tanto", y ese
+     * número sale del extracto del banco: incluye todos los payouts que ya
+     * habían caído. Acreditarlos otra vez inflaría la cuenta — el chequeo
+     * diario mira 30 días para atrás, así que sin esta guarda la primera
+     * corrida sumaba de nuevo los depósitos del mes anterior.
+     *
+     * Se compara contra el `created_at` del asiento de saldo inicial (el
+     * instante en que se trazó la línea), no contra su fecha, para que un
+     * payout que caiga más tarde ESE MISMO DÍA sí entre.
+     *
+     * Sin línea trazada no hay nada que proteger. Un payout sin fecha de
+     * completado se trata como nuevo: duplicar se ve en el extracto y se
+     * corrige con un ajuste; perder plata no se ve.
+     */
+    private function anteriorALaLinea(int $clubId, ?Carbon $completedAt): bool
+    {
+        if ($completedAt === null) {
+            return false;
+        }
+
+        $linea = Movement::withoutGlobalScopes()
+            ->where('club_id', $clubId)
+            ->where('kind', 'saldo_inicial')
+            ->min('created_at');
+
+        return $linea !== null && $completedAt->lessThanOrEqualTo(Carbon::parse($linea));
     }
 
     /** La fila de este payout, si ya la escribimos. */
