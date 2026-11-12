@@ -34,14 +34,32 @@ it('rechaza montos inválidos', function () {
     expect(Movement::withoutGlobalScopes()->count())->toBe(0);
 });
 
-it('cada club queda con su club_id y el que ya tiene se saltea', function () {
+it('el que ya tiene saldo inicial se saltea', function () {
+    $a = Member::factory()->manager()->create();
+    Movement::factory()->for($a->club)->create(['kind' => 'saldo_inicial', 'amount_cents' => 100]);
+
+    $this->artisan('app:saldo-inicial 225 10 go')->assertFailed();
+
+    expect(Movement::withoutGlobalScopes()->where('club_id', $a->club_id)->count())->toBe(1);
+});
+
+it('con varios clubes no adivina: hay que configurar de quién es la cuenta', function () {
+    Member::factory()->manager()->create();
+    Member::factory()->manager()->create();
+
+    $this->artisan('app:saldo-inicial 225 10 go')->assertFailed();
+
+    expect(Movement::withoutGlobalScopes()->count())->toBe(0);
+});
+
+it('el club configurado es el que recibe el saldo inicial', function () {
     $a = Member::factory()->manager()->create();
     $b = Member::factory()->manager()->create();
-    Movement::factory()->for($a->club)->create(['kind' => 'saldo_inicial', 'amount_cents' => 100]);
+    config(['services.mollie.club_id' => $b->club_id]);
 
     $this->artisan('app:saldo-inicial 225 10 go')->assertSuccessful();
 
-    expect(Movement::withoutGlobalScopes()->where('club_id', $a->club_id)->count())->toBe(1)
+    expect(Movement::withoutGlobalScopes()->where('club_id', $a->club_id)->count())->toBe(0)
         ->and(Movement::withoutGlobalScopes()->where('club_id', $b->club_id)->pluck('amount_cents', 'pot')->all())
         ->toBe(['cuenta' => 22500, 'cash' => 1000]);
 });

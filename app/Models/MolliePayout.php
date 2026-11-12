@@ -25,8 +25,15 @@ class MolliePayout extends Model
         'amount_cents',
         'fee_cents',
         'currency',
+        'pending_reason',
         'completed_at',
     ];
+
+    /** Quedó registrado pero su plata no entró a ningún saldo. */
+    public function sinAcreditar(): bool
+    {
+        return $this->pending_reason !== null;
+    }
 
     protected function casts(): array
     {

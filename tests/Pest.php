@@ -91,20 +91,34 @@ function fakeMolliePayout(string $id, int $amountCents, string $status, string $
 {
     $payout = molliePayoutResource($id, $amountCents, $status, $currency, $deductionCents);
 
+    // Acumulativo: dos llamadas con ids distintos conviven; dos con el mismo id
+    // reemplazan (el payout que primero llega completed y después failed).
     $holder = mollieFakeHolder();
-    $holder->payouts = [$id => $payout];
+    $holder->payouts ??= [];
+    $holder->payouts[$id] = $payout;
     $holder->payoutError = null;
     mollieFakeStubPayouts();
 
     return $payout;
 }
 
-/** getPayout($id) falla: id desconocido o error de API. */
-function fakeMolliePayoutFailure(string $message = 'payout no encontrado'): void
+/**
+ * getPayout() falla. El código es el status HTTP: 404 (id desconocido, no hay
+ * nada que reintentar) o cualquier otro (error transitorio). NO afecta a
+ * listPayouts(): para eso está fakeMolliePayoutListFailure().
+ */
+function fakeMolliePayoutFailure(string $message = 'payout no encontrado', int $code = 404): void
 {
     $holder = mollieFakeHolder();
-    $holder->payouts = [];
-    $holder->payoutError = $message;
+    $holder->payoutError = new RuntimeException($message, $code);
+    mollieFakeStubPayouts();
+}
+
+/** listPayouts() falla (sin permiso payouts.read, o Mollie caída). */
+function fakeMolliePayoutListFailure(string $message = 'no tengo permiso payouts.read'): void
+{
+    $holder = mollieFakeHolder();
+    $holder->listError = new RuntimeException($message);
     mollieFakeStubPayouts();
 }
 
@@ -131,6 +145,7 @@ function fakeMolliePayoutList(array $payouts): array
     $holder = mollieFakeHolder();
     $holder->payouts = $resources;
     $holder->payoutError = null;
+    $holder->listError = null;
     mollieFakeStubPayouts();
 
     return array_values($resources);
@@ -149,19 +164,19 @@ function mollieFakeStubPayouts(): void
     $mock = mollieGatewayFake();
 
     $mock->shouldReceive('getPayout')->andReturnUsing(function (string $id) use ($holder) {
-        if ($holder->payoutError) {
-            throw new RuntimeException($holder->payoutError);
+        if (isset($holder->payoutError)) {
+            throw $holder->payoutError;
         }
 
-        return $holder->payouts[$id] ?? throw new RuntimeException('payout no encontrado: '.$id);
+        return ($holder->payouts ?? [])[$id] ?? throw new RuntimeException('payout no encontrado: '.$id, 404);
     });
 
     $mock->shouldReceive('listPayouts')->andReturnUsing(function () use ($holder) {
-        if ($holder->payoutError) {
-            throw new RuntimeException($holder->payoutError);
+        if (isset($holder->listError)) {
+            throw $holder->listError;
         }
 
-        return array_values($holder->payouts);
+        return array_values($holder->payouts ?? []);
     });
 }
 

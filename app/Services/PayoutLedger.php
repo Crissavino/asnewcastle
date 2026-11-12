@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Club;
 use App\Models\MolliePayout;
 use App\Models\Movement;
+use App\Services\Mollie\ClubDeLaCuenta;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -34,12 +35,15 @@ class PayoutLedger
     /** Los dos bolsillos son `cuenta` y `cash`; el payout entra al banco. */
     private const POT = 'cuenta';
 
+    public function __construct(private ClubDeLaCuenta $clubDeLaCuenta) {}
+
     /**
      * Pone el libro al día con el estado de este payout de Mollie.
      * Devuelve qué hizo, para que el que llama lo loguee o lo cuente.
      *
      * @param  object  $payout  el recurso Payout del SDK (o uno equivalente)
-     * @return string acreditado | contra-asentado | sin_cambios | en_camino | sin_club | moneda
+     * @return string acreditado | contra-asentado | sin_cambios | en_camino | moneda |
+     *                sin_club | club_ambiguo | club_configurado_inexistente
      */
     public function sync(object $payout): string
     {
@@ -50,21 +54,32 @@ class PayoutLedger
             return 'sin_cambios';
         }
 
-        $club = $this->club();
-
-        if (! $club) {
-            // Sin club no hay a quién acreditarle: un movimiento con club_id null
-            // es plata sin dueño que no suma en ningún saldo. Mejor no escribir.
-            Log::warning('Payout de Mollie sin club al que acreditarlo', ['payout' => $payoutId]);
-
-            return 'sin_club';
-        }
-
         if ($status !== self::CREDITA && ! in_array($status, self::REVIERTE, true)) {
             // requested / initiated / processing-at-bank: todavía no está en el banco.
             return 'en_camino';
         }
 
+        [$club, $motivo] = $this->clubDeLaCuenta->resolver();
+
+        if (! $club) {
+            // Un movimiento con club_id null es plata sin dueño que no suma en
+            // ningún saldo, así que no se escribe. Pero el payout existió: queda
+            // registrado como SIN ACREDITAR para que se vea en la pantalla y lo
+            // repesque el chequeo diario, no escondido en un warning.
+            return DB::transaction(fn () => $this->registrarSinAcreditar($payout, $payoutId, $status, $motivo));
+        }
+
+        // El contra-asiento usa los importes que ya están en la base, así que no
+        // depende de la moneda ni del monto que traiga ESTE payout: gatearlo con
+        // esos chequeos dejaría acreditada plata que nunca llegó al banco.
+        return DB::transaction(fn () => $status === self::CREDITA
+            ? $this->acreditar($club, $payout, $payoutId)
+            : $this->contraAsentar($club, $payoutId, $status));
+    }
+
+    /** Escribe el depósito en el libro: una fila por el neto y, si corresponde, otra por la comisión. */
+    private function acreditar(Club $club, object $payout, string $payoutId): string
+    {
         $currency = strtoupper((string) ($payout->amount->currency ?? ''));
 
         if ($currency !== strtoupper($club->currency)) {
@@ -86,18 +101,12 @@ class PayoutLedger
             return 'sin_cambios';
         }
 
-        return DB::transaction(fn () => $status === self::CREDITA
-            ? $this->acreditar($club, $payout, $payoutId, $amountCents, $currency)
-            : $this->contraAsentar($club, $payoutId, $status));
-    }
-
-    /** Escribe el depósito en el libro: una fila por el neto y, si Mollie la informó, otra por la comisión. */
-    private function acreditar(Club $club, object $payout, string $payoutId, int $amountCents, string $currency): string
-    {
-        $feeCents = $this->feeCents($payout, $payoutId);
+        $feeInformada = $this->feeInformada($payout);
+        $feeAsentable = $this->feeAsentable($feeInformada, $payoutId);
         $registro = $this->registro($payoutId);
 
-        if ($registro && $registro->club_id !== $club->id) {
+        // club_id null es un payout que quedó sin acreditar: ahora se adopta.
+        if ($registro && $registro->club_id !== null && $registro->club_id !== $club->id) {
             Log::warning('Payout de Mollie ya registrado en otro club: no se toca', ['payout' => $payoutId]);
 
             return 'sin_cambios';
@@ -105,23 +114,20 @@ class PayoutLedger
 
         $completedAt = isset($payout->completedAt) ? Carbon::parse($payout->completedAt) : null;
 
+        $datos = [
+            'club_id' => $club->id,
+            'status' => self::CREDITA,
+            'amount_cents' => $amountCents,
+            'fee_cents' => $feeInformada,
+            'currency' => $currency,
+            'pending_reason' => null,
+            'completed_at' => $completedAt,
+        ];
+
         if ($registro) {
-            $registro->update([
-                'status' => self::CREDITA,
-                'amount_cents' => $amountCents,
-                'fee_cents' => $feeCents,
-                'completed_at' => $completedAt,
-            ]);
+            $registro->update($datos);
         } else {
-            $registro = MolliePayout::withoutGlobalScopes()->create([
-                'club_id' => $club->id,
-                'mollie_payout_id' => $payoutId,
-                'status' => self::CREDITA,
-                'amount_cents' => $amountCents,
-                'fee_cents' => $feeCents,
-                'currency' => $currency,
-                'completed_at' => $completedAt,
-            ]);
+            MolliePayout::withoutGlobalScopes()->create($datos + ['mollie_payout_id' => $payoutId]);
         }
 
         // Ya hay asientos vigentes de este payout: el webhook se repitió (o el
@@ -134,9 +140,9 @@ class PayoutLedger
 
         $this->movimiento($club->id, $payoutId, 'payout', $amountCents, $occurredOn, 'Depósito de Mollie');
 
-        if ($feeCents !== null && $feeCents !== 0) {
+        if ($feeAsentable !== null && $feeAsentable !== 0) {
             // La comisión sale del mismo bolsillo, con signo negativo.
-            $this->movimiento($club->id, $payoutId, 'fee', -abs($feeCents), $occurredOn, 'Comisión de Mollie');
+            $this->movimiento($club->id, $payoutId, 'fee', -abs($feeAsentable), $occurredOn, 'Comisión de Mollie');
         }
 
         return 'acreditado';
@@ -170,6 +176,49 @@ class PayoutLedger
         }
 
         return 'contra-asentado';
+    }
+
+    /**
+     * El payout existió pero no se sabe de quién es la cuenta: se registra sin
+     * club y sin movimiento. Plata no acreditada tiene que estar a la vista.
+     */
+    private function registrarSinAcreditar(object $payout, string $payoutId, string $status, ?string $motivo): string
+    {
+        $motivo ??= ClubDeLaCuenta::SIN_CLUB;
+        $registro = $this->registro($payoutId);
+
+        // Si ya estaba acreditado a un club, el club se resolvió alguna vez:
+        // no se le borra el dueño por una configuración que cambió hoy.
+        if ($registro && $registro->club_id !== null) {
+            Log::warning('Payout de Mollie ya acreditado pero ahora no se resuelve el club', [
+                'payout' => $payoutId,
+                'motivo' => $motivo,
+            ]);
+
+            return 'sin_cambios';
+        }
+
+        Log::warning('Payout de Mollie sin club al que acreditarlo: queda sin acreditar', [
+            'payout' => $payoutId,
+            'motivo' => $motivo,
+        ]);
+
+        $datos = [
+            'club_id' => null,
+            'status' => $status,
+            'amount_cents' => $this->cents($payout->amount->value ?? null) ?? 0,
+            'currency' => strtoupper((string) ($payout->amount->currency ?? '')) ?: null,
+            'pending_reason' => $motivo,
+            'completed_at' => isset($payout->completedAt) ? Carbon::parse($payout->completedAt) : null,
+        ];
+
+        if ($registro) {
+            $registro->update($datos);
+        } else {
+            MolliePayout::withoutGlobalScopes()->create($datos + ['mollie_payout_id' => $payoutId]);
+        }
+
+        return $motivo;
     }
 
     private function movimiento(int $clubId, string $payoutId, string $kind, int $amountCents, string $occurredOn, string $note, ?int $reverses = null): void
@@ -214,48 +263,44 @@ class PayoutLedger
     }
 
     /**
-     * El club dueño de la cuenta de Mollie. La credencial de Mollie es una sola
-     * por instalación, así que el dueño es el único club con cuota. Si hubiera
-     * más de uno no se sabe de quién es la plata: no se acredita nada.
+     * La comisión que hay que asentar como movimiento aparte, o null.
+     *
+     * NO se deriva ni se estima: un número inventado corrompe el saldo en
+     * silencio, y para esa diferencia ya está el ajuste contra el extracto.
+     *
+     * Y aunque Mollie la informe, por defecto NO se asienta: el SDK documenta el
+     * `amount` del payout como el monto depositado "excluding any applicable
+     * fees", o sea NETO. Restarle además la comisión dejaría la cuenta por
+     * debajo del extracto, en silencio y para siempre. El recurso acepta campos
+     * dinámicos (AllowDynamicProperties + el hydrator copia todo el JSON), así
+     * que `deductions` puede aparecer solo el día que Mollie lo agregue: el flag
+     * de config es lo que impide que esta rama se prenda sola. Se prende recién
+     * cuando la sonda (app:mollie-saldo-diag) confirme que `amount` es BRUTO.
      */
-    private function club(): ?Club
+    private function feeAsentable(?int $feeInformada, string $payoutId): ?int
     {
-        $clubs = Club::withoutGlobalScopes()
-            ->where('monthly_fee_cents', '>', 0)
-            ->orderBy('id')
-            ->limit(2)
-            ->get();
+        if ($feeInformada === null) {
+            Log::info('Payout de Mollie sin comisión legible: no se asienta ninguna', ['payout' => $payoutId]);
 
-        if ($clubs->count() === 1) {
-            return $clubs->first();
+            return null;
         }
 
-        if ($clubs->count() > 1) {
-            Log::warning('Hay más de un club con cuota: no se puede saber de quién es el payout de Mollie');
+        if (! config('services.mollie.payout_fee_aparte')) {
+            Log::info('Payout de Mollie con comisión informada, pero el monto se toma como neto: no se asienta', [
+                'payout' => $payoutId,
+                'comision_cents' => $feeInformada,
+            ]);
+
+            return null;
         }
 
-        return null;
+        return $feeInformada;
     }
 
-    /**
-     * La comisión que informa Mollie, o null si no la informa. NO se deriva ni
-     * se estima: un número inventado corrompe el saldo en silencio, y para esa
-     * diferencia ya está el ajuste contra el extracto.
-     *
-     * OJO: el recurso Payout del SDK no declara `deductions` (la trae la balance
-     * transaction), así que hoy esto es casi siempre null. Si algún día viniera,
-     * hay que confirmar antes si `amount` sigue siendo el neto depositado: si lo
-     * es, la comisión NO va como movimiento porque nunca pasó por el banco.
-     */
-    private function feeCents(object $payout, string $payoutId): ?int
+    /** La comisión tal como la informa Mollie, solo para dejarla registrada. */
+    private function feeInformada(object $payout): ?int
     {
-        $fee = isset($payout->deductions->value) ? $this->cents($payout->deductions->value) : null;
-
-        if ($fee === null) {
-            Log::info('Payout de Mollie sin comisión legible: no se asienta ninguna', ['payout' => $payoutId]);
-        }
-
-        return $fee;
+        return isset($payout->deductions->value) ? $this->cents($payout->deductions->value) : null;
     }
 
     /** "288.00" -> 28800. Enteros, nunca float. */

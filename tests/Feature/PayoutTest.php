@@ -86,7 +86,21 @@ it('el contra-asiento de un payout fallido no se duplica', function () {
         ->and(Movement::withoutGlobalScopes()->count())->toBe(2);
 });
 
-it('si Mollie trae la comisión la asienta aparte, negativa y en el mismo bolsillo', function () {
+it('la comisión informada queda registrada pero NO se asienta: el monto del payout ya es neto', function () {
+    $m = Member::factory()->manager()->create();
+    fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'completed', deductionCents: 1200);
+
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc']);
+
+    fijarClub($m);
+    expect(Movement::withoutGlobalScopes()->where('kind', 'fee')->count())->toBe(0)
+        ->and(app(Ledger::class)->balance('cuenta'))->toBe(28800)
+        // Se registra para que se vea, pero no toca el saldo.
+        ->and(MolliePayout::withoutGlobalScopes()->firstWhere('mollie_payout_id', 'ptr_abc')->fee_cents)->toBe(1200);
+});
+
+it('con el flag prendido la comisión se asienta aparte, negativa y en el mismo bolsillo', function () {
+    config(['services.mollie.payout_fee_aparte' => true]);
     $m = Member::factory()->manager()->create();
     fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'completed', deductionCents: 1200);
 
@@ -102,6 +116,7 @@ it('si Mollie trae la comisión la asienta aparte, negativa y en el mismo bolsil
 });
 
 it('un payout fallido contra-asienta también la comisión', function () {
+    config(['services.mollie.payout_fee_aparte' => true]);
     $m = Member::factory()->manager()->create();
     fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'completed', deductionCents: 1200);
     $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc']);
@@ -149,24 +164,92 @@ it('un payout todavía en camino no acredita nada', function (string $status) {
         ->and(Movement::withoutGlobalScopes()->count())->toBe(0);
 })->with(['requested', 'initiated', 'processing-at-bank']);
 
-it('con dos clubes candidatos no acredita nada: no se sabe de quién es la plata', function () {
+it('con dos clubes no adivina de quién es la plata, pero la deja registrada sin acreditar', function () {
     $m = Member::factory()->manager()->create();
-    Club::factory()->create(['monthly_fee_cents' => 9000]);
+    Club::factory()->create();
     fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'completed');
 
     $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc'])->assertOk();
 
     fijarClub($m);
+    $registro = MolliePayout::withoutGlobalScopes()->sole();
     expect(Movement::withoutGlobalScopes()->count())->toBe(0)
-        ->and(MolliePayout::withoutGlobalScopes()->count())->toBe(0);
+        ->and($registro->club_id)->toBeNull()
+        ->and($registro->amount_cents)->toBe(28800)
+        ->and($registro->pending_reason)->toBe('club_ambiguo')
+        ->and($registro->sinAcreditar())->toBeTrue();
+});
+
+it('sin ningún club la plata queda registrada sin acreditar, no en un log', function () {
+    fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'completed');
+
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc'])->assertOk();
+
+    expect(Movement::withoutGlobalScopes()->count())->toBe(0)
+        ->and(MolliePayout::withoutGlobalScopes()->sole()->pending_reason)->toBe('sin_club');
+});
+
+it('el club configurado manda: con dos clubes acredita al de MOLLIE_CLUB_ID', function () {
+    $m = Member::factory()->manager()->create();
+    $otro = Member::factory()->manager()->create();
+    config(['services.mollie.club_id' => $otro->club_id]);
+    fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'completed');
+
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc'])->assertOk();
+
+    fijarClub($otro);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(28800);
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(0);
+});
+
+it('un payout que quedó sin acreditar se acredita cuando el club se puede resolver', function () {
+    // Es el camino del chequeo diario: pasa el mismo payout por el mismo sync.
+    $m = Member::factory()->manager()->create();
+    Club::factory()->create();
+    fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'completed');
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc']);
+
+    config(['services.mollie.club_id' => $m->club_id]);
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc']);
+
+    fijarClub($m);
+    $registro = MolliePayout::withoutGlobalScopes()->sole();
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(28800)
+        ->and($registro->club_id)->toBe($m->club_id)
+        ->and($registro->pending_reason)->toBeNull();
 });
 
 it('un id desconocido no rompe el webhook', function () {
-    fakeMolliePayoutFailure();
+    fakeMolliePayoutFailure(code: 404);
 
     $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_nope'])->assertOk();
 
     expect(Movement::withoutGlobalScopes()->count())->toBe(0);
+});
+
+it('un error transitorio de la API devuelve 503 para que Mollie reintente', function () {
+    fakeMolliePayoutFailure(message: 'Mollie no responde', code: 500);
+
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc'])->assertStatus(503);
+
+    expect(Movement::withoutGlobalScopes()->count())->toBe(0)
+        ->and(MolliePayout::withoutGlobalScopes()->count())->toBe(0);
+});
+
+it('un payout fallido se contra-asienta aunque venga sin monto legible ni moneda', function () {
+    // El contra-asiento usa los importes de la base: no lo puede frenar un
+    // payload roto, o quedaría acreditada plata que nunca llegó al banco.
+    $m = Member::factory()->manager()->create();
+    fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'completed');
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc']);
+
+    $roto = fakeMolliePayout(id: 'ptr_abc', amountCents: 28800, status: 'failed', currency: 'EUR');
+    $roto->amount = null;
+    $this->post('/webhooks/mollie/payouts', ['id' => 'ptr_abc'])->assertOk();
+
+    fijarClub($m);
+    expect(app(Ledger::class)->balance('cuenta'))->toBe(0);
 });
 
 it('un webhook sin id no rompe nada', function () {

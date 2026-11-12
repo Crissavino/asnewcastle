@@ -2,14 +2,14 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Club;
 use App\Models\Movement;
+use App\Services\Mollie\ClubDeLaCuenta;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 /**
  * One-off: traza la línea en la arena de los dos bolsillos. Crea un saldo
- * inicial por bolsillo (cuenta y cash) en cada club con cuota; a partir de ahí
+ * inicial por bolsillo (cuenta y cash) del club dueño de la cuenta; a partir de ahí
  * los saldos salen solos del libro. Los montos se pasan en lei y se guardan en
  * centavos. Una fila con 0 también se escribe: documenta la fecha de la línea.
  *
@@ -43,24 +43,20 @@ class SaldoInicial extends Command
         $hoy = now()->toDateString();
         $escritos = 0;
 
-        $clubs = Club::withoutGlobalScopes()->where('monthly_fee_cents', '>', 0)->orderBy('id')->get();
+        // Mismo resolvedor que usa el libro de payouts: la regla de "de quién es
+        // la plata" vive en un solo lugar.
+        [$club, $motivo] = app(ClubDeLaCuenta::class)->resolver();
 
-        if ($clubs->isEmpty()) {
-            $this->error('No hay ningún club con cuota para ponerle saldo inicial.');
+        if (! $club) {
+            $this->error("No se pudo resolver el club dueño de la cuenta ({$motivo}). Setear MOLLIE_CLUB_ID.");
 
             return self::FAILURE;
         }
 
-        foreach ($clubs as $club) {
-            $yaTiene = Movement::withoutGlobalScopes()
-                ->where('club_id', $club->id)->where('kind', 'saldo_inicial')->exists();
+        $yaTiene = Movement::withoutGlobalScopes()
+            ->where('club_id', $club->id)->where('kind', 'saldo_inicial')->exists();
 
-            if ($yaTiene) {
-                $this->warn("{$club->name} (#{$club->id}): ya tiene saldo inicial, se saltea.");
-
-                continue;
-            }
-
+        if (! $yaTiene) {
             $this->line("{$club->name} (#{$club->id}): cuenta {$cuenta} lei · efectivo {$efectivo} lei · fecha {$hoy}");
 
             if ($apply) {
@@ -79,10 +75,12 @@ class SaldoInicial extends Command
             }
 
             $escritos++;
+        } else {
+            $this->warn("{$club->name} (#{$club->id}): ya tiene saldo inicial, se saltea.");
         }
 
         if ($escritos === 0) {
-            $this->error('Ningún club quedó escrito: todos ya tenían saldo inicial.');
+            $this->error('Ningún club quedó escrito: ya tenía saldo inicial.');
 
             return self::FAILURE;
         }
@@ -93,7 +91,7 @@ class SaldoInicial extends Command
             return self::SUCCESS;
         }
 
-        $this->info("Listo: saldo inicial escrito en {$escritos} club(es).");
+        $this->info("Listo: saldo inicial escrito en {$club->name}.");
 
         return self::SUCCESS;
     }

@@ -63,6 +63,14 @@ return [
         'profile_id' => env('MOLLIE_PROFILE_ID'),
         'testmode' => filter_var(env('MOLLIE_TESTMODE', false), FILTER_VALIDATE_BOOL),
         'enabled' => filter_var(env('MOLLIE_ENABLED', false), FILTER_VALIDATE_BOOL),
+        // El club dueño de esta cuenta de Mollie: a él se le acreditan los
+        // payouts. Si no se setea, se resuelve solo mientras haya un solo club.
+        'club_id' => env('MOLLIE_CLUB_ID'),
+        // ¿La comisión del payout es un cargo APARTE del monto depositado?
+        // Apagado hasta que la sonda (app:mollie-saldo-diag) confirme si el
+        // `amount` del payout es bruto o neto: si es neto —como documenta el
+        // SDK— asentar la comisión dejaría la cuenta por debajo del extracto.
+        'payout_fee_aparte' => filter_var(env('MOLLIE_PAYOUT_FEE_APARTE', false), FILTER_VALIDATE_BOOL),
     ],
 
     'whatsapp' => [

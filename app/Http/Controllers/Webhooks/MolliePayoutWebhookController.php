@@ -35,13 +35,21 @@ class MolliePayoutWebhookController extends Controller
         try {
             $payout = $mollie->getPayout($payoutId);
         } catch (\Throwable $e) {
-            // Id desconocido / error transitorio: no romper.
+            // Mollie reintenta con no-2xx, así que un error transitorio (API
+            // caída, sin permiso todavía) devuelve 503 para que vuelva. Un id
+            // que no existe (404) no tiene sentido reintentarlo: 200 y listo.
+            // Para todo lo que igual se pierda, la red de contención es el
+            // chequeo diario, que pasa los payouts por el mismo PayoutLedger.
+            $noExiste = $e->getCode() === 404;
+
             Log::warning('No se pudo traer el payout de Mollie', [
                 'payout' => $payoutId,
+                'codigo' => $e->getCode(),
+                'reintentar' => ! $noExiste,
                 'error' => $e->getMessage(),
             ]);
 
-            return response('ok', 200);
+            return response($noExiste ? 'ok' : 'reintentar', $noExiste ? 200 : 503);
         }
 
         Log::info('Webhook de payout de Mollie', [
