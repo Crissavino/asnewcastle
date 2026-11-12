@@ -31,7 +31,7 @@ class MolliePayout extends Model
     ];
 
     /** Quedó registrado pero su plata no entró a ningún saldo. */
-    public function sinAcreditar(): bool
+    public function noAcreditado(): bool
     {
         return $this->pending_reason !== null;
     }

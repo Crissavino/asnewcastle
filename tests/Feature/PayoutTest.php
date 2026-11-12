@@ -158,7 +158,7 @@ it('un payout que no viene en RON no se acredita, pero queda registrado', functi
         ->and($registro->amount_cents)->toBe(28800)
         ->and($registro->currency)->toBe('EUR')
         ->and($registro->pending_reason)->toBe('moneda')
-        ->and($registro->sinAcreditar())->toBeTrue();
+        ->and($registro->noAcreditado())->toBeTrue();
 });
 
 it('un payout fallido se contra-asienta aunque el club ya no se resuelva', function () {
@@ -239,7 +239,7 @@ it('con dos clubes no adivina de quién es la plata, pero la deja registrada sin
         ->and($registro->club_id)->toBeNull()
         ->and($registro->amount_cents)->toBe(28800)
         ->and($registro->pending_reason)->toBe('club_ambiguo')
-        ->and($registro->sinAcreditar())->toBeTrue();
+        ->and($registro->noAcreditado())->toBeTrue();
 });
 
 it('sin ningún club la plata queda registrada sin acreditar, no en un log', function () {
