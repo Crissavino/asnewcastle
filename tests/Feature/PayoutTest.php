@@ -340,11 +340,14 @@ it('el tránsito suma disponible, entrante y saliente: un payout en curso no des
     expect(app(MollieGateway::class)->transitCents())->toBe(21000);
 });
 
-it('un saldo sin saliente legible es null y no cero', function () {
+it('un saliente ausente es cero, no "sin dato": Mollie omite el campo cuando no hay nada en curso', function () {
+    // Confirmado contra la cuenta real (app:mollie-saldo-diag, 12.11.2026): el
+    // saldo vino con availableAmount y SIN incomingAmount ni outgoingAmount.
+    // Tratar la ausencia como "no sé" dejaba el tránsito en guion para siempre.
     $balance = fakeMollieBalance(availableCents: 12000, pendingCents: 6000);
     $balance->outgoingAmount = null;
 
-    expect(app(MollieGateway::class)->transitCents())->toBeNull();
+    expect(app(MollieGateway::class)->transitCents())->toBe(18000);
 });
 
 it('un saldo en cero es cero, no null', function () {
@@ -353,9 +356,16 @@ it('un saldo en cero es cero, no null', function () {
     expect(app(MollieGateway::class)->transitCents())->toBe(0);
 });
 
-it('un saldo sin la forma esperada es null y no cero', function () {
+it('un entrante ausente también es cero: queda el disponible', function () {
     $balance = fakeMollieBalance(availableCents: 12000, pendingCents: 6000);
     $balance->incomingAmount = null;
+
+    expect(app(MollieGateway::class)->transitCents())->toBe(12000);
+});
+
+it('sin disponible legible SÍ es null y no cero: ahí no sabemos nada', function () {
+    $balance = fakeMollieBalance(availableCents: 12000, pendingCents: 6000);
+    $balance->availableAmount = null;
 
     expect(app(MollieGateway::class)->transitCents())->toBeNull();
 });

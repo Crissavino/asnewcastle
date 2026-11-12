@@ -299,36 +299,42 @@ class MollieGateway
         return $cents;
     }
 
+    /** Un monto de Mollie a centavos. Ausente o ilegible es cero, no "sin dato". */
+    private function cents(mixed $value): int
+    {
+        return is_numeric($value) ? (int) round((float) $value * 100) : 0;
+    }
+
     private function leerTransitCents(): ?int
     {
         try {
             $balance = $this->getBalance();
 
-            // SUPOSICIÓN SIN CONFIRMAR (la sonda app:mollie-saldo-diag nunca corrió
-            // contra la cuenta real): el saldo trae availableAmount, incomingAmount y
-            // outgoingAmount como {currency, value:"12.00"}, y los TRES se asumen
-            // DISJUNTOS (crear un payout descuenta de available), así que se suman sin
-            // doble conteo. Sin outgoing, un payout encolado no estaría en ningún
-            // bolsillo ni en el tránsito. Es lo primero a confirmar con la sonda.
-            // Si falta algo no se asume: null.
+            // CONFIRMADO con la cuenta real (app:mollie-saldo-diag, 12.11.2026):
+            // el saldo trae availableAmount como {currency, value:"293.30"}, pero
+            // **incomingAmount y outgoingAmount vienen AUSENTES cuando no hay nada
+            // en ese estado** — no como 0. Por eso solo availableAmount es
+            // obligatorio: si falta, no sabemos nada y devolvemos null. Un entrante
+            // o saliente ausente SÍ es cero, y tratarlo como "sin dato" dejaría el
+            // tránsito en guion para siempre.
+            // Los tres son disjuntos: la sonda mostró que el payout del 11.11 salió
+            // de available con un asiento outgoing-transfer, así que sumarlos no
+            // cuenta dos veces.
             $moneda = strtoupper((string) ($balance->currency ?? ''));
             $disponible = $balance->availableAmount->value ?? null;
-            $entrante = $balance->incomingAmount->value ?? null;
-            $saliente = $balance->outgoingAmount->value ?? null;
 
-            if ($moneda !== 'RON' || ! is_numeric($disponible) || ! is_numeric($entrante) || ! is_numeric($saliente)) {
+            if ($moneda !== 'RON' || ! is_numeric($disponible)) {
                 Log::warning('Saldo de Mollie con forma inesperada: el tránsito queda sin dato', [
                     'moneda' => $moneda,
                     'disponible' => $balance->availableAmount ?? null,
-                    'entrante' => $balance->incomingAmount ?? null,
-                    'saliente' => $balance->outgoingAmount ?? null,
                 ]);
 
                 return null;
             }
 
-            return (int) round((float) $disponible * 100) + (int) round((float) $entrante * 100)
-                + (int) round((float) $saliente * 100);
+            return $this->cents($disponible)
+                + $this->cents($balance->incomingAmount->value ?? null)
+                + $this->cents($balance->outgoingAmount->value ?? null);
         } catch (\Throwable $e) {
             Log::warning('No se pudo leer el saldo de Mollie: el tránsito queda sin dato', [
                 'codigo' => $e->getCode(),

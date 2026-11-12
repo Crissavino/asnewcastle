@@ -22,17 +22,24 @@ class MollieDiag extends Command
         $key = (string) config('services.mollie.key');
         $this->info('key prefix='.substr($key, 0, 5).' | enabled='.(int) config('services.mollie.enabled').' | profile='.config('services.mollie.profile_id'));
 
-        // Con access token (access_...) Mollie exige saber de qué perfil hablás:
-        // sin profileId devuelve 400 "A website profile is required for payments".
-        // Con API key clásica el perfil va implícito en la credencial.
+        // Con access token (access_...) el listado de métodos devuelve 400
+        // ("A website profile is required for payments") aun pasando profileId,
+        // así que ese no sirve como prueba de auth. El perfil sí: si se puede
+        // leer, la credencial anda y el MOLLIE_PROFILE_ID configurado existe,
+        // que es justo lo que el cobro necesita. Con API key clásica el perfil
+        // va implícito en la credencial y los métodos siguen siendo la prueba.
         $esAccessToken = str_starts_with($key, 'access_');
-        $query = $esAccessToken ? ['profileId' => config('services.mollie.profile_id')] : [];
         $testmode = $esAccessToken && (bool) config('services.mollie.testmode');
 
         try {
-            $methods = $mollie->methods->allActive($query, $testmode);
-            $ids = collect($methods)->map(fn ($m) => $m->id)->implode(',');
-            $this->info('AUTH OK — métodos activos: '.count($methods).' ('.$ids.')');
+            if ($esAccessToken) {
+                $profile = $mollie->profiles->get((string) config('services.mollie.profile_id'), $testmode);
+                $this->info('AUTH OK — perfil '.$profile->id.' ('.$profile->name.') status='.$profile->status);
+            } else {
+                $methods = $mollie->methods->allActive();
+                $ids = collect($methods)->map(fn ($m) => $m->id)->implode(',');
+                $this->info('AUTH OK — métodos activos: '.count($methods).' ('.$ids.')');
+            }
         } catch (\Throwable $e) {
             $this->error('AUTH FAIL: '.class_basename($e).' — '.$e->getMessage());
         }
