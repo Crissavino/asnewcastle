@@ -66,6 +66,9 @@ class CuotaEfectivo extends Command
             ->whereDate('period', $period)
             ->first();
 
+        // La misma guarda que CuotaController::setStatus: una cuota cobrada
+        // online no se marca a mano, o su plata se acredita DOS veces (una por
+        // el movimiento `cuota` de acá, otra por el `payout` de Mollie).
         if ($due && $due->payments()->exists()) {
             $this->error("La cuota #{$due->id} tiene un pago online: no se toca a mano.");
 
@@ -89,7 +92,18 @@ class CuotaEfectivo extends Command
 
         $managerId = $member->club->members()->where('role', 'manager')->orderBy('id')->value('id');
 
-        DB::transaction(function () use ($due, $member, $period, $amount, $lei, $periodo, $managerId) {
+        $pagoOnline = DB::transaction(function () use (&$due, $member, $period, $amount, $lei, $periodo, $managerId) {
+            // Se vuelve a mirar bajo lock: el chequeo de arriba corrió antes del
+            // dry run, y entre medio puede haber entrado el webhook de Mollie.
+            // Marcarla igual acreditaría la misma cuota dos veces.
+            if ($due) {
+                $due = Due::withoutGlobalScopes()->whereKey($due->id)->lockForUpdate()->firstOrFail();
+
+                if ($due->payments()->exists()) {
+                    return true;
+                }
+            }
+
             $antes = $due
                 ? ['status' => $due->status, 'amount_cents' => $due->amount_cents]
                 : ['status' => null, 'amount_cents' => null];
@@ -122,7 +136,15 @@ class CuotaEfectivo extends Command
                     'via' => 'consola',
                 ],
             ]);
+
+            return false;
         });
+
+        if ($pagoOnline) {
+            $this->error("La cuota #{$due->id} tiene un pago online: no se toca a mano.");
+
+            return self::FAILURE;
+        }
 
         $this->info("Listo: cuota de {$periodo} de {$member->user->name} marcada pagada por {$lei} lei.");
 

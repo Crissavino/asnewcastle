@@ -3,6 +3,7 @@
 use App\Models\AuditLog;
 use App\Models\Due;
 use App\Models\Member;
+use App\Models\Movement;
 
 function cuotaDelMes(Member $member, int $cents = 20000): Due
 {
@@ -65,6 +66,30 @@ it('no aplica si el nombre no identifica a un solo jugador', function () {
         ->assertFailed();
 
     expect(Due::withoutGlobalScopes()->where('status', 'paid')->count())->toBe(0);
+});
+
+it('una cuota cobrada online no mueve ningún saldo: no se acredita dos veces', function () {
+    // La plata del pago online entra a `cuenta` sola, por el payout de Mollie.
+    // Si el comando además asentara su movimiento `cuota`, el club vería el
+    // doble de lo que cobró. Es la misma guarda que CuotaController::setStatus.
+    $manager = Member::factory()->manager()->create();
+    $jugador = Member::factory()->for($manager->club)->create();
+    $jugador->user->update(['name' => 'Adam Loz']);
+    $due = cuotaDelMes($jugador);
+    $due->payments()->create([
+        'stripe_payment_intent_id' => 'pi_test_'.uniqid(),
+        'amount_cents' => 20000,
+        'application_fee_cents' => 0,
+        'status' => 'succeeded',
+        'paid_at' => now(),
+    ]);
+
+    $this->artisan('app:cuota-efectivo', ['nombre' => 'Adam', 'lei' => 150, 'modo' => 'go'])
+        ->assertFailed();
+
+    expect($due->fresh()->status)->toBe('pending')
+        ->and(Movement::withoutGlobalScopes()->count())->toBe(0)
+        ->and(AuditLog::withoutGlobalScopes()->where('action', 'due.status.set')->count())->toBe(0);
 });
 
 it('no toca una cuota pagada por Stripe', function () {
