@@ -1,30 +1,38 @@
 # Análisis de negocio — A.S New Castle
 
-**Fecha:** 12.11.2026 · **Fuente:** producción, comando `app:analisis-negocio` (solo lectura)
+**Fecha:** 12.11.2026 (actualizado tras la puesta al día de los cobros en efectivo)
+**Fuente:** producción, comando `app:analisis-negocio` (solo lectura)
 **Período medido:** septiembre, octubre y noviembre 2026 (noviembre, al día 12)
 
 ---
 
 ## 0. El titular
 
-**El club cobra cada mes menos cuotas, y en noviembre quedó parado justo encima de su punto
-de equilibrio.**
+**El club está cómodo en septiembre y octubre, y en noviembre quedó parado justo encima de
+su punto de equilibrio.**
+
+> **Corrección.** Una primera versión de este informe leía una caída 17 → 13 → 11 y la
+> llamaba desplome. Era en buena parte atraso de la planilla: varios cobros en efectivo no
+> estaban cargados. Con los libros al día la serie es **18 → 15 → 11**, y noviembre lleva
+> solo 12 días. Sigue habiendo una tendencia a la baja, pero no es la caída libre que
+> describí.
 
 | | Sep | Oct | Nov (al 12) |
 |---|---:|---:|---:|
-| Cuotas cobradas | **17** | **13** | **11** |
-| Cuotas impagas | 5 | 11 | 9 |
-| Tasa de cobro | 77,5% | 53,5% | 54,1% |
-| Cobrado | 4.660 RON | 3.800 RON | 3.180 RON |
+| Cuotas cobradas | **18** | **15** | **11** |
+| Cuotas impagas | 4 | 7 | 8 |
+| Tasa de cobro | 82,5% | 67,7% | 57,0% |
+| Cobrado | 4.960 RON | 4.400 RON | 3.180 RON |
 | Gastado | 3.639 RON | 2.968 RON | 2.575 RON |
-| **Resultado del mes** | **+1.021** | **+832** | **+605** |
+| **Resultado del mes** | **+1.321** | **+1.432** | **+605** |
 
 **El punto de equilibrio son 11,4 cuotas cobradas por mes** (gasto promedio 3.303 RON ÷ 290
 RON de cuota efectiva promedio). Noviembre va 11.
 
-El club sigue en azul, pero el azul se achicó 40% en dos meses y la línea de flotación está
-tocando el casco. El mes todavía no cerró y pueden entrar cuotas; la dirección, igual, ya está
-marcada.
+El club está en azul y con margen en los dos meses cerrados. Noviembre va 11 cuotas con 18
+días por delante: si entran tres o cuatro más, queda igual que octubre. Lo que sí baja mes a
+mes, sin excusa de calendario, es la **tasa de cobro**: 82,5% → 67,7% → 57,0%. Esa es la
+serie que hay que mirar.
 
 ---
 
@@ -69,17 +77,19 @@ gasto completo, no hay análisis que valga.
 
 ## 3. La morosidad es el problema central
 
-**Deuda abierta: 7.350 RON.** Para dimensionarla:
+**Deuda abierta: 5.550 RON.** Para dimensionarla:
 
-- Es **3,4 veces el saldo de caja** (2.158 RON)
-- Es el **63% de todo lo que el club cobró en su historia** (11.640 RON)
-- Es **más de dos meses completos de gasto**
+- Es **el 44% de todo lo que el club cobró en su historia** (12.540 RON)
+- Es **más de un mes y medio completo de gasto**
+- De esos 5.550, **1.650 son de seis personas que ya no están en el club**: incobrables en
+  la práctica, y hoy inflando el activo de la caja
 
-Y crece: 5 morosos en septiembre, 11 en octubre, 9 en noviembre.
+Queda entonces una deuda viva de **3.900 RON entre nueve personas activas**. Y está muy
+concentrada: **una sola persona no pagó un solo peso en tres meses (900 RON)**, y entre esa
+y las dos siguientes suman 2.100 — el 54% de la deuda cobrable.
 
-**Lo más grave:** los 1.350 RON de septiembre **siguen abiertos dos meses y medio después.**
-La deuda vieja no se recupera. A efectos prácticos ya no es deuda, es pérdida — solo que
-todavía figura como activo en la caja y hace ver al club mejor de lo que está.
+No es un problema repartido entre nueve morosos: son tres conversaciones pendientes. Los
+nombres salen de la caja de la app; a propósito no quedan escritos acá.
 
 ---
 
@@ -91,7 +101,13 @@ todavía figura como activo en la caja y hace ver al club mejor de lo que está.
 | En mora (`past_due`) | 2 |
 | Canceladas | 1 |
 | **Adopción sobre los 21 que pagan** | **19%** |
-| **Deserción** (de 7 que lo activaron, 3 se cayeron) | **43%** |
+
+> **Ojo con esos estados: no son de fiar.** El detalle por jugador (§4bis) muestra que
+> Horia-Paul Schiopu y Teodor Pădureanu figuran `past_due` y sin embargo pagaron los tres
+> meses por Mollie, y Juan Madrigal figura `canceled` y también pagó los tres. Al revés,
+> SIFAIN Maruf figura `active` y debe octubre. El campo `subscription_status` quedó
+> desfasado de la realidad en al menos 4 de los 7 casos, así que no sirve para medir
+> deserción — y tampoco para decidir a quién reclamarle.
 
 Hay un dato que conviene leer junto al anterior: **Mollie procesó 29 pagos por 8.360 RON
 —el 72% de todo el dinero del club— pero solo 4 son débito automático.** Casi todo lo que
