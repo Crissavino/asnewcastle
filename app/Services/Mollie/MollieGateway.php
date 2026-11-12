@@ -311,15 +311,15 @@ class MollieGateway
             $balance = $this->getBalance();
 
             // CONFIRMADO con la cuenta real (app:mollie-saldo-diag, 12.11.2026):
-            // el saldo trae availableAmount como {currency, value:"293.30"}, pero
-            // **incomingAmount y outgoingAmount vienen AUSENTES cuando no hay nada
-            // en ese estado** — no como 0. Por eso solo availableAmount es
-            // obligatorio: si falta, no sabemos nada y devolvemos null. Un entrante
-            // o saliente ausente SÍ es cero, y tratarlo como "sin dato" dejaría el
-            // tránsito en guion para siempre.
-            // Los tres son disjuntos: la sonda mostró que el payout del 11.11 salió
-            // de available con un asiento outgoing-transfer, así que sumarlos no
-            // cuenta dos veces.
+            //   availableAmount = 293.30 RON   ← ya liberado, se va en el próximo payout
+            //   pendingAmount   = 1427.22 RON  ← cobrado pero todavía sin liberar
+            //   incomingAmount / outgoingAmount = AUSENTES
+            // Los dos últimos los declara el SDK pero la API no los manda. El
+            // tránsito es disponible + pendiente, y esa suma dio exactamente el
+            // "Next payout: RON 1.720,52" que muestra el panel de Mollie.
+            //
+            // Solo availableAmount es obligatorio: si falta, no sabemos nada y
+            // devolvemos null. Un pendiente ausente SÍ es cero.
             $moneda = strtoupper((string) ($balance->currency ?? ''));
             $disponible = $balance->availableAmount->value ?? null;
 
@@ -332,9 +332,16 @@ class MollieGateway
                 return null;
             }
 
-            return $this->cents($disponible)
-                + $this->cents($balance->incomingAmount->value ?? null)
-                + $this->cents($balance->outgoingAmount->value ?? null);
+            // Si Mollie empieza a mandar estos campos, hay que decidir si entran
+            // en la suma: avisamos en vez de ignorarlos en silencio.
+            if (isset($balance->incomingAmount) || isset($balance->outgoingAmount)) {
+                Log::warning('El saldo de Mollie ahora trae incoming/outgoing: revisar si el tránsito debe sumarlos', [
+                    'entrante' => $balance->incomingAmount ?? null,
+                    'saliente' => $balance->outgoingAmount ?? null,
+                ]);
+            }
+
+            return $this->cents($disponible) + $this->cents($balance->pendingAmount->value ?? null);
         } catch (\Throwable $e) {
             Log::warning('No se pudo leer el saldo de Mollie: el tránsito queda sin dato', [
                 'codigo' => $e->getCode(),

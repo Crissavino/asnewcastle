@@ -195,9 +195,12 @@ function fakeMollieBalance(int $availableCents, int $pendingCents, string $curre
     $balance->id = 'bal_test';
     $balance->status = 'active';
     $balance->currency = $currency;
+    // Forma REAL de la respuesta (confirmada con app:mollie-saldo-diag el
+    // 12.11.2026): la API manda availableAmount y pendingAmount. Los
+    // incomingAmount/outgoingAmount que declara el SDK NO vienen, por eso acá
+    // tampoco se setean.
     $balance->availableAmount = mollieFakeMoney($availableCents, $currency);
-    $balance->incomingAmount = mollieFakeMoney($pendingCents, $currency);
-    $balance->outgoingAmount = mollieFakeMoney(0, $currency);
+    $balance->pendingAmount = mollieFakeMoney($pendingCents, $currency);
 
     $holder = mollieFakeHolder();
     $holder->balance = $balance;

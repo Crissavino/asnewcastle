@@ -460,21 +460,22 @@ it('el tránsito es el saldo pendiente de Mollie', function () {
     expect(app(MollieGateway::class)->transitCents())->toBe(18000);
 });
 
-it('el tránsito suma disponible, entrante y saliente: un payout en curso no desaparece', function () {
-    $balance = fakeMollieBalance(availableCents: 12000, pendingCents: 6000);
-    $balance->outgoingAmount = mollieFakeMoney(3000);
+it('el tránsito es disponible + pendiente, como el "próximo payout" del panel de Mollie', function () {
+    // Forma REAL confirmada con app:mollie-saldo-diag el 12.11.2026:
+    //   availableAmount 293.30 + pendingAmount 1427.22 = 1720.52,
+    // que es exactamente el "Next payout: RON 1.720,52" del panel.
+    fakeMollieBalance(availableCents: 29330, pendingCents: 142722);
 
-    expect(app(MollieGateway::class)->transitCents())->toBe(21000);
+    expect(app(MollieGateway::class)->transitCents())->toBe(172052);
 });
 
-it('un saliente ausente es cero, no "sin dato": Mollie omite el campo cuando no hay nada en curso', function () {
-    // Confirmado contra la cuenta real (app:mollie-saldo-diag, 12.11.2026): el
-    // saldo vino con availableAmount y SIN incomingAmount ni outgoingAmount.
+it('un pendiente ausente es cero, no "sin dato": queda el disponible', function () {
+    // Mollie omite los montos que están en cero en vez de mandarlos como 0.
     // Tratar la ausencia como "no sé" dejaba el tránsito en guion para siempre.
     $balance = fakeMollieBalance(availableCents: 12000, pendingCents: 6000);
-    $balance->outgoingAmount = null;
+    $balance->pendingAmount = null;
 
-    expect(app(MollieGateway::class)->transitCents())->toBe(18000);
+    expect(app(MollieGateway::class)->transitCents())->toBe(12000);
 });
 
 it('un saldo en cero es cero, no null', function () {
@@ -483,11 +484,14 @@ it('un saldo en cero es cero, no null', function () {
     expect(app(MollieGateway::class)->transitCents())->toBe(0);
 });
 
-it('un entrante ausente también es cero: queda el disponible', function () {
+it('los incoming/outgoing que declara el SDK no se suman: la API no los manda', function () {
+    // Si algún día aparecen, el gateway deja un warning para que alguien
+    // decida si entran en la suma, pero NO los suma por su cuenta.
     $balance = fakeMollieBalance(availableCents: 12000, pendingCents: 6000);
-    $balance->incomingAmount = null;
+    $balance->incomingAmount = mollieFakeMoney(99999);
+    $balance->outgoingAmount = mollieFakeMoney(88888);
 
-    expect(app(MollieGateway::class)->transitCents())->toBe(12000);
+    expect(app(MollieGateway::class)->transitCents())->toBe(18000);
 });
 
 it('sin disponible legible SÍ es null y no cero: ahí no sabemos nada', function () {
