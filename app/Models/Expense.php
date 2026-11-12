@@ -19,6 +19,7 @@ class Expense extends Model
         'category',
         'description',
         'amount_cents',
+        'pot',
         'spent_on',
     ];
 

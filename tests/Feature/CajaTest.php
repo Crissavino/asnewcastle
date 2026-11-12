@@ -39,12 +39,14 @@ it('el saldo descuenta los gastos, y el jugador ve el desglose por categoría', 
         'category' => 'referee',
         'amount_cents' => 15000,
         'spent_on' => now()->toDateString(),
+        'pot' => 'cash',
     ])->assertRedirect();
 
     $this->actingAs($manager->user)->post('/gastos', [
         'category' => 'water',
         'amount_cents' => 4000,
         'spent_on' => now()->toDateString(),
+        'pot' => 'cuenta',
         'description' => 'Bidones',
     ])->assertRedirect();
 
@@ -109,6 +111,7 @@ it('un gasto se puede atar a un evento del club, pero no a uno ajeno', function 
         'category' => 'referee',
         'amount_cents' => 15000,
         'spent_on' => now()->toDateString(),
+        'pot' => 'cash',
         'event_id' => $event->id,
     ])->assertRedirect();
 
@@ -116,6 +119,7 @@ it('un gasto se puede atar a un evento del club, pero no a uno ajeno', function 
         'category' => 'referee',
         'amount_cents' => 15000,
         'spent_on' => now()->toDateString(),
+        'pot' => 'cash',
         'event_id' => $ajeno->id,
     ])->assertNotFound();
 });

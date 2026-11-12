@@ -83,6 +83,7 @@ function ExpenseSheet({ categorias, eventos, currency, onClose }) {
         spent_on: new Date().toISOString().slice(0, 10),
         description: '',
         event_id: '',
+        pot: '',
     });
     const [processing, setProcessing] = useState(false);
     const [errors, setErrors] = useState({});
@@ -95,6 +96,7 @@ function ExpenseSheet({ categorias, eventos, currency, onClose }) {
             spent_on: data.spent_on,
             description: data.description || null,
             event_id: data.event_id || null,
+            pot: data.pot,
         }, {
             onSuccess: onClose,
             onError: setErrors,
@@ -120,6 +122,19 @@ function ExpenseSheet({ categorias, eventos, currency, onClose }) {
                         {categorias.map((c) => <option key={c} value={c}>{t(`exp.${c}`)}</option>)}
                     </select>
                 </label>
+
+                <div className="nc-field-l">
+                    <span className="nc-label">{t('cuota.pot_label')}</span>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        {[['cuenta', 'cuota.pot_cuenta'], ['cash', 'cuota.pot_cash']].map(([k, label]) => (
+                            <button key={k} type="button" className={data.pot === k ? 'nc-btn' : 'nc-mini'}
+                                style={{ flex: 1, minHeight: 44 }} aria-pressed={data.pot === k}
+                                onClick={() => setData({ ...data, pot: k })}>
+                                {t(label)}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
                 <label className="nc-field-l">
                     <span className="nc-label">{t('cuota.amount')} ({currency})</span>
@@ -151,7 +166,7 @@ function ExpenseSheet({ categorias, eventos, currency, onClose }) {
 
                 {Object.values(errors)[0] && <div className="nc-error">{Object.values(errors)[0]}</div>}
 
-                <button className="nc-btn" style={{ marginTop: 8 }} disabled={processing || !data.amount || parseFloat(data.amount) <= 0} onClick={save}>
+                <button className="nc-btn" style={{ marginTop: 8 }} disabled={processing || !data.pot || !data.amount || parseFloat(data.amount) <= 0} onClick={save}>
                     {processing ? t('agenda.saving') : t('agenda.save')}
                 </button>
             </div>
