@@ -19,6 +19,16 @@ use Illuminate\Validation\Rule;
 class MovementController extends Controller
 {
     /**
+     * El tope de cualquier monto del libro: 10.000.000 centavos, o 100.000 lei.
+     * Es el mismo que ya topea los gastos y la cuota (ExpenseController,
+     * CuotaController): dos órdenes de magnitud por encima de cualquier monto
+     * real de un club amateur, así que ataja el dedo pegado al teclado sin
+     * frenar nada legítimo. El ajuste lo usa con signo: el saldo objetivo puede
+     * ser negativo, pero no por más que eso.
+     */
+    private const MAX_CENTS = 10000000;
+
+    /**
      * Mover plata entre bolsillos. NO es un gasto: el total del club no cambia.
      * Escribe dos filas opuestas atadas por group_uuid y no crea ningún Expense;
      * el gasto nace después, cuando se paga lo que sea.
@@ -29,7 +39,7 @@ class MovementController extends Controller
 
         $validated = $request->validate([
             'from' => ['required', Rule::in(Movement::POTS)],
-            'amount_cents' => ['required', 'integer', 'min:1', 'max:10000000'],
+            'amount_cents' => ['required', 'integer', 'min:1', 'max:'.self::MAX_CENTS],
             'occurred_on' => ['required', 'date'],
             'note' => ['nullable', 'string', 'max:120'],
         ]);
@@ -57,7 +67,7 @@ class MovementController extends Controller
 
         $validated = $request->validate([
             'pot' => ['required', Rule::in(Movement::POTS)],
-            'amount_cents' => ['required', 'integer', 'min:1', 'max:10000000'],
+            'amount_cents' => ['required', 'integer', 'min:1', 'max:'.self::MAX_CENTS],
             'occurred_on' => ['required', 'date'],
             'note' => ['required', 'string', 'max:120'],
         ]);
@@ -78,7 +88,7 @@ class MovementController extends Controller
 
         $validated = $request->validate([
             'pot' => ['required', Rule::in(Movement::POTS)],
-            'target_cents' => ['required', 'integer', 'min:-100000000', 'max:100000000'],
+            'target_cents' => ['required', 'integer', 'min:-'.self::MAX_CENTS, 'max:'.self::MAX_CENTS],
             'note' => ['required', 'string', 'max:120'],
         ]);
 
