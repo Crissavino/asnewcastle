@@ -272,6 +272,20 @@ it('el tránsito es el saldo pendiente de Mollie', function () {
     expect(app(MollieGateway::class)->transitCents())->toBe(18000);
 });
 
+it('el tránsito suma disponible, entrante y saliente: un payout en curso no desaparece', function () {
+    $balance = fakeMollieBalance(availableCents: 12000, pendingCents: 6000);
+    $balance->outgoingAmount = mollieFakeMoney(3000);
+
+    expect(app(MollieGateway::class)->transitCents())->toBe(21000);
+});
+
+it('un saldo sin saliente legible es null y no cero', function () {
+    $balance = fakeMollieBalance(availableCents: 12000, pendingCents: 6000);
+    $balance->outgoingAmount = null;
+
+    expect(app(MollieGateway::class)->transitCents())->toBeNull();
+});
+
 it('un saldo en cero es cero, no null', function () {
     fakeMollieBalance(availableCents: 0, pendingCents: 0);
 

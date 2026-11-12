@@ -4,8 +4,8 @@ namespace App\Services\Mollie;
 
 use App\Models\Due;
 use App\Models\Member;
-use Illuminate\Support\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Mollie\Api\Exceptions\ApiException;
@@ -256,7 +256,7 @@ class MollieGateway
 
     /**
      * La plata que ya es del club pero todavía no llegó a su banco: lo que
-     * Mollie tiene disponible más lo que viene en camino. NO se deriva del
+     * Mollie tiene disponible, lo que viene en camino y lo que ya está en un payout encolado. NO se deriva del
      * libro: nuestros pagos son brutos y el payout es neto, así que una resta
      * propia se inflaría con cada comisión. Se lee del saldo real.
      *
@@ -289,23 +289,30 @@ class MollieGateway
             $balance = $this->getBalance();
 
             // SUPOSICIÓN SIN CONFIRMAR (la sonda app:mollie-saldo-diag nunca corrió
-            // contra la cuenta real): el saldo trae availableAmount e incomingAmount
-            // como {currency, value:"12.00"}. Si falta algo no se asume: null.
+            // contra la cuenta real): el saldo trae availableAmount, incomingAmount y
+            // outgoingAmount como {currency, value:"12.00"}, y los TRES se asumen
+            // DISJUNTOS (crear un payout descuenta de available), así que se suman sin
+            // doble conteo. Sin outgoing, un payout encolado no estaría en ningún
+            // bolsillo ni en el tránsito. Es lo primero a confirmar con la sonda.
+            // Si falta algo no se asume: null.
             $moneda = strtoupper((string) ($balance->currency ?? ''));
             $disponible = $balance->availableAmount->value ?? null;
             $entrante = $balance->incomingAmount->value ?? null;
+            $saliente = $balance->outgoingAmount->value ?? null;
 
-            if ($moneda !== 'RON' || ! is_numeric($disponible) || ! is_numeric($entrante)) {
+            if ($moneda !== 'RON' || ! is_numeric($disponible) || ! is_numeric($entrante) || ! is_numeric($saliente)) {
                 Log::warning('Saldo de Mollie con forma inesperada: el tránsito queda sin dato', [
                     'moneda' => $moneda,
                     'disponible' => $balance->availableAmount ?? null,
                     'entrante' => $balance->incomingAmount ?? null,
+                    'saliente' => $balance->outgoingAmount ?? null,
                 ]);
 
                 return null;
             }
 
-            return (int) round((float) $disponible * 100) + (int) round((float) $entrante * 100);
+            return (int) round((float) $disponible * 100) + (int) round((float) $entrante * 100)
+                + (int) round((float) $saliente * 100);
         } catch (\Throwable $e) {
             Log::warning('No se pudo leer el saldo de Mollie: el tránsito queda sin dato', [
                 'codigo' => $e->getCode(),
