@@ -52,9 +52,7 @@ class CuotaLedger
             ->where('club_id', $due->club_id)
             ->where('due_id', $due->id)
             ->where('kind', 'cuota')
-            ->whereNull('reverses_movement_id')
-            ->whereNotIn('id', Movement::withoutGlobalScopes()
-                ->whereNotNull('reverses_movement_id')->select('reverses_movement_id'))
+            ->vigentes()
             ->first();
     }
 }

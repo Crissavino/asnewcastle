@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToClub;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -62,5 +63,25 @@ class Movement extends Model
     public function reverses(): BelongsTo
     {
         return $this->belongsTo(self::class, 'reverses_movement_id');
+    }
+
+    /**
+     * Los asientos que todavía cuentan: los originales (no son contra-asiento de
+     * nadie) que nadie contra-asentó.
+     *
+     * Es LA definición de "este asiento sigue vigente", y vive acá sola: la
+     * consumen CuotaLedger y PayoutLedger. Duplicada, el día que haya que
+     * cambiarla (un contra-asiento del contra-asiento, un `reverses` encadenado)
+     * hay que acertarle a dos lugares o el saldo se parte.
+     *
+     * La subconsulta va sin global scopes a propósito: esto corre también en
+     * comandos y webhooks, donde no hay club activo y el filtro por club_id lo
+     * pone a mano quien llama.
+     */
+    public function scopeVigentes(Builder $query): void
+    {
+        $query->whereNull('reverses_movement_id')
+            ->whereNotIn('id', self::withoutGlobalScopes()
+                ->whereNotNull('reverses_movement_id')->select('reverses_movement_id'));
     }
 }
