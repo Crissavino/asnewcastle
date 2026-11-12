@@ -1,7 +1,7 @@
 # Diseño — Dos bolsillos: que el saldo de la app sea la plata que hay
 
 **Fecha:** 12.11.2026 · **Pedido por:** el presidente del club (dueño del proyecto)
-**Estado:** revisado por un constructor; pendiente de aprobación del dueño
+**Estado:** APROBADO por el dueño el 12.11.2026
 
 ---
 
@@ -93,7 +93,12 @@ Al poner esto en marcha, un comando artisan one-off crea los movimientos `saldo_
 con la fecha del día:
 
 - cuenta = **225 lei** (dato del dueño al 12.11.2026)
-- efectivo = **pendiente: el dueño lo pasa antes de ejecutar el comando**
+- efectivo = **0** (decisión del dueño, 12.11.2026)
+
+> **Consecuencia conocida.** La transferencia de Sergio a Andres ya salió de la cuenta (los
+> 225 son el saldo posterior), así que esa plata no entra a ningún bolsillo. Cuando Andres
+> pague la cancha del viernes, el efectivo va a quedar en negativo por ese monto. Se corrige
+> con un movimiento de ajuste. El dueño lo sabe y eligió arrancar igual en 0.
 - tránsito = no hace falta, se lee de Mollie
 
 Nada anterior se recalcula. Los gastos ya cargados quedan sin bolsillo y fuera de los saldos.
