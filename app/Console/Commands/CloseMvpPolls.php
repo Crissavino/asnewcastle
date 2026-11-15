@@ -19,6 +19,7 @@ class CloseMvpPolls extends Command
             ->where('kind', 'match')
             ->whereNotNull('mvp_opened_at')
             ->whereNull('mvp_closed_at')
+            ->whereNull('cancelled_at')
             ->whereRaw('COALESCE(kickoff_at, starts_at) < ?', [now()->subHours(50)])
             ->with('mvpVotes.voted.user', 'attendances')
             ->get();

@@ -18,6 +18,7 @@ class OpenMvpPolls extends Command
         $events = Event::query()
             ->where('kind', 'match')
             ->whereNull('mvp_opened_at')
+            ->whereNull('cancelled_at')
             // El mismo criterio que isFinished(): manda el kick-off, no la
             // citación. Si acá se abre antes, el aviso sale y la votación no.
             ->finished()

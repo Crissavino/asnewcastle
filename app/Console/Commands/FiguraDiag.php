@@ -14,19 +14,21 @@ class FiguraDiag extends Command
 
     public function handle(): int
     {
-        $event = Event::withoutGlobalScopes()
+        $events = Event::withoutGlobalScopes()
             ->where('kind', 'match')
             ->with('attendances')
             ->latest('starts_at')
-            ->first();
+            ->limit(4)
+            ->get();
 
-        if (! $event) {
+        if ($events->isEmpty()) {
             $this->warn('No hay partidos.');
 
             return self::SUCCESS;
         }
 
-        $this->line(json_encode([
+        foreach ($events as $event) {
+            $this->line(json_encode([
             'now' => now()->toIso8601String(),
             'tz' => config('app.timezone'),
             'event_id' => $event->id,
@@ -44,7 +46,8 @@ class FiguraDiag extends Command
             'status_in' => $event->attendances->where('status', 'in')->count(),
             'attended_true' => $event->attendances->where('attended', true)->count(),
             'present_ids' => $event->presentMemberIds()->count(),
-        ], JSON_UNESCAPED_UNICODE));
+            ], JSON_UNESCAPED_UNICODE));
+        }
 
         return self::SUCCESS;
     }

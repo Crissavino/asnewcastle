@@ -301,3 +301,37 @@ it('anunciada la figura, la votación queda cerrada', function () {
 
     expect($event->fresh()->mvpPollOpen())->toBeFalse();
 });
+
+it('un partido cancelado no tapa la votación del que sí se jugó', function () {
+    $manager = Member::factory()->manager()->create();
+    $otro = Member::factory()->for($manager->club)->create();
+
+    $jugado = partidoTerminado($manager);
+    fueron($jugado, $manager, $otro);
+
+    // Mismo rival, cargado para más tarde y cancelado: sin asistencias
+    Event::factory()->by($manager)->create([
+        'starts_at' => now()->subHours(2),
+        'mvp_opened_at' => now()->subHour(),
+        'cancelled_at' => now()->subDays(3),
+    ]);
+
+    $this->actingAs($manager->user)
+        ->get('/vestuario')
+        ->assertInertia(fn (Assert $page) => $page->where('mvp.event_id', $jugado->id));
+});
+
+it('figura:abrir ignora los partidos cancelados', function () {
+    $manager = Member::factory()->manager()->create();
+    $otro = Member::factory()->for($manager->club)->create();
+    $event = Event::factory()->by($manager)->create([
+        'starts_at' => now()->subHours(3),
+        'cancelled_at' => now()->subDay(),
+    ]);
+    fueron($event, $manager, $otro);
+
+    $this->artisan('figura:abrir')->assertSuccessful();
+
+    expect($event->fresh()->mvp_opened_at)->toBeNull()
+        ->and(Message::withoutGlobalScopes()->count())->toBe(0);
+});

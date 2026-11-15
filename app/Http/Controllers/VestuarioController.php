@@ -105,6 +105,9 @@ class VestuarioController extends Controller
         $event = Event::query()
             ->where('kind', 'match')
             ->whereNotNull('mvp_opened_at')
+            // Un partido cancelado no tiene figura, y si queda en el medio
+            // tapa al que sí se jugó: latest() se lo lleva y no hay candidatos
+            ->whereNull('cancelled_at')
             ->whereRaw('COALESCE(kickoff_at, starts_at) < ?', [now()])
             ->whereRaw('COALESCE(kickoff_at, starts_at) > ?', [now()->subHours(50)])
             ->with(['attendances.member.user:id,name', 'mvpVotes', 'playerRatings'])

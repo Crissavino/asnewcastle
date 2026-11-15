@@ -216,6 +216,7 @@ class Event extends Model
         // fecha, el aviso sale y la votación no aparece.
         return $this->mvp_opened_at !== null
             && $this->mvp_closed_at === null
+            && ! $this->isCancelled()
             && $this->playedAt()->copy()->addHours(50)->isFuture();
     }
 }
