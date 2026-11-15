@@ -257,3 +257,47 @@ it('con presentes confirmados, el que no estuvo deja de ser candidato aunque hay
         ->post("/eventos/{$event->id}/figura", ['member_id' => $falto->id])
         ->assertSessionHasErrors('member_id');
 });
+
+it('con hora de partido cargada, figura:abrir espera al kick-off y no al encuentro', function () {
+    $manager = Member::factory()->manager()->create();
+    $otro = Member::factory()->for($manager->club)->create();
+    // Citación 18:00, partido 20:00: a las 21:00 todavía no terminó
+    $event = Event::factory()->by($manager)->create([
+        'starts_at' => now()->subHours(3),
+        'kickoff_at' => now()->subHour(),
+        'notified_at' => now()->subDay(),
+    ]);
+    fueron($event, $manager, $otro);
+
+    $this->artisan('figura:abrir')->assertSuccessful();
+
+    expect($event->fresh()->mvp_opened_at)->toBeNull();
+});
+
+it('abierta la votación, el vestuario la muestra aunque el kick-off sea posterior a la citación', function () {
+    $manager = Member::factory()->manager()->create();
+    $otro = Member::factory()->for($manager->club)->create();
+    $event = Event::factory()->by($manager)->create([
+        'starts_at' => now()->subHours(5),
+        'kickoff_at' => now()->subHours(3),
+        'notified_at' => now()->subDay(),
+    ]);
+    fueron($event, $manager, $otro);
+
+    $this->artisan('figura:abrir')->assertSuccessful();
+    expect($event->fresh()->mvpPollOpen())->toBeTrue();
+
+    $this->actingAs($manager->user)
+        ->get('/vestuario')
+        ->assertInertia(fn (Assert $page) => $page->where('mvp.event_id', $event->id));
+});
+
+it('anunciada la figura, la votación queda cerrada', function () {
+    $manager = Member::factory()->manager()->create();
+    $otro = Member::factory()->for($manager->club)->create();
+    $event = partidoTerminado($manager);
+    fueron($event, $manager, $otro);
+    $event->forceFill(['mvp_closed_at' => now()])->save();
+
+    expect($event->fresh()->mvpPollOpen())->toBeFalse();
+});

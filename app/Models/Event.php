@@ -124,7 +124,13 @@ class Event extends Model
      */
     public function isFinished(): bool
     {
-        return ($this->kickoff_at ?? $this->starts_at)->copy()->addHours(2)->isPast();
+        return $this->playedAt()->copy()->addHours(2)->isPast();
+    }
+
+    /** La hora que manda para todo lo post-partido: el kick-off si está cargado. */
+    public function playedAt(): CarbonInterface
+    {
+        return $this->kickoff_at ?? $this->starts_at;
     }
 
     /**
@@ -205,8 +211,11 @@ class Event extends Model
     /** La votación de figura queda abierta 48hs desde el final del partido. */
     public function mvpPollOpen(): bool
     {
+        // Abrirla es decisión de figura:abrir, que ya exigió que el partido
+        // terminara. Acá no se vuelve a decidir: si se recalcula con otra
+        // fecha, el aviso sale y la votación no aparece.
         return $this->mvp_opened_at !== null
-            && $this->isFinished()
-            && $this->starts_at->copy()->addHours(50)->isFuture();
+            && $this->mvp_closed_at === null
+            && $this->playedAt()->copy()->addHours(50)->isFuture();
     }
 }

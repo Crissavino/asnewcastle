@@ -18,8 +18,10 @@ class OpenMvpPolls extends Command
         $events = Event::query()
             ->where('kind', 'match')
             ->whereNull('mvp_opened_at')
-            ->where('starts_at', '<', now()->subHours(2))
-            ->where('starts_at', '>', now()->subDay())
+            // El mismo criterio que isFinished(): manda el kick-off, no la
+            // citación. Si acá se abre antes, el aviso sale y la votación no.
+            ->finished()
+            ->whereRaw('COALESCE(kickoff_at, starts_at) > ?', [now()->subDay()])
             ->with('attendances')
             ->get();
 

@@ -105,8 +105,8 @@ class VestuarioController extends Controller
         $event = Event::query()
             ->where('kind', 'match')
             ->whereNotNull('mvp_opened_at')
-            ->where('starts_at', '<', now())
-            ->where('starts_at', '>', now()->subHours(50))
+            ->whereRaw('COALESCE(kickoff_at, starts_at) < ?', [now()])
+            ->whereRaw('COALESCE(kickoff_at, starts_at) > ?', [now()->subHours(50)])
             ->with(['attendances.member.user:id,name', 'mvpVotes', 'playerRatings'])
             ->latest('starts_at')
             ->first();
