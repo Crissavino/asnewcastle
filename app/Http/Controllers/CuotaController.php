@@ -47,7 +47,10 @@ class CuotaController extends Controller
         // que falten, para que la caja nunca enmascare a un deudor.
         $this->ensurePeriodDues($club, $period);
 
-        $myDue = Due::query()
+        // Lo que le toca pagar: SIEMPRE el mes impago más viejo. Si está al
+        // día, la del mes en curso (pagada o condonada), que es lo que la
+        // pantalla muestra como "tu cuota".
+        $myDue = $member->cuotaMasVieja() ?? Due::query()
             ->where('member_id', $member->id)
             ->whereDate('period', $period)
             ->first();

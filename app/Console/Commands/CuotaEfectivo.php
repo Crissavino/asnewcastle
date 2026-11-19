@@ -29,10 +29,6 @@ class CuotaEfectivo extends Command
     {
         $lei = (int) $this->argument('lei');
         $amount = $lei * 100;
-        $period = $this->option('periodo')
-            ? Carbon::parse($this->option('periodo'))->startOfMonth()
-            : now()->startOfMonth();
-
         if (! in_array($this->option('pot'), Movement::POTS, true)) {
             $this->error('--pot tiene que ser: '.implode(' o ', Movement::POTS).'.');
 
@@ -60,6 +56,12 @@ class CuotaEfectivo extends Command
 
         $member = $members->first();
         $this->line("Jugador: #{$member->id} {$member->user->name} · tipo de cuota: {$member->fee_type}");
+
+        // Sin --periodo, el efectivo salda el mes impago más viejo (la misma
+        // regla que el pago online); si está al día, el mes en curso.
+        $period = $this->option('periodo')
+            ? Carbon::parse($this->option('periodo'))->startOfMonth()
+            : ($member->cuotaMasVieja()?->period->copy()->startOfMonth() ?? now()->startOfMonth());
 
         $due = Due::withoutGlobalScopes()
             ->where('member_id', $member->id)

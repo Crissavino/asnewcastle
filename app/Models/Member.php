@@ -101,6 +101,22 @@ class Member extends Model
         };
     }
 
+    /**
+     * La cuota impaga más vieja. A ésa va cualquier pago que haga el jugador:
+     * la deuda se salda del mes más viejo al más nuevo, nunca al revés. Sin
+     * esto, el que debía octubre pagaba noviembre y octubre quedaba colgado
+     * envejeciendo para siempre.
+     */
+    public function cuotaMasVieja(): ?Due
+    {
+        return Due::withoutGlobalScopes()
+            ->where('club_id', $this->club_id)
+            ->where('member_id', $this->id)
+            ->where('status', 'pending')
+            ->orderBy('period')
+            ->first();
+    }
+
     /** ¿Tiene el débito automático activo? */
     public function isSubscribed(): bool
     {

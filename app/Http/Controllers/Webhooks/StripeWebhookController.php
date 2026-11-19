@@ -62,6 +62,12 @@ class StripeWebhookController extends Controller
             return;
         }
 
+        // Entre el checkout y el webhook pudieron marcarle esa cuota a mano.
+        // El pago no se pierde: va al mes impago más viejo que le quede.
+        if (! $due->isPending()) {
+            $due = $due->member?->cuotaMasVieja() ?? $due;
+        }
+
         // Idempotencia: el unique de stripe_payment_intent_id hace que un
         // reintento del webhook no duplique el pago ni el estado.
         DB::transaction(function () use ($due, $session, $paymentIntentId) {
@@ -130,6 +136,11 @@ class StripeWebhookController extends Controller
         $period = $periodStart
             ? Carbon::createFromTimestamp($periodStart)->startOfMonth()
             : now()->startOfMonth();
+
+        // Igual que en Mollie: el débito mensual salda primero el mes impago
+        // más viejo, y solo cubre el mes en curso cuando está al día.
+        $atrasada = $member->cuotaMasVieja();
+        $period = $atrasada ? $atrasada->period->copy()->startOfMonth() : $period;
 
         [$due, $isNew] = DB::transaction(function () use ($member, $period, $amount, $piKey) {
             // El período va como Carbon (no string) para que matchee el formato

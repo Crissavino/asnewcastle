@@ -85,6 +85,12 @@ class MollieWebhookController extends Controller
             return;
         }
 
+        // Entre el checkout y el webhook pudieron marcarle esa cuota a mano.
+        // El pago no se pierde: va al mes impago más viejo que le quede.
+        if (! $due->isPending()) {
+            $due = $due->member?->cuotaMasVieja() ?? $due;
+        }
+
         $isNew = DB::transaction(function () use ($due, $payment, $amountCents) {
             $record = $this->recordPayment($payment->id, $due, $amountCents);
 
@@ -228,6 +234,13 @@ class MollieWebhookController extends Controller
         }
 
         $period = ($payment->createdAt ? Carbon::parse($payment->createdAt) : now())->startOfMonth();
+
+        // El débito mensual salda primero lo viejo: si arrastra meses impagos,
+        // este cobro va al más viejo y recién cuando se pone al día empieza a
+        // cubrir el mes en curso. El monto que queda asentado es el COBRADO
+        // (con descuento de suscripción), que es la plata que entró de verdad.
+        $atrasada = $member->cuotaMasVieja();
+        $period = $atrasada ? $atrasada->period->copy()->startOfMonth() : $period;
 
         $isNew = DB::transaction(function () use ($member, $period, $payment, $amountCents) {
             $due = Due::withoutGlobalScopes()->updateOrCreate(
